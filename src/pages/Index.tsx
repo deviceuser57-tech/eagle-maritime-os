@@ -5,6 +5,7 @@ import UniversalSearch from '@/components/UniversalSearch';
 import Dashboard from '@/components/Dashboard';
 import AIAssistant from '@/components/AIAssistant';
 import SetupPage from '@/components/SetupPage';
+import VesselManagement from '@/components/VesselManagement';
 
 const Index = () => {
   const [showFrontPage, setShowFrontPage] = useState(true);
@@ -36,6 +37,8 @@ const Index = () => {
         return <AIAssistant />;
       case 'setup':
         return <SetupPage />;
+      case 'vessel-management':
+        return <VesselManagement />;
       default:
         return (
           <div className="space-y-6">
