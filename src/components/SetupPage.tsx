@@ -24,6 +24,7 @@ const SetupPage = () => {
   const [setupData, setSetupData] = useState<SetupData>({});
   const [editingItem, setEditingItem] = useState<{ type: string; index: number; data: any } | null>(null);
   const [showAddForm, setShowAddForm] = useState<{ type: string; config: SetupCardConfig } | null>(null);
+  const [formData, setFormData] = useState<any>({});
 
   // Setup configurations for different categories
   const setupConfigs = {
@@ -179,6 +180,7 @@ const SetupPage = () => {
       [type]: [...(prev[type] || []), { ...newItem, id: Date.now().toString() }]
     }));
     setShowAddForm(null);
+    setFormData({});
     toast({
       title: "Success",
       description: "Item added successfully"
@@ -313,8 +315,6 @@ const SetupPage = () => {
 
   const renderAddForm = () => {
     if (!showAddForm) return null;
-
-    const [formData, setFormData] = useState<any>({});
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
