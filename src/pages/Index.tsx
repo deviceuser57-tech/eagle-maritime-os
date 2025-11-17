@@ -6,6 +6,25 @@ import Dashboard from '@/components/Dashboard';
 import AIAssistant from '@/components/AIAssistant';
 import SetupPage from '@/components/SetupPage';
 import VesselManagement from '@/components/VesselManagement';
+import UserAuth from '@/components/UserAuth';
+import VesselsCertification from '@/components/VesselsCertification';
+import CrewManagement from '@/components/CrewManagement';
+import AuditorManagement from '@/components/AuditorManagement';
+import RulesRegulations from '@/components/RulesRegulations';
+import CIIDashboard from '@/components/CIIDashboard';
+import Operations from '@/components/Operations';
+import Maintenance from '@/components/Maintenance';
+import Projects from '@/components/Projects';
+import AuditPlan from '@/components/AuditPlan';
+import AuditExecution from '@/components/AuditExecution';
+import AuditFindings from '@/components/AuditFindings';
+import CorrectiveAction from '@/components/CorrectiveAction';
+import InteractiveClosure from '@/components/InteractiveClosure';
+import Incidents from '@/components/Incidents';
+import Communications from '@/components/Communications';
+import SafetyManagement from '@/components/SafetyManagement';
+import DigitalCompliance from '@/components/DigitalCompliance';
+import InsuranceClaims from '@/components/InsuranceClaims';
 
 const Index = () => {
   const [showFrontPage, setShowFrontPage] = useState(true);
@@ -31,23 +50,36 @@ const Index = () => {
 
   const renderContent = () => {
     switch (activeSection) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'ai-assistant':
-        return <AIAssistant />;
-      case 'setup':
-        return <SetupPage />;
-      case 'vessel-management':
-        return <VesselManagement />;
+      case 'dashboard': return <Dashboard />;
+      case 'ai-assistant': return <AIAssistant />;
+      case 'user-auth': return <UserAuth />;
+      case 'setup': return <SetupPage />;
+      case 'vessel-management': return <VesselManagement />;
+      case 'vessels-certification': return <VesselsCertification />;
+      case 'crew-management': return <CrewManagement />;
+      case 'auditor-management': return <AuditorManagement />;
+      case 'rules-regulations': return <RulesRegulations />;
+      case 'cii-dashboard': return <CIIDashboard />;
+      case 'operations': return <Operations />;
+      case 'maintenance': return <Maintenance />;
+      case 'projects': return <Projects />;
+      case 'audit-plan': return <AuditPlan />;
+      case 'audit-execution': return <AuditExecution />;
+      case 'audit-findings': return <AuditFindings />;
+      case 'corrective-action': return <CorrectiveAction />;
+      case 'interactive-closure': return <InteractiveClosure />;
+      case 'incidents': return <Incidents />;
+      case 'communications': return <Communications />;
+      case 'sms': return <SafetyManagement />;
+      case 'digital-compliance': return <DigitalCompliance />;
+      case 'insurance-claims': return <InsuranceClaims />;
       default:
         return (
           <div className="space-y-6">
             <h2 className="text-3xl font-bold text-foreground mb-2">
-              {activeSection.charAt(0).toUpperCase() + activeSection.slice(1).replace('-', ' ')}
+              {activeSection.charAt(0).toUpperCase() + activeSection.slice(1).replace(/-/g, ' ')}
             </h2>
-            <p className="text-muted-foreground">
-              This section is under development. More features coming soon!
-            </p>
+            <p className="text-muted-foreground">This section is under development.</p>
           </div>
         );
     }
