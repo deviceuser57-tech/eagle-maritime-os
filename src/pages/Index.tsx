@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import FrontPage from '@/components/FrontPage';
 import Sidebar from '@/components/Sidebar';
 import UniversalSearch from '@/components/UniversalSearch';
@@ -6,7 +7,7 @@ import Dashboard from '@/components/Dashboard';
 import AIAssistant from '@/components/AIAssistant';
 import SetupPage from '@/components/SetupPage';
 import VesselManagement from '@/components/VesselManagement';
-import UserAuth from '@/components/UserAuth';
+import AuthPage from '@/components/AuthPage';
 import VesselsCertification from '@/components/VesselsCertification';
 import CrewManagement from '@/components/CrewManagement';
 import AuditorManagement from '@/components/AuditorManagement';
@@ -25,8 +26,10 @@ import Communications from '@/components/Communications';
 import SafetyManagement from '@/components/SafetyManagement';
 import DigitalCompliance from '@/components/DigitalCompliance';
 import InsuranceClaims from '@/components/InsuranceClaims';
+import Reports from '@/components/Reports';
 
-const Index = () => {
+const IndexContent = () => {
+  const { user, loading } = useAuth();
   const [showFrontPage, setShowFrontPage] = useState(true);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -45,14 +48,13 @@ const Index = () => {
 
   const handleSearch = (query: string) => {
     console.log('Search:', query);
-    // Implement search functionality
   };
 
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard': return <Dashboard />;
       case 'ai-assistant': return <AIAssistant />;
-      case 'user-auth': return <UserAuth />;
+      case 'user-auth': return <AuthPage />;
       case 'setup': return <SetupPage />;
       case 'vessel-management': return <VesselManagement />;
       case 'vessels-certification': return <VesselsCertification />;
@@ -73,6 +75,7 @@ const Index = () => {
       case 'sms': return <SafetyManagement />;
       case 'digital-compliance': return <DigitalCompliance />;
       case 'insurance-claims': return <InsuranceClaims />;
+      case 'reports': return <Reports />;
       default:
         return (
           <div className="space-y-6">
@@ -84,6 +87,10 @@ const Index = () => {
         );
     }
   };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   if (showFrontPage) {
     return <FrontPage onEnterDashboard={handleEnterDashboard} />;
@@ -103,6 +110,14 @@ const Index = () => {
         {renderContent()}
       </main>
     </div>
+  );
+};
+
+const Index = () => {
+  return (
+    <AuthProvider>
+      <IndexContent />
+    </AuthProvider>
   );
 };
 
