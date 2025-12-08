@@ -14,7 +14,433 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_findings: {
+        Row: {
+          audit_id: string | null
+          closed_date: string | null
+          corrective_action: string | null
+          created_at: string
+          description: string
+          finding_type: string
+          id: string
+          severity: string
+          status: string
+          target_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          audit_id?: string | null
+          closed_date?: string | null
+          corrective_action?: string | null
+          created_at?: string
+          description: string
+          finding_type: string
+          id?: string
+          severity?: string
+          status?: string
+          target_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audit_id?: string | null
+          closed_date?: string | null
+          corrective_action?: string | null
+          created_at?: string
+          description?: string
+          finding_type?: string
+          id?: string
+          severity?: string
+          status?: string
+          target_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_findings_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audits: {
+        Row: {
+          audit_type: string
+          auditor_name: string | null
+          completed_date: string | null
+          created_at: string
+          findings_count: number | null
+          id: string
+          location: string | null
+          notes: string | null
+          scheduled_date: string
+          score: number | null
+          status: string
+          updated_at: string
+          user_id: string | null
+          vessel_id: string | null
+        }
+        Insert: {
+          audit_type: string
+          auditor_name?: string | null
+          completed_date?: string | null
+          created_at?: string
+          findings_count?: number | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          scheduled_date: string
+          score?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          vessel_id?: string | null
+        }
+        Update: {
+          audit_type?: string
+          auditor_name?: string | null
+          completed_date?: string | null
+          created_at?: string
+          findings_count?: number | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          scheduled_date?: string
+          score?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          vessel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audits_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crew_members: {
+        Row: {
+          certificate_expiry: string | null
+          certificate_number: string | null
+          contract_end: string | null
+          contract_start: string | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string
+          nationality: string | null
+          phone: string | null
+          rank: string
+          status: string | null
+          updated_at: string
+          user_id: string | null
+          vessel_id: string | null
+        }
+        Insert: {
+          certificate_expiry?: string | null
+          certificate_number?: string | null
+          contract_end?: string | null
+          contract_start?: string | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          nationality?: string | null
+          phone?: string | null
+          rank: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          vessel_id?: string | null
+        }
+        Update: {
+          certificate_expiry?: string | null
+          certificate_number?: string | null
+          contract_end?: string | null
+          contract_start?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          nationality?: string | null
+          phone?: string | null
+          rank?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          vessel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_members_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incidents: {
+        Row: {
+          corrective_actions: string | null
+          created_at: string
+          description: string | null
+          id: string
+          incident_date: string
+          incident_type: string
+          investigation_status: string | null
+          location: string | null
+          reported_by: string | null
+          root_cause: string | null
+          severity: string
+          title: string
+          updated_at: string
+          user_id: string | null
+          vessel_id: string | null
+        }
+        Insert: {
+          corrective_actions?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          incident_date: string
+          incident_type: string
+          investigation_status?: string | null
+          location?: string | null
+          reported_by?: string | null
+          root_cause?: string | null
+          severity?: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+          vessel_id?: string | null
+        }
+        Update: {
+          corrective_actions?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          incident_date?: string
+          incident_type?: string
+          investigation_status?: string | null
+          location?: string | null
+          reported_by?: string | null
+          root_cause?: string | null
+          severity?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+          vessel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incidents_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_tasks: {
+        Row: {
+          actual_cost: number | null
+          actual_hours: number | null
+          assigned_to: string | null
+          completed_date: string | null
+          cost_estimate: number | null
+          created_at: string
+          description: string | null
+          due_date: string
+          estimated_hours: number | null
+          id: string
+          notes: string | null
+          priority: string
+          status: string
+          task_type: string
+          title: string
+          updated_at: string
+          user_id: string | null
+          vessel_id: string | null
+        }
+        Insert: {
+          actual_cost?: number | null
+          actual_hours?: number | null
+          assigned_to?: string | null
+          completed_date?: string | null
+          cost_estimate?: number | null
+          created_at?: string
+          description?: string | null
+          due_date: string
+          estimated_hours?: number | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          status?: string
+          task_type?: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+          vessel_id?: string | null
+        }
+        Update: {
+          actual_cost?: number | null
+          actual_hours?: number | null
+          assigned_to?: string | null
+          completed_date?: string | null
+          cost_estimate?: number | null
+          created_at?: string
+          description?: string | null
+          due_date?: string
+          estimated_hours?: number | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          status?: string
+          task_type?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+          vessel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_tasks_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          company: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          role: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          company?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          company?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          description: string | null
+          generated_at: string
+          id: string
+          parameters: Json | null
+          report_type: string
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          generated_at?: string
+          id?: string
+          parameters?: Json | null
+          report_type: string
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          generated_at?: string
+          id?: string
+          parameters?: Json | null
+          report_type?: string
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      vessels: {
+        Row: {
+          call_sign: string | null
+          classification_society: string | null
+          created_at: string
+          deadweight: number | null
+          flag_state: string | null
+          gross_tonnage: number | null
+          id: string
+          imo_number: string | null
+          mmsi_number: string | null
+          name: string
+          status: string | null
+          updated_at: string
+          user_id: string | null
+          vessel_type: string | null
+          year_built: number | null
+        }
+        Insert: {
+          call_sign?: string | null
+          classification_society?: string | null
+          created_at?: string
+          deadweight?: number | null
+          flag_state?: string | null
+          gross_tonnage?: number | null
+          id?: string
+          imo_number?: string | null
+          mmsi_number?: string | null
+          name: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          vessel_type?: string | null
+          year_built?: number | null
+        }
+        Update: {
+          call_sign?: string | null
+          classification_society?: string | null
+          created_at?: string
+          deadweight?: number | null
+          flag_state?: string | null
+          gross_tonnage?: number | null
+          id?: string
+          imo_number?: string | null
+          mmsi_number?: string | null
+          name?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          vessel_type?: string | null
+          year_built?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
