@@ -2,29 +2,83 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { useVessels } from '@/hooks/useVessels';
+import { useAudits } from '@/hooks/useAudits';
+import { useIncidents } from '@/hooks/useIncidents';
+import { useVesselCertifications } from '@/hooks/useVesselCertifications';
+import { useCorrectiveActions } from '@/hooks/useCorrectiveActions';
+import { Loader2 } from 'lucide-react';
+import { differenceInDays, format, subMonths } from 'date-fns';
 
 const Dashboard = () => {
-  // Mock data for charts
+  const { vessels, loading: vesselsLoading } = useVessels();
+  const { audits, isLoading: auditsLoading } = useAudits();
+  const { incidents, isLoading: incidentsLoading } = useIncidents();
+  const { certifications, loading: certificationsLoading } = useVesselCertifications();
+  const { correctiveActions, loading: actionsLoading } = useCorrectiveActions();
+
+  const isLoading = vesselsLoading || auditsLoading || incidentsLoading || certificationsLoading || actionsLoading;
+
+  // Fleet status data from real vessels
   const fleetStatusData = [
-    { name: 'Active', value: 12, color: '#22c55e' },
-    { name: 'Maintenance', value: 3, color: '#f59e0b' },
-    { name: 'In Port', value: 5, color: '#3b82f6' },
-    { name: 'Alerts', value: 2, color: '#ef4444' }
-  ];
+    { name: 'Active', value: vessels.filter(v => v.status === 'active').length, color: '#22c55e' },
+    { name: 'Maintenance', value: vessels.filter(v => v.status === 'maintenance').length, color: '#f59e0b' },
+    { name: 'In Port', value: vessels.filter(v => v.status === 'inactive').length, color: '#3b82f6' },
+    { name: 'Drydock', value: vessels.filter(v => v.status === 'drydock').length, color: '#ef4444' }
+  ].filter(item => item.value > 0);
 
-  const complianceData = [
-    { month: 'Jan', compliant: 85, nonCompliant: 15 },
-    { month: 'Feb', compliant: 88, nonCompliant: 12 },
-    { month: 'Mar', compliant: 92, nonCompliant: 8 },
-    { month: 'Apr', compliant: 95, nonCompliant: 5 },
-    { month: 'May', compliant: 90, nonCompliant: 10 },
-    { month: 'Jun', compliant: 93, nonCompliant: 7 }
-  ];
+  // Compute compliance trends from real data (last 6 months)
+  const getComplianceData = () => {
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = subMonths(new Date(), i);
+      const monthName = format(date, 'MMM');
+      
+      // Count valid vs expiring/expired certs for that month
+      const validCerts = certifications.filter(c => {
+        const expiry = new Date(c.expiry_date);
+        return expiry > date;
+      }).length;
+      
+      const totalCerts = certifications.length || 1;
+      const compliantPercent = Math.round((validCerts / totalCerts) * 100);
+      
+      months.push({
+        month: monthName,
+        compliant: compliantPercent,
+        nonCompliant: 100 - compliantPercent
+      });
+    }
+    return months;
+  };
 
+  const complianceData = getComplianceData();
+
+  // Priority alerts from real data
   const alerts = [
-    { id: 1, type: 'Certificate Expiry', vessel: 'MV Ocean Star', priority: 'high', daysLeft: 5 },
-    { id: 2, type: 'Inspection Due', vessel: 'MV Blue Wave', priority: 'medium', daysLeft: 15 },
-    { id: 3, type: 'Crew Training', vessel: 'MV Sea Eagle', priority: 'low', daysLeft: 30 }
+    ...certifications
+      .filter(c => {
+        const daysLeft = differenceInDays(new Date(c.expiry_date), new Date());
+        return daysLeft <= 30 && daysLeft > 0;
+      })
+      .slice(0, 2)
+      .map(c => ({
+        id: c.id,
+        type: 'Certificate Expiry',
+        vessel: c.certificate_name,
+        priority: differenceInDays(new Date(c.expiry_date), new Date()) <= 7 ? 'high' : 'medium',
+        daysLeft: differenceInDays(new Date(c.expiry_date), new Date())
+      })),
+    ...correctiveActions
+      .filter(a => a.status !== 'completed' && a.due_date)
+      .slice(0, 1)
+      .map(a => ({
+        id: a.id,
+        type: 'Corrective Action Due',
+        vessel: a.action_description.slice(0, 30) + '...',
+        priority: differenceInDays(new Date(a.due_date!), new Date()) <= 7 ? 'high' : 'low',
+        daysLeft: differenceInDays(new Date(a.due_date!), new Date())
+      }))
   ];
 
   const getPriorityColor = (priority: string) => {
@@ -35,6 +89,22 @@ const Dashboard = () => {
       default: return 'status-valid';
     }
   };
+
+  // Calculate real stats
+  const activeAudits = audits.filter(a => a.status === 'in_progress' || a.status === 'scheduled').length;
+  const openFindings = correctiveActions.filter(a => a.status !== 'completed').length;
+  
+  const validCerts = certifications.filter(c => new Date(c.expiry_date) > new Date()).length;
+  const totalCerts = certifications.length || 1;
+  const complianceRate = Math.round((validCerts / totalCerts) * 100);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -52,8 +122,8 @@ const Dashboard = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Vessels</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">22</div>
-            <p className="text-xs text-muted-foreground">+2 from last month</p>
+            <div className="text-2xl font-bold text-foreground">{vessels.length}</div>
+            <p className="text-xs text-muted-foreground">{vessels.filter(v => v.status === 'active').length} active</p>
           </CardContent>
         </Card>
 
@@ -62,8 +132,8 @@ const Dashboard = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Active Audits</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">8</div>
-            <p className="text-xs text-muted-foreground">3 completed this week</p>
+            <div className="text-2xl font-bold text-foreground">{activeAudits}</div>
+            <p className="text-xs text-muted-foreground">{audits.filter(a => a.status === 'completed').length} completed</p>
           </CardContent>
         </Card>
 
@@ -72,18 +142,20 @@ const Dashboard = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Compliance Rate</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">93%</div>
-            <p className="text-xs text-muted-foreground">+2% improvement</p>
+            <div className={`text-2xl font-bold ${complianceRate >= 80 ? 'text-green-600' : complianceRate >= 60 ? 'text-orange-500' : 'text-destructive'}`}>
+              {complianceRate}%
+            </div>
+            <p className="text-xs text-muted-foreground">{validCerts} of {certifications.length} certs valid</p>
           </CardContent>
         </Card>
 
         <Card className="maritime-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Open Findings</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Open Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">14</div>
-            <p className="text-xs text-muted-foreground">7 critical, 7 minor</p>
+            <div className={`text-2xl font-bold ${openFindings > 10 ? 'text-orange-600' : 'text-foreground'}`}>{openFindings}</div>
+            <p className="text-xs text-muted-foreground">{correctiveActions.filter(a => a.status === 'completed').length} resolved</p>
           </CardContent>
         </Card>
       </div>
@@ -97,25 +169,31 @@ const Dashboard = () => {
             <CardDescription>Current operational status of all vessels</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={fleetStatusData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {fleetStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {fleetStatusData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={fleetStatusData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {fleetStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No vessels found. Add vessels to see fleet status.
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -149,26 +227,30 @@ const Dashboard = () => {
             <CardDescription>Urgent items requiring attention</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {alerts.map((alert) => (
-              <Alert key={alert.id} className="border-l-4 border-l-orange-500">
-                <AlertDescription>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{alert.type}</div>
-                      <div className="text-sm text-muted-foreground">{alert.vessel}</div>
-                    </div>
-                    <div className="text-right">
-                      <Badge className={getPriorityColor(alert.priority)}>
-                        {alert.priority.toUpperCase()}
-                      </Badge>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {alert.daysLeft} days left
+            {alerts.length > 0 ? (
+              alerts.map((alert) => (
+                <Alert key={alert.id} className="border-l-4 border-l-orange-500">
+                  <AlertDescription>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">{alert.type}</div>
+                        <div className="text-sm text-muted-foreground">{alert.vessel}</div>
+                      </div>
+                      <div className="text-right">
+                        <Badge className={getPriorityColor(alert.priority)}>
+                          {alert.priority.toUpperCase()}
+                        </Badge>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {alert.daysLeft} days left
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            ))}
+                  </AlertDescription>
+                </Alert>
+              ))
+            ) : (
+              <p className="text-muted-foreground text-center py-4">No urgent alerts at this time.</p>
+            )}
           </CardContent>
         </Card>
 
@@ -180,30 +262,37 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                <div>
-                  <div className="text-sm font-medium">Audit completed</div>
-                  <div className="text-xs text-muted-foreground">MV Ocean Star - ISM Audit</div>
-                  <div className="text-xs text-muted-foreground">2 hours ago</div>
+              {audits.slice(0, 2).map((audit) => (
+                <div key={audit.id} className="flex items-start space-x-3">
+                  <div className={`w-2 h-2 rounded-full mt-2 ${audit.status === 'completed' ? 'bg-green-500' : 'bg-blue-500'}`}></div>
+                  <div>
+                    <div className="text-sm font-medium">
+                      {audit.status === 'completed' ? 'Audit completed' : 'Audit in progress'}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {audit.vessels?.name || 'Unknown vessel'} - {audit.audit_type}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {format(new Date(audit.scheduled_date), 'MMM dd, yyyy')}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                <div>
-                  <div className="text-sm font-medium">Certificate renewed</div>
-                  <div className="text-xs text-muted-foreground">Safety Management Certificate</div>
-                  <div className="text-xs text-muted-foreground">5 hours ago</div>
+              ))}
+              {incidents.slice(0, 1).map((incident) => (
+                <div key={incident.id} className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                  <div>
+                    <div className="text-sm font-medium">Incident reported</div>
+                    <div className="text-xs text-muted-foreground">{incident.title}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {format(new Date(incident.incident_date), 'MMM dd, yyyy')}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-                <div>
-                  <div className="text-sm font-medium">Finding reported</div>
-                  <div className="text-xs text-muted-foreground">MV Blue Wave - Minor deficiency</div>
-                  <div className="text-xs text-muted-foreground">1 day ago</div>
-                </div>
-              </div>
+              ))}
+              {audits.length === 0 && incidents.length === 0 && (
+                <p className="text-muted-foreground text-center py-4">No recent activity.</p>
+              )}
             </div>
           </CardContent>
         </Card>
