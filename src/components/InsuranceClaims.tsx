@@ -1,22 +1,175 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FileText, DollarSign, Clock, CheckCircle, Plus, Loader2, Trash2 } from 'lucide-react';
+import { useInsuranceClaims } from '@/hooks/useInsuranceClaims';
+import { useVessels } from '@/hooks/useVessels';
+import { format } from 'date-fns';
 
 const InsuranceClaims = () => {
-  const claims = [
-    { id: 'CLM-2024-005', vessel: 'MV Atlantic Pride', type: 'Hull Damage', amount: '$45,000', status: 'Under Review', date: '2024-01-12' },
-    { id: 'CLM-2024-004', vessel: 'MV Pacific Star', type: 'Cargo Loss', amount: '$28,000', status: 'Approved', date: '2024-01-08' },
-    { id: 'CLM-2023-089', vessel: 'MV Nordic Wave', type: 'Equipment Failure', amount: '$12,500', status: 'Settled', date: '2023-12-20' },
-  ];
+  const { claims, loading, addClaim, deleteClaim } = useInsuranceClaims();
+  const { vessels } = useVessels();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    vessel_id: '',
+    claim_type: '',
+    claim_amount: '',
+    incident_date: '',
+    description: '',
+    status: 'submitted',
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await addClaim({
+      vessel_id: formData.vessel_id || null,
+      claim_type: formData.claim_type,
+      claim_amount: formData.claim_amount ? parseFloat(formData.claim_amount) : null,
+      incident_date: formData.incident_date || null,
+      description: formData.description || null,
+      status: formData.status,
+      policy_number: null,
+      insurer_name: null,
+      claim_number: null,
+      submitted_date: new Date().toISOString().split('T')[0],
+      resolved_date: null,
+      approved_amount: null,
+    });
+    setFormData({
+      vessel_id: '',
+      claim_type: '',
+      claim_amount: '',
+      incident_date: '',
+      description: '',
+      status: 'submitted',
+    });
+    setIsDialogOpen(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this claim?')) {
+      await deleteClaim(id);
+    }
+  };
+
+  const activeCount = claims.filter(c => c.status === 'submitted' || c.status === 'under_review').length;
+  const pendingCount = claims.filter(c => c.status === 'under_review' || c.status === 'approved').length;
+  const settledCount = claims.filter(c => c.status === 'settled').length;
+  const totalValue = claims.reduce((sum, c) => sum + (c.claim_amount || 0), 0);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const formatCurrency = (amount: number) => {
+    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
+    return `$${amount.toFixed(0)}`;
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-foreground mb-2">📋 Insurance Claim Management</h2>
-        <p className="text-muted-foreground">
-          Track and manage insurance claims with documentation, status updates, and financial tracking.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground mb-2">📋 Insurance Claim Management</h2>
+          <p className="text-muted-foreground">
+            Track and manage insurance claims with documentation, status updates, and financial tracking.
+          </p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              File Claim
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>File New Claim</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="claim_type">Claim Type *</Label>
+                <Select value={formData.claim_type} onValueChange={(v) => setFormData({ ...formData, claim_type: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select claim type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Hull Damage">Hull Damage</SelectItem>
+                    <SelectItem value="Cargo Loss">Cargo Loss</SelectItem>
+                    <SelectItem value="Equipment Failure">Equipment Failure</SelectItem>
+                    <SelectItem value="Collision">Collision</SelectItem>
+                    <SelectItem value="Third Party Liability">Third Party Liability</SelectItem>
+                    <SelectItem value="Crew Injury">Crew Injury</SelectItem>
+                    <SelectItem value="Environmental">Environmental</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="vessel_id">Vessel</Label>
+                <Select value={formData.vessel_id} onValueChange={(v) => setFormData({ ...formData, vessel_id: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select vessel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vessels.map((vessel) => (
+                      <SelectItem key={vessel.id} value={vessel.id}>{vessel.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="claim_amount">Claim Amount ($)</Label>
+                  <Input
+                    id="claim_amount"
+                    type="number"
+                    value={formData.claim_amount}
+                    onChange={(e) => setFormData({ ...formData, claim_amount: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="incident_date">Incident Date</Label>
+                  <Input
+                    id="incident_date"
+                    type="date"
+                    value={formData.incident_date}
+                    onChange={(e) => setFormData({ ...formData, incident_date: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description *</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  required
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Submit Claim
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid gap-6 md:grid-cols-4">
@@ -25,7 +178,7 @@ const InsuranceClaims = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Active Claims</p>
-                <p className="text-2xl font-bold">8</p>
+                <p className="text-2xl font-bold">{activeCount}</p>
               </div>
               <FileText className="h-8 w-8 text-primary" />
             </div>
@@ -37,7 +190,7 @@ const InsuranceClaims = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Value</p>
-                <p className="text-2xl font-bold">$385K</p>
+                <p className="text-2xl font-bold">{formatCurrency(totalValue)}</p>
               </div>
               <DollarSign className="h-8 w-8 text-primary" />
             </div>
@@ -49,7 +202,7 @@ const InsuranceClaims = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Pending</p>
-                <p className="text-2xl font-bold text-orange-500">5</p>
+                <p className="text-2xl font-bold text-orange-500">{pendingCount}</p>
               </div>
               <Clock className="h-8 w-8 text-orange-500" />
             </div>
@@ -61,7 +214,7 @@ const InsuranceClaims = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Settled</p>
-                <p className="text-2xl font-bold text-green-500">23</p>
+                <p className="text-2xl font-bold text-green-500">{settledCount}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-500" />
             </div>
@@ -74,32 +227,47 @@ const InsuranceClaims = () => {
           <CardTitle>Recent Claims</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {claims.map((claim) => (
-              <div key={claim.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-medium">{claim.id}</p>
-                    <Badge variant="outline">{claim.type}</Badge>
+          {claims.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">No claims filed yet. File your first claim above.</p>
+          ) : (
+            <div className="space-y-4">
+              {claims.map((claim) => (
+                <div key={claim.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-medium">CLM-{claim.id.slice(0, 8).toUpperCase()}</p>
+                      <Badge variant="outline">{claim.claim_type}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{claim.description?.slice(0, 50) || 'No description'}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground">{claim.vessel}</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-lg font-medium">{claim.amount}</p>
-                    <p className="text-xs text-muted-foreground">{claim.date}</p>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-lg font-medium">
+                        {claim.claim_amount ? `$${claim.claim_amount.toLocaleString()}` : 'TBD'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {claim.incident_date ? format(new Date(claim.incident_date), 'MMM dd, yyyy') : 'No date'}
+                      </p>
+                    </div>
+                    <Badge variant={
+                      claim.status === 'settled' ? 'default' :
+                      claim.status === 'approved' ? 'secondary' : 'outline'
+                    }>
+                      {claim.status.replace('_', ' ')}
+                    </Badge>
+                    <Button size="sm" variant="outline">View Details</Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDelete(claim.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
                   </div>
-                  <Badge variant={
-                    claim.status === 'Settled' ? 'default' :
-                    claim.status === 'Approved' ? 'secondary' : 'outline'
-                  }>
-                    {claim.status}
-                  </Badge>
-                  <Button size="sm" variant="outline">View Details</Button>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

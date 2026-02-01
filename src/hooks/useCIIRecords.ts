@@ -16,6 +16,7 @@ export interface CIIRecord {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  vessels?: { name: string } | null;
 }
 
 export const useCIIRecords = () => {
@@ -34,7 +35,7 @@ export const useCIIRecords = () => {
     try {
       const { data, error } = await supabase
         .from('cii_records')
-        .select('*')
+        .select('*, vessels(name)')
         .order('year', { ascending: false });
 
       if (error) throw error;

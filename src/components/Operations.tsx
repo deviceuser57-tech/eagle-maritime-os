@@ -1,22 +1,174 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Ship, Anchor, Navigation, Activity } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Ship, Anchor, Navigation, Activity, Plus, Loader2, Trash2 } from 'lucide-react';
+import { useVoyages } from '@/hooks/useVoyages';
+import { useVessels } from '@/hooks/useVessels';
+import { format } from 'date-fns';
 
 const Operations = () => {
-  const activeVoyages = [
-    { vessel: 'MV Atlantic Pride', from: 'Singapore', to: 'Rotterdam', eta: '2024-01-25', status: 'Underway' },
-    { vessel: 'MV Pacific Star', from: 'Los Angeles', to: 'Tokyo', eta: '2024-01-22', status: 'Underway' },
-    { vessel: 'MV Nordic Wave', from: 'Hamburg', to: 'New York', eta: '2024-01-28', status: 'In Port' },
-  ];
+  const { voyages, loading, addVoyage, deleteVoyage } = useVoyages();
+  const { vessels } = useVessels();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    vessel_id: '',
+    departure_port: '',
+    arrival_port: '',
+    departure_date: '',
+    eta: '',
+    status: 'planned',
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await addVoyage({
+      vessel_id: formData.vessel_id || null,
+      voyage_number: null,
+      origin_port: formData.departure_port,
+      destination_port: formData.arrival_port,
+      departure_date: formData.departure_date || null,
+      arrival_date: null,
+      eta: formData.eta || null,
+      cargo_type: null,
+      cargo_quantity: null,
+      status: formData.status,
+      notes: null,
+    });
+    setFormData({
+      vessel_id: '',
+      departure_port: '',
+      arrival_port: '',
+      departure_date: '',
+      eta: '',
+      status: 'planned',
+    });
+    setIsDialogOpen(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this voyage?')) {
+      await deleteVoyage(id);
+    }
+  };
+
+  const atSeaCount = voyages.filter(v => v.status === 'underway').length;
+  const inPortCount = voyages.filter(v => v.status === 'arrived' || v.status === 'planned').length;
+  const activeVoyages = voyages.filter(v => v.status === 'underway' || v.status === 'planned');
+  const utilization = vessels.length > 0 ? Math.round((activeVoyages.length / vessels.length) * 100) : 0;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-foreground mb-2">🛥️ Operations</h2>
-        <p className="text-muted-foreground">
-          Monitor real-time vessel operations, voyage planning, and fleet activity.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground mb-2">🛥️ Operations</h2>
+          <p className="text-muted-foreground">
+            Monitor real-time vessel operations, voyage planning, and fleet activity.
+          </p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Voyage
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Plan New Voyage</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="vessel_id">Vessel *</Label>
+                <Select value={formData.vessel_id} onValueChange={(v) => setFormData({ ...formData, vessel_id: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select vessel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vessels.map((vessel) => (
+                      <SelectItem key={vessel.id} value={vessel.id}>{vessel.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="departure_port">Departure Port *</Label>
+                  <Input
+                    id="departure_port"
+                    value={formData.departure_port}
+                    onChange={(e) => setFormData({ ...formData, departure_port: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="arrival_port">Arrival Port *</Label>
+                  <Input
+                    id="arrival_port"
+                    value={formData.arrival_port}
+                    onChange={(e) => setFormData({ ...formData, arrival_port: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="departure_date">Departure Date</Label>
+                  <Input
+                    id="departure_date"
+                    type="date"
+                    value={formData.departure_date}
+                    onChange={(e) => setFormData({ ...formData, departure_date: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="eta">ETA</Label>
+                  <Input
+                    id="eta"
+                    type="date"
+                    value={formData.eta}
+                    onChange={(e) => setFormData({ ...formData, eta: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="planned">Planned</SelectItem>
+                    <SelectItem value="underway">Underway</SelectItem>
+                    <SelectItem value="arrived">Arrived</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Add Voyage
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid gap-6 md:grid-cols-4">
@@ -25,7 +177,7 @@ const Operations = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">At Sea</p>
-                <p className="text-2xl font-bold">15</p>
+                <p className="text-2xl font-bold">{atSeaCount}</p>
               </div>
               <Ship className="h-8 w-8 text-primary" />
             </div>
@@ -37,7 +189,7 @@ const Operations = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">In Port</p>
-                <p className="text-2xl font-bold">7</p>
+                <p className="text-2xl font-bold">{inPortCount}</p>
               </div>
               <Anchor className="h-8 w-8 text-green-500" />
             </div>
@@ -49,7 +201,7 @@ const Operations = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Active Voyages</p>
-                <p className="text-2xl font-bold">18</p>
+                <p className="text-2xl font-bold">{activeVoyages.length}</p>
               </div>
               <Navigation className="h-8 w-8 text-primary" />
             </div>
@@ -61,7 +213,7 @@ const Operations = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Fleet Utilization</p>
-                <p className="text-2xl font-bold">87%</p>
+                <p className="text-2xl font-bold">{utilization}%</p>
               </div>
               <Activity className="h-8 w-8 text-green-500" />
             </div>
@@ -82,26 +234,39 @@ const Operations = () => {
               <CardTitle>Current Voyages</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {activeVoyages.map((voyage, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium">{voyage.vessel}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {voyage.from} → {voyage.to}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-sm">ETA: {voyage.eta}</p>
+              {voyages.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">No voyages planned yet. Add your first voyage above.</p>
+              ) : (
+                <div className="space-y-4">
+                  {voyages.map((voyage) => (
+                    <div key={voyage.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <p className="font-medium">{voyage.voyage_number || 'Voyage'}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {voyage.origin_port} → {voyage.destination_port}
+                        </p>
                       </div>
-                      <Badge variant={voyage.status === 'Underway' ? 'default' : 'secondary'}>
-                        {voyage.status}
-                      </Badge>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="text-sm">
+                            ETA: {voyage.eta ? format(new Date(voyage.eta), 'MMM dd, yyyy') : 'TBD'}
+                          </p>
+                        </div>
+                        <Badge variant={voyage.status === 'underway' ? 'default' : 'secondary'}>
+                          {voyage.status}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(voyage.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
