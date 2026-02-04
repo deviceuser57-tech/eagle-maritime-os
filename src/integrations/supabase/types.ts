@@ -707,6 +707,393 @@ export type Database = {
         }
         Relationships: []
       }
+      setup_audit_types: {
+        Row: {
+          audit_type_name: string
+          created_at: string
+          description: string | null
+          frequency_months: number | null
+          id: string
+          is_external: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audit_type_name: string
+          created_at?: string
+          description?: string | null
+          frequency_months?: number | null
+          id?: string
+          is_external?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audit_type_name?: string
+          created_at?: string
+          description?: string | null
+          frequency_months?: number | null
+          id?: string
+          is_external?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      setup_certificate_types: {
+        Row: {
+          certificate_category: string
+          certificate_name: string
+          created_at: string
+          id: string
+          is_mandatory: boolean | null
+          issuing_authority: string | null
+          updated_at: string
+          user_id: string
+          validity_months: number | null
+        }
+        Insert: {
+          certificate_category: string
+          certificate_name: string
+          created_at?: string
+          id?: string
+          is_mandatory?: boolean | null
+          issuing_authority?: string | null
+          updated_at?: string
+          user_id: string
+          validity_months?: number | null
+        }
+        Update: {
+          certificate_category?: string
+          certificate_name?: string
+          created_at?: string
+          id?: string
+          is_mandatory?: boolean | null
+          issuing_authority?: string | null
+          updated_at?: string
+          user_id?: string
+          validity_months?: number | null
+        }
+        Relationships: []
+      }
+      setup_classification_societies: {
+        Row: {
+          abbreviation: string | null
+          created_at: string
+          id: string
+          society_name: string
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          abbreviation?: string | null
+          created_at?: string
+          id?: string
+          society_name: string
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          abbreviation?: string | null
+          created_at?: string
+          id?: string
+          society_name?: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      setup_companies: {
+        Row: {
+          address: string | null
+          company_type: string
+          contact_person: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          remarks: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          company_type: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          remarks?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          company_type?: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          remarks?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      setup_contract_types: {
+        Row: {
+          contract_name: string
+          created_at: string
+          description: string | null
+          duration_months: number | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contract_name: string
+          created_at?: string
+          description?: string | null
+          duration_months?: number | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contract_name?: string
+          created_at?: string
+          description?: string | null
+          duration_months?: number | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      setup_crew_ranks: {
+        Row: {
+          created_at: string
+          department: string | null
+          id: string
+          is_officer: boolean | null
+          rank_name: string
+          rank_order: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          id?: string
+          is_officer?: boolean | null
+          rank_name: string
+          rank_order?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          id?: string
+          is_officer?: boolean | null
+          rank_name?: string
+          rank_order?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      setup_currencies: {
+        Row: {
+          created_at: string
+          currency_code: string
+          currency_name: string
+          id: string
+          symbol: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency_code: string
+          currency_name: string
+          id?: string
+          symbol?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency_code?: string
+          currency_name?: string
+          id?: string
+          symbol?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      setup_finding_statuses: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          is_closed: boolean | null
+          status_name: string
+          status_order: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_closed?: boolean | null
+          status_name: string
+          status_order?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_closed?: boolean | null
+          status_name?: string
+          status_order?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      setup_finding_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          finding_type_name: string
+          id: string
+          severity: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          finding_type_name: string
+          id?: string
+          severity?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          finding_type_name?: string
+          id?: string
+          severity?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      setup_flag_states: {
+        Row: {
+          created_at: string
+          flag_code: string | null
+          flag_name: string
+          id: string
+          risk_level: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          flag_code?: string | null
+          flag_name: string
+          id?: string
+          risk_level?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          flag_code?: string | null
+          flag_name?: string
+          id?: string
+          risk_level?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      setup_nationalities: {
+        Row: {
+          country_code: string | null
+          country_name: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          country_code?: string | null
+          country_name: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          country_code?: string | null
+          country_name?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      setup_root_causes: {
+        Row: {
+          category: string | null
+          cause_name: string
+          created_at: string
+          description: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          cause_name: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          cause_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       vessel_certifications: {
         Row: {
           certificate_name: string

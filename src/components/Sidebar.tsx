@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, LogOut, User } from 'lucide-react';
 
 interface SidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
   theme: 'light' | 'dark';
   onThemeToggle: () => void;
+  userEmail?: string;
+  onSignOut?: () => void;
 }
 
-const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle }: SidebarProps) => {
+const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEmail, onSignOut }: SidebarProps) => {
   const navigationSections = [
     {
       title: "Core System & AI Support",
       items: [
         { id: "dashboard", label: "📊 Dashboard", badge: null },
         { id: "ai-assistant", label: "✨ AI Assistant", badge: null },
-        { id: "user-auth", label: "🔒 User Auth", badge: null }
       ]
     },
     {
@@ -108,6 +108,21 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle }: Sideb
         </button>
       </div>
 
+      {/* User Info */}
+      {userEmail && (
+        <div className="px-4 py-3 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-full bg-primary/20">
+              <User className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-white truncate">{userEmail}</p>
+              <p className="text-xs text-blue-200">Authenticated</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-6">
         {navigationSections.map((section, sectionIndex) => (
@@ -136,6 +151,19 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle }: Sideb
           </div>
         ))}
       </nav>
+
+      {/* Sign Out Button */}
+      {onSignOut && (
+        <div className="p-4 border-t border-white/10">
+          <button
+            onClick={onSignOut}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-300 hover:bg-red-500/20 transition-colors"
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      )}
     </aside>
   );
 };
