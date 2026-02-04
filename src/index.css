@@ -12,37 +12,39 @@
 
 @layer base {
   :root {
-    /* Maritime Theme Colors */
-    --background: 0 0% 96%;
-    --foreground: 0 0% 9%;
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 9%;
-    --popover: 0 0% 89%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 20 90% 48%;
-    --primary-foreground: 33 100% 96%;
-    --secondary: 0 0% 32%;
+    /* Enhanced Maritime Theme Colors */
+    --background: 210 20% 98%;
+    --foreground: 210 40% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 40% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 40% 10%;
+    --primary: 205 85% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 25% 25%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 63%;
-    --muted-foreground: 0 0% 9%;
-    --accent: 47 100% 96%;
-    --accent-foreground: 37 92% 50%;
+    --muted: 210 20% 92%;
+    --muted-foreground: 210 20% 40%;
+    --accent: 38 95% 55%;
+    --accent-foreground: 38 95% 15%;
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 85% 97%;
-    --border: 0 0% 83%;
-    --input: 0 0% 83%;
-    --ring: 20 90% 48%;
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 205 85% 35%;
     --radius: 0.75rem;
 
     /* Maritime specific colors */
-    --ocean-blue: 206 84% 20%;
-    --deep-sea: 206 84% 15%;
-    --maritime-accent: 195 100% 50%;
-    --sea-foam: 195 53% 79%;
-    --anchor-gray: 210 11% 71%;
-    --warning-orange: 25 95% 53%;
-    --success-green: 142 76% 36%;
-    --critical-red: 0 84% 60%;
+    --ocean-blue: 205 85% 25%;
+    --deep-sea: 210 90% 12%;
+    --maritime-accent: 185 80% 45%;
+    --sea-foam: 180 45% 85%;
+    --anchor-gray: 210 15% 60%;
+    --warning-orange: 30 95% 50%;
+    --success-green: 155 70% 40%;
+    --critical-red: 0 80% 55%;
+    --gold: 38 95% 55%;
+    --navy: 210 90% 15%;
 
     /* Gradients */
     --gradient-ocean: linear-gradient(135deg, hsl(var(--ocean-blue)), hsl(var(--deep-sea)));
@@ -85,32 +87,34 @@
   }
 
   .dark {
-    --background: 0 0% 9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 14%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 25%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 27 95% 60%;
-    --primary-foreground: 12 81% 14%;
-    --secondary: 0 0% 45%;
+    --background: 210 50% 6%;
+    --foreground: 210 20% 95%;
+    --card: 210 45% 10%;
+    --card-foreground: 210 20% 95%;
+    --popover: 210 45% 12%;
+    --popover-foreground: 210 20% 95%;
+    --primary: 205 80% 50%;
+    --primary-foreground: 210 50% 6%;
+    --secondary: 210 30% 30%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 45%;
-    --muted-foreground: 0 0% 98%;
-    --accent: 20 91% 14%;
-    --accent-foreground: 43 96% 56%;
-    --destructive: 0 84% 60%;
+    --muted: 210 30% 20%;
+    --muted-foreground: 210 20% 70%;
+    --accent: 38 90% 50%;
+    --accent-foreground: 38 95% 10%;
+    --destructive: 0 75% 55%;
     --destructive-foreground: 0 85% 97%;
-    --border: 0 0% 32%;
-    --input: 0 0% 32%;
-    --ring: 27 95% 60%;
+    --border: 210 30% 20%;
+    --input: 210 30% 20%;
+    --ring: 205 80% 50%;
 
     /* Dark maritime colors */
-    --ocean-blue: 206 84% 85%;
-    --deep-sea: 206 84% 90%;
-    --maritime-accent: 195 100% 70%;
-    --sea-foam: 195 53% 40%;
-    --anchor-gray: 210 11% 40%;
+    --ocean-blue: 205 70% 70%;
+    --deep-sea: 210 80% 80%;
+    --maritime-accent: 185 70% 55%;
+    --sea-foam: 180 35% 35%;
+    --anchor-gray: 210 15% 50%;
+    --gold: 38 90% 60%;
+    --navy: 210 80% 25%;
     --chart-1: 30 97% 72%;
     --chart-2: 45 96% 64%;
     --chart-3: 48 96% 76%;
