@@ -1,19 +1,23 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Ship, Mail, Lock, User, Anchor } from 'lucide-react';
+import { Mail, Lock, User, Anchor } from 'lucide-react';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
 
-const AuthPage = () => {
-  const { signIn, signUp } = useAuth();
+interface AuthPageProps {
+  onAuthSuccess?: () => void;
+}
+
+const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
+  const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   
@@ -26,6 +30,11 @@ const AuthPage = () => {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+
+  // If user is already authenticated and callback provided, call it
+  if (user && onAuthSuccess) {
+    onAuthSuccess();
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +55,9 @@ const AuthPage = () => {
       toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Welcome back!', description: 'You have successfully logged in.' });
+      if (onAuthSuccess) {
+        onAuthSuccess();
+      }
     }
   };
 
@@ -76,7 +88,7 @@ const AuthPage = () => {
         toast({ title: 'Signup Failed', description: error.message, variant: 'destructive' });
       }
     } else {
-      toast({ title: 'Account Created!', description: 'Welcome to Maritime Compliance System.' });
+      toast({ title: 'Account Created!', description: 'Please check your email to verify your account.' });
     }
   };
 
