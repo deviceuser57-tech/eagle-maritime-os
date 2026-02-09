@@ -16,6 +16,43 @@ export interface Vessel {
   year_built: number | null;
   classification_society: string | null;
   status: string | null;
+  // Extended fields
+  official_number: string | null;
+  port_of_registry: string | null;
+  net_tonnage: number | null;
+  length_overall: number | null;
+  beam: number | null;
+  depth: number | null;
+  draft: number | null;
+  engine_make: string | null;
+  engine_model: string | null;
+  engine_power: number | null;
+  propulsion_type: string | null;
+  max_speed: number | null;
+  service_speed: number | null;
+  fuel_consumption: number | null;
+  fuel_type: string | null;
+  lifeboats: number | null;
+  liferafts: number | null;
+  owner_company_id: string | null;
+  operator_company_id: string | null;
+  technical_manager_id: string | null;
+  ism_manager_id: string | null;
+  class_number: string | null;
+  keel_laid_date: string | null;
+  delivery_date: string | null;
+  last_drydock_date: string | null;
+  next_drydock_date: string | null;
+  trading_area: string | null;
+  hull_material: string | null;
+  hull_coating: string | null;
+  cargo_capacity: number | null;
+  passenger_capacity: number | null;
+  crew_capacity: number | null;
+  insurance_value: number | null;
+  purchase_price: number | null;
+  currency: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -40,7 +77,7 @@ export const useVessels = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setVessels(data || []);
+      setVessels((data as Vessel[]) || []);
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -58,12 +95,12 @@ export const useVessels = () => {
     try {
       const { data, error } = await supabase
         .from('vessels')
-        .insert([{ ...vessel, user_id: user.id }])
+        .insert([{ ...vessel, user_id: user.id }] as any)
         .select()
         .single();
 
       if (error) throw error;
-      setVessels(prev => [data, ...prev]);
+      setVessels(prev => [data as Vessel, ...prev]);
       toast({ title: 'Success', description: 'Vessel added successfully' });
       return { data, error: null };
     } catch (error: any) {
@@ -76,13 +113,13 @@ export const useVessels = () => {
     try {
       const { data, error } = await supabase
         .from('vessels')
-        .update(updates)
+        .update(updates as any)
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
-      setVessels(prev => prev.map(v => v.id === id ? data : v));
+      setVessels(prev => prev.map(v => v.id === id ? (data as Vessel) : v));
       toast({ title: 'Success', description: 'Vessel updated successfully' });
       return { data, error: null };
     } catch (error: any) {

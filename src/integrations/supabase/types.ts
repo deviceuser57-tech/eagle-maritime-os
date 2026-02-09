@@ -1152,57 +1152,194 @@ export type Database = {
       }
       vessels: {
         Row: {
+          beam: number | null
           call_sign: string | null
+          cargo_capacity: number | null
+          class_number: string | null
           classification_society: string | null
           created_at: string
+          crew_capacity: number | null
+          currency: string | null
           deadweight: number | null
+          delivery_date: string | null
+          depth: number | null
+          draft: number | null
+          engine_make: string | null
+          engine_model: string | null
+          engine_power: number | null
           flag_state: string | null
+          fuel_consumption: number | null
+          fuel_type: string | null
           gross_tonnage: number | null
+          hull_coating: string | null
+          hull_material: string | null
           id: string
           imo_number: string | null
+          insurance_value: number | null
+          ism_manager_id: string | null
+          keel_laid_date: string | null
+          last_drydock_date: string | null
+          length_overall: number | null
+          lifeboats: number | null
+          liferafts: number | null
+          max_speed: number | null
           mmsi_number: string | null
           name: string
+          net_tonnage: number | null
+          next_drydock_date: string | null
+          notes: string | null
+          official_number: string | null
+          operator_company_id: string | null
+          owner_company_id: string | null
+          passenger_capacity: number | null
+          port_of_registry: string | null
+          propulsion_type: string | null
+          purchase_price: number | null
+          service_speed: number | null
           status: string | null
+          technical_manager_id: string | null
+          trading_area: string | null
           updated_at: string
           user_id: string | null
           vessel_type: string | null
           year_built: number | null
         }
         Insert: {
+          beam?: number | null
           call_sign?: string | null
+          cargo_capacity?: number | null
+          class_number?: string | null
           classification_society?: string | null
           created_at?: string
+          crew_capacity?: number | null
+          currency?: string | null
           deadweight?: number | null
+          delivery_date?: string | null
+          depth?: number | null
+          draft?: number | null
+          engine_make?: string | null
+          engine_model?: string | null
+          engine_power?: number | null
           flag_state?: string | null
+          fuel_consumption?: number | null
+          fuel_type?: string | null
           gross_tonnage?: number | null
+          hull_coating?: string | null
+          hull_material?: string | null
           id?: string
           imo_number?: string | null
+          insurance_value?: number | null
+          ism_manager_id?: string | null
+          keel_laid_date?: string | null
+          last_drydock_date?: string | null
+          length_overall?: number | null
+          lifeboats?: number | null
+          liferafts?: number | null
+          max_speed?: number | null
           mmsi_number?: string | null
           name: string
+          net_tonnage?: number | null
+          next_drydock_date?: string | null
+          notes?: string | null
+          official_number?: string | null
+          operator_company_id?: string | null
+          owner_company_id?: string | null
+          passenger_capacity?: number | null
+          port_of_registry?: string | null
+          propulsion_type?: string | null
+          purchase_price?: number | null
+          service_speed?: number | null
           status?: string | null
+          technical_manager_id?: string | null
+          trading_area?: string | null
           updated_at?: string
           user_id?: string | null
           vessel_type?: string | null
           year_built?: number | null
         }
         Update: {
+          beam?: number | null
           call_sign?: string | null
+          cargo_capacity?: number | null
+          class_number?: string | null
           classification_society?: string | null
           created_at?: string
+          crew_capacity?: number | null
+          currency?: string | null
           deadweight?: number | null
+          delivery_date?: string | null
+          depth?: number | null
+          draft?: number | null
+          engine_make?: string | null
+          engine_model?: string | null
+          engine_power?: number | null
           flag_state?: string | null
+          fuel_consumption?: number | null
+          fuel_type?: string | null
           gross_tonnage?: number | null
+          hull_coating?: string | null
+          hull_material?: string | null
           id?: string
           imo_number?: string | null
+          insurance_value?: number | null
+          ism_manager_id?: string | null
+          keel_laid_date?: string | null
+          last_drydock_date?: string | null
+          length_overall?: number | null
+          lifeboats?: number | null
+          liferafts?: number | null
+          max_speed?: number | null
           mmsi_number?: string | null
           name?: string
+          net_tonnage?: number | null
+          next_drydock_date?: string | null
+          notes?: string | null
+          official_number?: string | null
+          operator_company_id?: string | null
+          owner_company_id?: string | null
+          passenger_capacity?: number | null
+          port_of_registry?: string | null
+          propulsion_type?: string | null
+          purchase_price?: number | null
+          service_speed?: number | null
           status?: string | null
+          technical_manager_id?: string | null
+          trading_area?: string | null
           updated_at?: string
           user_id?: string | null
           vessel_type?: string | null
           year_built?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vessels_ism_manager_id_fkey"
+            columns: ["ism_manager_id"]
+            isOneToOne: false
+            referencedRelation: "setup_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vessels_operator_company_id_fkey"
+            columns: ["operator_company_id"]
+            isOneToOne: false
+            referencedRelation: "setup_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vessels_owner_company_id_fkey"
+            columns: ["owner_company_id"]
+            isOneToOne: false
+            referencedRelation: "setup_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vessels_technical_manager_id_fkey"
+            columns: ["technical_manager_id"]
+            isOneToOne: false
+            referencedRelation: "setup_companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       voyages: {
         Row: {
