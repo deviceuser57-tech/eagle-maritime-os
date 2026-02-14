@@ -395,6 +395,54 @@ export type Database = {
           },
         ]
       }
+      custom_regulations: {
+        Row: {
+          category: string
+          code: string
+          created_at: string
+          description: string | null
+          file_name: string | null
+          file_url: string | null
+          id: string
+          link: string | null
+          notes: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          version: string | null
+        }
+        Insert: {
+          category?: string
+          code: string
+          created_at?: string
+          description?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          link?: string | null
+          notes?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          version?: string | null
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string
+          description?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          link?: string | null
+          notes?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
       incidents: {
         Row: {
           corrective_actions: string | null
@@ -626,15 +674,66 @@ export type Database = {
         }
         Relationships: []
       }
+      project_vessels: {
+        Row: {
+          audit_type: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          planned_audit_date: string | null
+          project_id: string
+          vessel_id: string
+        }
+        Insert: {
+          audit_type?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          planned_audit_date?: string | null
+          project_id: string
+          vessel_id: string
+        }
+        Update: {
+          audit_type?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          planned_audit_date?: string | null
+          project_id?: string
+          vessel_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_vessels_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_vessels_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
+          actual_cost: number | null
+          budget: number | null
           completed_date: string | null
           created_at: string
           deadline: string | null
           description: string | null
           id: string
+          location: string | null
           name: string
+          notes: string | null
+          priority: string | null
           progress: number | null
+          project_manager: string | null
           project_type: string | null
           start_date: string | null
           status: string
@@ -643,13 +742,19 @@ export type Database = {
           vessel_count: number | null
         }
         Insert: {
+          actual_cost?: number | null
+          budget?: number | null
           completed_date?: string | null
           created_at?: string
           deadline?: string | null
           description?: string | null
           id?: string
+          location?: string | null
           name: string
+          notes?: string | null
+          priority?: string | null
           progress?: number | null
+          project_manager?: string | null
           project_type?: string | null
           start_date?: string | null
           status?: string
@@ -658,13 +763,19 @@ export type Database = {
           vessel_count?: number | null
         }
         Update: {
+          actual_cost?: number | null
+          budget?: number | null
           completed_date?: string | null
           created_at?: string
           deadline?: string | null
           description?: string | null
           id?: string
+          location?: string | null
           name?: string
+          notes?: string | null
+          priority?: string | null
           progress?: number | null
+          project_manager?: string | null
           project_type?: string | null
           start_date?: string | null
           status?: string
@@ -673,6 +784,48 @@ export type Database = {
           vessel_count?: number | null
         }
         Relationships: []
+      }
+      regulation_vessels: {
+        Row: {
+          compliance_status: string
+          created_at: string
+          id: string
+          notes: string | null
+          regulation_id: string
+          vessel_id: string
+        }
+        Insert: {
+          compliance_status?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          regulation_id: string
+          vessel_id: string
+        }
+        Update: {
+          compliance_status?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          regulation_id?: string
+          vessel_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regulation_vessels_regulation_id_fkey"
+            columns: ["regulation_id"]
+            isOneToOne: false
+            referencedRelation: "custom_regulations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "regulation_vessels_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {
