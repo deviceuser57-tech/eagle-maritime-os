@@ -223,7 +223,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
         {/* Bottom accent line */}
         <div className="mt-16 flex items-center gap-4 text-white/30 text-sm">
           <div className="w-12 h-px bg-gradient-to-r from-transparent to-white/20" />
-          <span>Maritime Excellence Since 2025 , Elhamy Sobhy 
+          <span className="">Maritime Excellence Since 2025 , Elhamy Sobhy 
 Copyrights Reserved </span>
           <div className="w-12 h-px bg-gradient-to-l from-transparent to-white/20" />
         </div>
