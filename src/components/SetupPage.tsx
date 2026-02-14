@@ -19,8 +19,8 @@ interface SetupCardConfig {
 }
 
 const SetupPage = () => {
-  const [editingItem, setEditingItem] = useState<{ type: string; id: string; data: any } | null>(null);
-  const [showAddForm, setShowAddForm] = useState<{ type: string; config: SetupCardConfig } | null>(null);
+  const [editingItem, setEditingItem] = useState<{type: string;id: string;data: any;} | null>(null);
+  const [showAddForm, setShowAddForm] = useState<{type: string;config: SetupCardConfig;} | null>(null);
   const [formData, setFormData] = useState<any>({});
 
   // Company hooks
@@ -50,7 +50,7 @@ const SetupPage = () => {
   const statutoryCerts = useCertificateTypes('statutory');
   const crewCerts = useCertificateTypes('crew');
 
-  const setupConfigs: Record<string, SetupCardConfig & { data: any[]; isLoading: boolean; add: any; update: any; delete: any }> = {
+  const setupConfigs: Record<string, SetupCardConfig & {data: any[];isLoading: boolean;add: any;update: any;delete: any;}> = {
     ownerCompanies: {
       type: 'ownerCompanies',
       title: 'Owner Company',
@@ -61,7 +61,7 @@ const SetupPage = () => {
       isLoading: ownerCompanies.isLoading,
       add: (data: any) => ownerCompanies.addCompany.mutate({ ...data, company_type: 'owner' as const }),
       update: (data: any) => ownerCompanies.updateCompany.mutate(data),
-      delete: (id: string) => ownerCompanies.deleteCompany.mutate(id),
+      delete: (id: string) => ownerCompanies.deleteCompany.mutate(id)
     },
     operatorCompanies: {
       type: 'operatorCompanies',
@@ -73,7 +73,7 @@ const SetupPage = () => {
       isLoading: operatorCompanies.isLoading,
       add: (data: any) => operatorCompanies.addCompany.mutate({ ...data, company_type: 'operator' as const }),
       update: (data: any) => operatorCompanies.updateCompany.mutate(data),
-      delete: (id: string) => operatorCompanies.deleteCompany.mutate(id),
+      delete: (id: string) => operatorCompanies.deleteCompany.mutate(id)
     },
     technicalManagers: {
       type: 'technicalManagers',
@@ -85,7 +85,7 @@ const SetupPage = () => {
       isLoading: technicalManagers.isLoading,
       add: (data: any) => technicalManagers.addCompany.mutate({ ...data, company_type: 'technical' as const }),
       update: (data: any) => technicalManagers.updateCompany.mutate(data),
-      delete: (id: string) => technicalManagers.deleteCompany.mutate(id),
+      delete: (id: string) => technicalManagers.deleteCompany.mutate(id)
     },
     ismManagers: {
       type: 'ismManagers',
@@ -97,7 +97,7 @@ const SetupPage = () => {
       isLoading: ismManagers.isLoading,
       add: (data: any) => ismManagers.addCompany.mutate({ ...data, company_type: 'ism' as const }),
       update: (data: any) => ismManagers.updateCompany.mutate(data),
-      delete: (id: string) => ismManagers.deleteCompany.mutate(id),
+      delete: (id: string) => ismManagers.deleteCompany.mutate(id)
     },
     docIssuers: {
       type: 'docIssuers',
@@ -109,7 +109,7 @@ const SetupPage = () => {
       isLoading: docIssuers.isLoading,
       add: (data: any) => docIssuers.addCompany.mutate({ ...data, company_type: 'doc' as const }),
       update: (data: any) => docIssuers.updateCompany.mutate(data),
-      delete: (id: string) => docIssuers.deleteCompany.mutate(id),
+      delete: (id: string) => docIssuers.deleteCompany.mutate(id)
     },
     crewRanks: {
       type: 'crewRanks',
@@ -121,7 +121,7 @@ const SetupPage = () => {
       isLoading: crewRanks.isLoading,
       add: (data: any) => crewRanks.addRank.mutate(data),
       update: (data: any) => crewRanks.updateRank.mutate(data),
-      delete: (id: string) => crewRanks.deleteRank.mutate(id),
+      delete: (id: string) => crewRanks.deleteRank.mutate(id)
     },
     nationalities: {
       type: 'nationalities',
@@ -133,7 +133,7 @@ const SetupPage = () => {
       isLoading: nationalities.isLoading,
       add: (data: any) => nationalities.addNationality.mutate(data),
       update: (data: any) => nationalities.updateNationality.mutate(data),
-      delete: (id: string) => nationalities.deleteNationality.mutate(id),
+      delete: (id: string) => nationalities.deleteNationality.mutate(id)
     },
     contractTypes: {
       type: 'contractTypes',
@@ -145,7 +145,7 @@ const SetupPage = () => {
       isLoading: contractTypes.isLoading,
       add: (data: any) => contractTypes.addContractType.mutate(data),
       update: (data: any) => contractTypes.updateContractType.mutate(data),
-      delete: (id: string) => contractTypes.deleteContractType.mutate(id),
+      delete: (id: string) => contractTypes.deleteContractType.mutate(id)
     },
     currencies: {
       type: 'currencies',
@@ -157,7 +157,7 @@ const SetupPage = () => {
       isLoading: currencies.isLoading,
       add: (data: any) => currencies.addCurrency.mutate(data),
       update: (data: any) => currencies.updateCurrency.mutate(data),
-      delete: (id: string) => currencies.deleteCurrency.mutate(id),
+      delete: (id: string) => currencies.deleteCurrency.mutate(id)
     },
     auditTypes: {
       type: 'auditTypes',
@@ -169,7 +169,7 @@ const SetupPage = () => {
       isLoading: auditTypes.isLoading,
       add: (data: any) => auditTypes.addAuditType.mutate(data),
       update: (data: any) => auditTypes.updateAuditType.mutate(data),
-      delete: (id: string) => auditTypes.deleteAuditType.mutate(id),
+      delete: (id: string) => auditTypes.deleteAuditType.mutate(id)
     },
     findingTypes: {
       type: 'findingTypes',
@@ -181,7 +181,7 @@ const SetupPage = () => {
       isLoading: findingTypes.isLoading,
       add: (data: any) => findingTypes.addFindingType.mutate(data),
       update: (data: any) => findingTypes.updateFindingType.mutate(data),
-      delete: (id: string) => findingTypes.deleteFindingType.mutate(id),
+      delete: (id: string) => findingTypes.deleteFindingType.mutate(id)
     },
     findingStatuses: {
       type: 'findingStatuses',
@@ -193,7 +193,7 @@ const SetupPage = () => {
       isLoading: findingStatuses.isLoading,
       add: (data: any) => findingStatuses.addFindingStatus.mutate(data),
       update: (data: any) => findingStatuses.updateFindingStatus.mutate(data),
-      delete: (id: string) => findingStatuses.deleteFindingStatus.mutate(id),
+      delete: (id: string) => findingStatuses.deleteFindingStatus.mutate(id)
     },
     rootCauses: {
       type: 'rootCauses',
@@ -205,7 +205,7 @@ const SetupPage = () => {
       isLoading: rootCauses.isLoading,
       add: (data: any) => rootCauses.addRootCause.mutate(data),
       update: (data: any) => rootCauses.updateRootCause.mutate(data),
-      delete: (id: string) => rootCauses.deleteRootCause.mutate(id),
+      delete: (id: string) => rootCauses.deleteRootCause.mutate(id)
     },
     classificationSocieties: {
       type: 'classificationSocieties',
@@ -217,7 +217,7 @@ const SetupPage = () => {
       isLoading: classificationSocieties.isLoading,
       add: (data: any) => classificationSocieties.addSociety.mutate(data),
       update: (data: any) => classificationSocieties.updateSociety.mutate(data),
-      delete: (id: string) => classificationSocieties.deleteSociety.mutate(id),
+      delete: (id: string) => classificationSocieties.deleteSociety.mutate(id)
     },
     flagStates: {
       type: 'flagStates',
@@ -229,7 +229,7 @@ const SetupPage = () => {
       isLoading: flagStates.isLoading,
       add: (data: any) => flagStates.addFlagState.mutate(data),
       update: (data: any) => flagStates.updateFlagState.mutate(data),
-      delete: (id: string) => flagStates.deleteFlagState.mutate(id),
+      delete: (id: string) => flagStates.deleteFlagState.mutate(id)
     },
     statutoryCertificates: {
       type: 'statutoryCertificates',
@@ -241,7 +241,7 @@ const SetupPage = () => {
       isLoading: statutoryCerts.isLoading,
       add: (data: any) => statutoryCerts.addCertificateType.mutate({ ...data, certificate_category: 'statutory' as const }),
       update: (data: any) => statutoryCerts.updateCertificateType.mutate(data),
-      delete: (id: string) => statutoryCerts.deleteCertificateType.mutate(id),
+      delete: (id: string) => statutoryCerts.deleteCertificateType.mutate(id)
     },
     crewCertificates: {
       type: 'crewCertificates',
@@ -253,8 +253,8 @@ const SetupPage = () => {
       isLoading: crewCerts.isLoading,
       add: (data: any) => crewCerts.addCertificateType.mutate({ ...data, certificate_category: 'crew' as const }),
       update: (data: any) => crewCerts.updateCertificateType.mutate(data),
-      delete: (id: string) => crewCerts.deleteCertificateType.mutate(id),
-    },
+      delete: (id: string) => crewCerts.deleteCertificateType.mutate(id)
+    }
   };
 
   const handleAddItem = (type: string, newItem: any) => {
@@ -295,101 +295,101 @@ const SetupPage = () => {
             size="sm"
             variant="outline"
             onClick={() => setShowAddForm({ type: configKey, config })}
-            className="btn-ocean"
-          >
+            className="btn-ocean bg-[#20818d]">
+
             <Plus className="h-4 w-4 mr-1" />
             Add New
           </Button>
         </div>
 
         <div className="p-4">
-          {config.isLoading ? (
-            <div className="flex items-center justify-center py-8">
+          {config.isLoading ?
+          <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
               <span className="ml-2 text-muted-foreground">Loading...</span>
-            </div>
-          ) : data.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
+            </div> :
+          data.length === 0 ?
+          <div className="text-center text-muted-foreground py-8">
               No {config.title.toLowerCase()}s configured yet. Click "Add New" to get started.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
+            </div> :
+
+          <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    {config.labels.map((label, index) => (
-                      <th key={index} className="text-left py-2 px-3 text-sm font-semibold text-muted-foreground">
+                    {config.labels.map((label, index) =>
+                  <th key={index} className="text-left py-2 px-3 text-sm font-semibold text-muted-foreground">
                         {label}
                       </th>
-                    ))}
+                  )}
                     <th className="text-left py-2 px-3 text-sm font-semibold text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.map((item: any) => (
-                    <tr key={item.id} className="border-b border-border/50 hover:bg-accent/50">
-                      {config.dbFields.map((field, fieldIndex) => (
-                        <td key={fieldIndex} className="py-2 px-3 text-sm">
-                          {editingItem?.type === configKey && editingItem?.id === item.id ? (
-                            <Input
-                              value={editingItem.data[field] || ''}
-                              onChange={(e) => setEditingItem({
-                                ...editingItem,
-                                data: { ...editingItem.data, [field]: e.target.value }
-                              })}
-                              className="h-8"
-                            />
-                          ) : (
-                            <span>{item[field] || '-'}</span>
-                          )}
+                  {data.map((item: any) =>
+                <tr key={item.id} className="border-b border-border/50 hover:bg-accent/50">
+                      {config.dbFields.map((field, fieldIndex) =>
+                  <td key={fieldIndex} className="py-2 px-3 text-sm">
+                          {editingItem?.type === configKey && editingItem?.id === item.id ?
+                    <Input
+                      value={editingItem.data[field] || ''}
+                      onChange={(e) => setEditingItem({
+                        ...editingItem,
+                        data: { ...editingItem.data, [field]: e.target.value }
+                      })}
+                      className="h-8" /> :
+
+
+                    <span>{item[field] || '-'}</span>
+                    }
                         </td>
-                      ))}
+                  )}
                       <td className="py-2 px-3">
-                        {editingItem?.type === configKey && editingItem?.id === item.id ? (
-                          <div className="flex gap-2">
+                        {editingItem?.type === configKey && editingItem?.id === item.id ?
+                    <div className="flex gap-2">
                             <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEditItem(configKey, item.id, editingItem.data)}
-                            >
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditItem(configKey, item.id, editingItem.data)}>
+
                               <Save className="h-3 w-3" />
                             </Button>
                             <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setEditingItem(null)}
-                            >
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingItem(null)}>
+
                               <X className="h-3 w-3" />
                             </Button>
-                          </div>
-                        ) : (
-                          <div className="flex gap-2">
+                          </div> :
+
+                    <div className="flex gap-2">
                             <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setEditingItem({ type: configKey, id: item.id, data: item })}
-                            >
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingItem({ type: configKey, id: item.id, data: item })}>
+
                               <Edit className="h-3 w-3" />
                             </Button>
                             <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDeleteItem(configKey, item.id)}
-                            >
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteItem(configKey, item.id)}>
+
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
-                        )}
+                    }
                       </td>
                     </tr>
-                  ))}
+                )}
                 </tbody>
               </table>
             </div>
-          )}
+          }
         </div>
-      </div>
-    );
+      </div>);
+
   };
 
   const renderAddForm = () => {
@@ -414,17 +414,17 @@ const SetupPage = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {config.dbFields.map((field, index) => (
-              <div key={field} className="space-y-2">
+            {config.dbFields.map((field, index) =>
+            <div key={field} className="space-y-2">
                 <Label htmlFor={field}>{config.labels[index]}</Label>
                 <Input
-                  id={field}
-                  value={formData[field] || ''}
-                  onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
-                  required={index === 0}
-                />
+                id={field}
+                value={formData[field] || ''}
+                onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                required={index === 0} />
+
               </div>
-            ))}
+            )}
 
             <div className="flex gap-2 pt-4">
               <Button type="submit" className="btn-maritime flex-1">
@@ -436,8 +436,8 @@ const SetupPage = () => {
             </div>
           </form>
         </div>
-      </div>
-    );
+      </div>);
+
   };
 
   // Calculate totals for summary
@@ -462,7 +462,7 @@ const SetupPage = () => {
             <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-4 rounded-t-lg">
               <h3 className="text-lg font-bold">Company & Vessel Data</h3>
             </div>
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 mx-0 px-0 py-[43px]">
               {renderDataTable('ownerCompanies')}
               {renderDataTable('operatorCompanies')}
               {renderDataTable('technicalManagers')}
@@ -539,8 +539,8 @@ const SetupPage = () => {
               <div key={key} className="text-center">
                 <div className="text-2xl font-bold text-primary">{count}</div>
                 <div className="text-sm text-muted-foreground">{config.title}s</div>
-              </div>
-            );
+              </div>);
+
           })}
         </div>
         <div className="mt-4 pt-4 border-t border-border text-center">
@@ -551,8 +551,8 @@ const SetupPage = () => {
       </div>
 
       {renderAddForm()}
-    </div>
-  );
+    </div>);
+
 };
 
 export default SetupPage;
