@@ -14,12 +14,12 @@ import { useMaintenanceTasks } from '@/hooks/useMaintenanceTasks';
 import { supabase } from '@/integrations/supabase/client';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { 
-  FileText, 
-  Download, 
-  Ship, 
-  ClipboardCheck, 
-  Wrench, 
+import {
+  FileText,
+  Download,
+  Ship,
+  ClipboardCheck,
+  Wrench,
   AlertTriangle,
   Users,
   Calendar,
@@ -32,7 +32,7 @@ const Reports = () => {
   const { user } = useAuth();
   const { vessels } = useVessels();
   const { tasks } = useMaintenanceTasks();
-  
+
   const [selectedReportType, setSelectedReportType] = useState('fleet-status');
   const [selectedVessel, setSelectedVessel] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState('');
@@ -54,7 +54,7 @@ const Reports = () => {
   const generateFleetStatusPDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
-    
+
     // Header
     doc.setFillColor(30, 64, 175);
     doc.rect(0, 0, pageWidth, 40, 'F');
@@ -63,10 +63,10 @@ const Reports = () => {
     doc.text('Fleet Status Report', 14, 25);
     doc.setFontSize(10);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 35);
-    
+
     // Reset text color
     doc.setTextColor(0, 0, 0);
-    
+
     if (includeSummary) {
       doc.setFontSize(16);
       doc.text('Executive Summary', 14, 55);
@@ -75,11 +75,11 @@ const Reports = () => {
       doc.text(`Active Vessels: ${vessels.filter(v => v.status === 'active').length}`, 14, 72);
       doc.text(`Under Maintenance: ${vessels.filter(v => v.status === 'maintenance').length}`, 14, 79);
     }
-    
+
     if (includeDetails && vessels.length > 0) {
       doc.setFontSize(16);
       doc.text('Vessel Details', 14, 95);
-      
+
       autoTable(doc, {
         startY: 100,
         head: [['Vessel Name', 'IMO Number', 'Type', 'Flag State', 'Status']],
@@ -94,7 +94,7 @@ const Reports = () => {
         headStyles: { fillColor: [30, 64, 175] }
       });
     }
-    
+
     // Footer
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
@@ -104,14 +104,14 @@ const Reports = () => {
       doc.text(`Page ${i} of ${pageCount}`, pageWidth - 30, doc.internal.pageSize.getHeight() - 10);
       doc.text('Maritime Compliance System', 14, doc.internal.pageSize.getHeight() - 10);
     }
-    
+
     return doc;
   };
 
   const generateMaintenancePDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
-    
+
     // Header
     doc.setFillColor(22, 163, 74);
     doc.rect(0, 0, pageWidth, 40, 'F');
@@ -120,16 +120,16 @@ const Reports = () => {
     doc.text('Maintenance Report', 14, 25);
     doc.setFontSize(10);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 35);
-    
+
     doc.setTextColor(0, 0, 0);
-    
+
     const filteredTasks = tasks.filter(t => {
       if (selectedVessel !== 'all' && t.vessel_id !== selectedVessel) return false;
       if (dateFrom && new Date(t.due_date) < new Date(dateFrom)) return false;
       if (dateTo && new Date(t.due_date) > new Date(dateTo)) return false;
       return true;
     });
-    
+
     if (includeSummary) {
       doc.setFontSize(16);
       doc.text('Summary', 14, 55);
@@ -140,11 +140,11 @@ const Reports = () => {
       doc.text(`Completed: ${filteredTasks.filter(t => t.status === 'completed').length}`, 14, 86);
       doc.text(`Overdue: ${filteredTasks.filter(t => t.status === 'overdue').length}`, 14, 93);
     }
-    
+
     if (includeDetails && filteredTasks.length > 0) {
       doc.setFontSize(16);
       doc.text('Task Details', 14, 110);
-      
+
       autoTable(doc, {
         startY: 115,
         head: [['Task', 'Vessel', 'Type', 'Priority', 'Due Date', 'Status']],
@@ -160,20 +160,20 @@ const Reports = () => {
         headStyles: { fillColor: [22, 163, 74] }
       });
     }
-    
+
     return doc;
   };
 
   const generateAuditPDF = async () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
-    
+
     // Fetch audits
     const { data: audits } = await supabase
       .from('audits')
       .select('*, vessels(name)')
       .order('scheduled_date', { ascending: false });
-    
+
     // Header
     doc.setFillColor(147, 51, 234);
     doc.rect(0, 0, pageWidth, 40, 'F');
@@ -182,9 +182,9 @@ const Reports = () => {
     doc.text('Audit & Compliance Report', 14, 25);
     doc.setFontSize(10);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 35);
-    
+
     doc.setTextColor(0, 0, 0);
-    
+
     if (includeSummary) {
       doc.setFontSize(16);
       doc.text('Summary', 14, 55);
@@ -193,11 +193,11 @@ const Reports = () => {
       doc.text(`Completed: ${audits?.filter(a => a.status === 'completed').length || 0}`, 14, 72);
       doc.text(`Scheduled: ${audits?.filter(a => a.status === 'scheduled').length || 0}`, 14, 79);
     }
-    
+
     if (includeDetails && audits && audits.length > 0) {
       doc.setFontSize(16);
       doc.text('Audit Details', 14, 95);
-      
+
       autoTable(doc, {
         startY: 100,
         head: [['Vessel', 'Type', 'Auditor', 'Date', 'Status', 'Score']],
@@ -213,19 +213,19 @@ const Reports = () => {
         headStyles: { fillColor: [147, 51, 234] }
       });
     }
-    
+
     return doc;
   };
 
   const generateIncidentsPDF = async () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
-    
+
     const { data: incidents } = await supabase
       .from('incidents')
       .select('*, vessels(name)')
       .order('incident_date', { ascending: false });
-    
+
     // Header
     doc.setFillColor(220, 38, 38);
     doc.rect(0, 0, pageWidth, 40, 'F');
@@ -234,9 +234,9 @@ const Reports = () => {
     doc.text('Incident Report', 14, 25);
     doc.setFontSize(10);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 35);
-    
+
     doc.setTextColor(0, 0, 0);
-    
+
     if (includeSummary) {
       doc.setFontSize(16);
       doc.text('Summary', 14, 55);
@@ -246,11 +246,11 @@ const Reports = () => {
       doc.text(`Major: ${incidents?.filter(i => i.severity === 'major').length || 0}`, 14, 79);
       doc.text(`Minor: ${incidents?.filter(i => i.severity === 'minor').length || 0}`, 14, 86);
     }
-    
+
     if (includeDetails && incidents && incidents.length > 0) {
       doc.setFontSize(16);
       doc.text('Incident Details', 14, 103);
-      
+
       autoTable(doc, {
         startY: 108,
         head: [['Title', 'Vessel', 'Type', 'Severity', 'Date', 'Status']],
@@ -266,19 +266,19 @@ const Reports = () => {
         headStyles: { fillColor: [220, 38, 38] }
       });
     }
-    
+
     return doc;
   };
 
   const generateCrewPDF = async () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
-    
+
     const { data: crew } = await supabase
       .from('crew_members')
       .select('*, vessels(name)')
       .order('last_name', { ascending: true });
-    
+
     // Header
     doc.setFillColor(59, 130, 246);
     doc.rect(0, 0, pageWidth, 40, 'F');
@@ -287,9 +287,9 @@ const Reports = () => {
     doc.text('Crew Report', 14, 25);
     doc.setFontSize(10);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 35);
-    
+
     doc.setTextColor(0, 0, 0);
-    
+
     if (includeSummary) {
       doc.setFontSize(16);
       doc.text('Summary', 14, 55);
@@ -298,11 +298,11 @@ const Reports = () => {
       doc.text(`Active: ${crew?.filter(c => c.status === 'active').length || 0}`, 14, 72);
       doc.text(`On Leave: ${crew?.filter(c => c.status === 'on_leave').length || 0}`, 14, 79);
     }
-    
+
     if (includeDetails && crew && crew.length > 0) {
       doc.setFontSize(16);
       doc.text('Crew Details', 14, 95);
-      
+
       autoTable(doc, {
         startY: 100,
         head: [['Name', 'Rank', 'Vessel', 'Nationality', 'Cert. Expiry', 'Status']],
@@ -318,7 +318,44 @@ const Reports = () => {
         headStyles: { fillColor: [59, 130, 246] }
       });
     }
-    
+
+    return doc;
+  };
+
+  const generateCertificateExpiryPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Header
+    doc.setFillColor(245, 158, 11); // Amber-500
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.text('Certificate Expiry Report', 14, 25);
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 35);
+
+    doc.setTextColor(0, 0, 0);
+
+    doc.setFontSize(16);
+    doc.text('Certification Status Overview', 14, 55);
+    doc.setFontSize(11);
+    doc.text('This report outlines upcoming expirations for all vessel documentation.', 14, 65);
+    doc.text(`Total Vessels Checked: ${vessels.length}`, 14, 75);
+
+    if (includeDetails && vessels.length > 0) {
+      doc.setFontSize(16);
+      doc.text('Vessel Registry Snapshot', 14, 95);
+
+      autoTable(doc, {
+        startY: 100,
+        head: [['Vessel Name', 'IMO Number', 'Status']],
+        body: vessels.map(v => [v.name, v.imo_number || 'N/A', v.status || 'Active']),
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [245, 158, 11] }
+      });
+    }
+
     return doc;
   };
 
@@ -329,10 +366,10 @@ const Reports = () => {
     }
 
     setGenerating(true);
-    
+
     try {
       let doc: jsPDF;
-      
+
       switch (selectedReportType) {
         case 'fleet-status':
           doc = generateFleetStatusPDF();
@@ -349,27 +386,30 @@ const Reports = () => {
         case 'crew':
           doc = await generateCrewPDF();
           break;
+        case 'certificate-expiry':
+          doc = generateCertificateExpiryPDF();
+          break;
         default:
           doc = generateFleetStatusPDF();
       }
-      
+
       // Save report record
       await supabase.from('reports').insert([{
         user_id: user.id,
         report_type: selectedReportType,
         title: reportTypes.find(r => r.id === selectedReportType)?.name || 'Report',
-        parameters: { 
-          vessel: selectedVessel, 
-          dateFrom, 
-          dateTo, 
-          includeCharts, 
-          includeSummary, 
-          includeDetails 
+        parameters: {
+          vessel: selectedVessel,
+          dateFrom,
+          dateTo,
+          includeCharts,
+          includeSummary,
+          includeDetails
         }
       }]);
-      
+
       doc.save(`${selectedReportType}-report-${new Date().toISOString().split('T')[0]}.pdf`);
-      
+
       toast({ title: 'Success', description: 'Report generated and downloaded successfully' });
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -399,22 +439,20 @@ const Reports = () => {
             {reportTypes.map((type) => {
               const Icon = type.icon;
               return (
-                <Card 
+                <Card
                   key={type.id}
-                  className={`maritime-card cursor-pointer transition-all ${
-                    selectedReportType === type.id 
-                      ? 'ring-2 ring-primary border-primary' 
-                      : 'hover:border-primary/50'
-                  }`}
+                  className={`maritime-card cursor-pointer transition-all ${selectedReportType === type.id
+                    ? 'ring-2 ring-primary border-primary'
+                    : 'hover:border-primary/50'
+                    }`}
                   onClick={() => setSelectedReportType(type.id)}
                 >
                   <CardContent className="pt-6">
                     <div className="flex items-start gap-4">
-                      <div className={`p-3 rounded-lg ${
-                        selectedReportType === type.id 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted'
-                      }`}>
+                      <div className={`p-3 rounded-lg ${selectedReportType === type.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted'
+                        }`}>
                         <Icon className="h-6 w-6" />
                       </div>
                       <div>
@@ -456,43 +494,43 @@ const Reports = () => {
 
                 <div className="space-y-2">
                   <Label>Date From</Label>
-                  <Input 
-                    type="date" 
-                    value={dateFrom} 
-                    onChange={(e) => setDateFrom(e.target.value)} 
+                  <Input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Date To</Label>
-                  <Input 
-                    type="date" 
-                    value={dateTo} 
-                    onChange={(e) => setDateTo(e.target.value)} 
+                  <Input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
                   />
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-6">
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="summary" 
+                  <Checkbox
+                    id="summary"
                     checked={includeSummary}
                     onCheckedChange={(checked) => setIncludeSummary(checked as boolean)}
                   />
                   <Label htmlFor="summary">Include Executive Summary</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="details" 
+                  <Checkbox
+                    id="details"
                     checked={includeDetails}
                     onCheckedChange={(checked) => setIncludeDetails(checked as boolean)}
                   />
                   <Label htmlFor="details">Include Detailed Tables</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="charts" 
+                  <Checkbox
+                    id="charts"
                     checked={includeCharts}
                     onCheckedChange={(checked) => setIncludeCharts(checked as boolean)}
                   />
@@ -500,8 +538,8 @@ const Reports = () => {
                 </div>
               </div>
 
-              <Button 
-                onClick={generateReport} 
+              <Button
+                onClick={generateReport}
                 disabled={generating}
                 className="btn-maritime"
                 size="lg"
@@ -529,17 +567,17 @@ const ReportHistory = () => {
   useEffect(() => {
     const fetchReports = async () => {
       if (!user) return;
-      
+
       const { data } = await supabase
         .from('reports')
         .select('*')
         .order('generated_at', { ascending: false })
         .limit(20);
-      
+
       setReports(data || []);
       setLoading(false);
     };
-    
+
     fetchReports();
   }, [user]);
 
