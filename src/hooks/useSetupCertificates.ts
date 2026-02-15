@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { certificateTypeSchema, validate } from '@/lib/validations';
 
 export interface CertificateType {
   id: string;
@@ -45,6 +46,8 @@ export const useCertificateTypes = (category?: CertificateType['certificate_cate
   const addCertificateType = useMutation({
     mutationFn: async (cert: Omit<CertificateType, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user?.id) throw new Error('User not authenticated');
+      const { error: validationError } = validate(certificateTypeSchema, cert);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_certificate_types')
         .insert({ ...cert, user_id: user.id })

@@ -85,6 +85,197 @@ export const regulationSchema = z.object({
   notes: optionalSafeString(2000),
 }).passthrough();
 
+// ── Setup Company ──
+export const companySchema = z.object({
+  company_type: z.enum(['owner', 'operator', 'technical', 'ism', 'doc'], { required_error: 'Company type is required' }),
+  name: safeString(200).pipe(z.string().min(1, 'Company name is required')),
+  contact_person: optionalSafeString(150),
+  title: optionalSafeString(100),
+  phone: optionalSafeString(30),
+  email: z.string().email('Invalid email').max(255).optional().nullable().or(z.literal('')),
+  address: optionalSafeString(500),
+  remarks: optionalSafeString(2000),
+}).passthrough();
+
+// ── Setup Audit Type ──
+export const auditTypeSchema = z.object({
+  audit_type_name: safeString(150).pipe(z.string().min(1, 'Audit type name is required')),
+  description: optionalSafeString(2000),
+  frequency_months: z.number().int().min(1).max(120).optional().nullable(),
+  is_external: z.boolean().default(false),
+}).passthrough();
+
+// ── Setup Finding Type ──
+export const findingTypeSchema = z.object({
+  finding_type_name: safeString(150).pipe(z.string().min(1, 'Finding type name is required')),
+  severity: z.enum(['minor', 'major', 'critical']).default('minor'),
+  description: optionalSafeString(2000),
+}).passthrough();
+
+// ── Setup Finding Status ──
+export const findingStatusSchema = z.object({
+  status_name: safeString(100).pipe(z.string().min(1, 'Status name is required')),
+  status_order: z.number().int().min(0).max(1000).default(0),
+  is_closed: z.boolean().default(false),
+  color: optionalSafeString(20),
+}).passthrough();
+
+// ── Setup Root Cause ──
+export const rootCauseSchema = z.object({
+  cause_name: safeString(200).pipe(z.string().min(1, 'Cause name is required')),
+  category: optionalSafeString(100),
+  description: optionalSafeString(2000),
+}).passthrough();
+
+// ── Setup Crew Rank ──
+export const crewRankSchema = z.object({
+  rank_name: safeString(100).pipe(z.string().min(1, 'Rank name is required')),
+  department: optionalSafeString(100),
+  rank_order: z.number().int().min(0).max(1000).default(0),
+  is_officer: z.boolean().default(false),
+}).passthrough();
+
+// ── Setup Nationality ──
+export const nationalitySchema = z.object({
+  country_name: safeString(100).pipe(z.string().min(1, 'Country name is required')),
+  country_code: optionalSafeString(10),
+}).passthrough();
+
+// ── Setup Contract Type ──
+export const contractTypeSchema = z.object({
+  contract_name: safeString(150).pipe(z.string().min(1, 'Contract name is required')),
+  duration_months: z.number().int().min(1).max(120).optional().nullable(),
+  description: optionalSafeString(2000),
+}).passthrough();
+
+// ── Setup Currency ──
+export const currencySchema = z.object({
+  currency_code: safeString(10).pipe(z.string().min(1, 'Currency code is required')),
+  currency_name: safeString(100).pipe(z.string().min(1, 'Currency name is required')),
+  symbol: optionalSafeString(10),
+}).passthrough();
+
+// ── Setup Classification Society ──
+export const classificationSocietySchema = z.object({
+  society_name: safeString(200).pipe(z.string().min(1, 'Society name is required')),
+  abbreviation: optionalSafeString(20),
+  website: z.string().url('Invalid URL').max(500).optional().nullable().or(z.literal('')).or(z.literal(null)),
+}).passthrough();
+
+// ── Setup Flag State ──
+export const flagStateSchema = z.object({
+  flag_name: safeString(100).pipe(z.string().min(1, 'Flag name is required')),
+  flag_code: optionalSafeString(10),
+  risk_level: z.enum(['low', 'standard', 'high']).default('standard'),
+}).passthrough();
+
+// ── Setup Certificate Type ──
+export const certificateTypeSchema = z.object({
+  certificate_category: z.enum(['statutory', 'class', 'crew', 'other'], { required_error: 'Category is required' }),
+  certificate_name: safeString(200).pipe(z.string().min(1, 'Certificate name is required')),
+  issuing_authority: optionalSafeString(200),
+  validity_months: z.number().int().min(1).max(600).optional().nullable(),
+  is_mandatory: z.boolean().default(false),
+}).passthrough();
+
+// ── Auditor ──
+export const auditorSchema = z.object({
+  name: safeString(150).pipe(z.string().min(1, 'Name is required')),
+  email: z.string().email('Invalid email').max(255).optional().nullable().or(z.literal('')),
+  phone: optionalSafeString(30),
+  certification_number: optionalSafeString(100),
+  specialization: optionalSafeString(200),
+  status: safeString(50).default('available'),
+  rating: z.number().min(0).max(5).optional().nullable(),
+  audits_completed: z.number().int().min(0).max(100000).optional().nullable(),
+}).passthrough();
+
+// ── CII Record ──
+export const ciiRecordSchema = z.object({
+  year: z.number().int().min(2000).max(2100),
+  cii_value: z.number().min(0).max(100000),
+  cii_rating: safeString(10).pipe(z.string().min(1, 'CII rating is required')),
+  target_value: z.number().min(0).max(100000).optional().nullable(),
+  fuel_consumption: z.number().min(0).max(10_000_000).optional().nullable(),
+  distance_travelled: z.number().min(0).max(10_000_000).optional().nullable(),
+  cargo_carried: z.number().min(0).max(10_000_000).optional().nullable(),
+  notes: optionalSafeString(2000),
+}).passthrough();
+
+// ── Corrective Action ──
+export const correctiveActionSchema = z.object({
+  action_description: safeString(2000).pipe(z.string().min(1, 'Action description is required')),
+  responsible_person: optionalSafeString(150),
+  due_date: z.string().optional().nullable(),
+  status: safeString(50).default('pending'),
+  evidence_url: z.string().url('Invalid URL').max(2000).optional().nullable().or(z.literal('')).or(z.literal(null)),
+  notes: optionalSafeString(2000),
+}).passthrough();
+
+// ── Communication ──
+export const communicationSchema = z.object({
+  subject: safeString(300).pipe(z.string().min(1, 'Subject is required')),
+  message: safeString(10000).pipe(z.string().min(1, 'Message is required')),
+  sender_name: optionalSafeString(150),
+  recipient_name: optionalSafeString(150),
+  priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal').optional().nullable(),
+  status: safeString(50).default('unread'),
+}).passthrough();
+
+// ── Vessel Certification ──
+export const vesselCertificationSchema = z.object({
+  certificate_name: safeString(200).pipe(z.string().min(1, 'Certificate name is required')),
+  certificate_type: safeString(100).pipe(z.string().min(1, 'Certificate type is required')),
+  issuing_authority: optionalSafeString(200),
+  issue_date: z.string().optional().nullable(),
+  expiry_date: z.string().min(1, 'Expiry date is required'),
+  status: safeString(50).default('active'),
+  document_url: z.string().url('Invalid URL').max(2000).optional().nullable().or(z.literal('')).or(z.literal(null)),
+  notes: optionalSafeString(2000),
+}).passthrough();
+
+// ── Voyage ──
+export const voyageSchema = z.object({
+  voyage_number: optionalSafeString(50),
+  origin_port: safeString(200).pipe(z.string().min(1, 'Origin port is required')),
+  destination_port: safeString(200).pipe(z.string().min(1, 'Destination port is required')),
+  departure_date: z.string().optional().nullable(),
+  arrival_date: z.string().optional().nullable(),
+  eta: z.string().optional().nullable(),
+  cargo_type: optionalSafeString(200),
+  cargo_quantity: z.number().min(0).max(10_000_000).optional().nullable(),
+  status: safeString(50).default('planned'),
+  notes: optionalSafeString(2000),
+}).passthrough();
+
+// ── Insurance Claim ──
+export const insuranceClaimSchema = z.object({
+  claim_number: optionalSafeString(50),
+  claim_type: safeString(100).pipe(z.string().min(1, 'Claim type is required')),
+  policy_number: optionalSafeString(50),
+  insurer_name: optionalSafeString(200),
+  incident_date: z.string().optional().nullable(),
+  submitted_date: z.string().optional().nullable(),
+  resolved_date: z.string().optional().nullable(),
+  claim_amount: z.number().min(0).max(1_000_000_000).optional().nullable(),
+  approved_amount: z.number().min(0).max(1_000_000_000).optional().nullable(),
+  status: safeString(50).default('pending'),
+  description: optionalSafeString(5000),
+}).passthrough();
+
+// ── Project ──
+export const projectSchema = z.object({
+  name: safeString(200).pipe(z.string().min(1, 'Project name is required')),
+  description: optionalSafeString(5000),
+  project_type: optionalSafeString(100),
+  status: safeString(50).default('planning'),
+  start_date: z.string().optional().nullable(),
+  deadline: z.string().optional().nullable(),
+  completed_date: z.string().optional().nullable(),
+  progress: z.number().int().min(0).max(100).optional().nullable(),
+  vessel_count: z.number().int().min(0).max(10000).optional().nullable(),
+}).passthrough();
+
 // Helper to validate and return either { data } or { error }
 export function validate<T>(schema: z.ZodSchema<T>, input: unknown): { data: T; error: null } | { data: null; error: z.ZodError } {
   const result = schema.safeParse(input);

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { communicationSchema, validate } from '@/lib/validations';
 
 export interface Communication {
   id: string;
@@ -49,6 +50,8 @@ export const useCommunications = () => {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
+      const { error: validationError } = validate(communicationSchema, communication);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('communications')
         .insert([{ ...communication, user_id: user.id }])

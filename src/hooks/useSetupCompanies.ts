@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { companySchema, validate } from '@/lib/validations';
 
 export interface SetupCompany {
   id: string;
@@ -51,6 +52,8 @@ export const useSetupCompanies = (companyType?: SetupCompany['company_type']) =>
   const addCompany = useMutation({
     mutationFn: async (company: Omit<CompanyInsert, 'user_id'>) => {
       if (!user?.id) throw new Error('User not authenticated');
+      const { error: validationError } = validate(companySchema, company);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       
       const { data, error } = await supabase
         .from('setup_companies')
@@ -72,6 +75,8 @@ export const useSetupCompanies = (companyType?: SetupCompany['company_type']) =>
 
   const updateCompany = useMutation({
     mutationFn: async ({ id, ...updates }: CompanyUpdate) => {
+      const { error: validationError } = validate(companySchema.partial(), updates);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_companies')
         .update(updates)

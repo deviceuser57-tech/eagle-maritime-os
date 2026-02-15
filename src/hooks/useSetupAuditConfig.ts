@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { auditTypeSchema, findingTypeSchema, findingStatusSchema, rootCauseSchema, validate } from '@/lib/validations';
 
 // Types for audit configuration tables
 export interface AuditType {
@@ -70,6 +71,8 @@ export const useAuditTypes = () => {
   const addAuditType = useMutation({
     mutationFn: async (auditType: Omit<AuditType, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user?.id) throw new Error('User not authenticated');
+      const { error: validationError } = validate(auditTypeSchema, auditType);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_audit_types')
         .insert({ ...auditType, user_id: user.id })
@@ -148,6 +151,8 @@ export const useFindingTypes = () => {
   const addFindingType = useMutation({
     mutationFn: async (findingType: Omit<FindingType, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user?.id) throw new Error('User not authenticated');
+      const { error: validationError } = validate(findingTypeSchema, findingType);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_finding_types')
         .insert({ ...findingType, user_id: user.id })
@@ -226,6 +231,8 @@ export const useFindingStatuses = () => {
   const addFindingStatus = useMutation({
     mutationFn: async (status: Omit<FindingStatus, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user?.id) throw new Error('User not authenticated');
+      const { error: validationError } = validate(findingStatusSchema, status);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_finding_statuses')
         .insert({ ...status, user_id: user.id })
@@ -304,6 +311,8 @@ export const useRootCauses = () => {
   const addRootCause = useMutation({
     mutationFn: async (cause: Omit<RootCause, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user?.id) throw new Error('User not authenticated');
+      const { error: validationError } = validate(rootCauseSchema, cause);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_root_causes')
         .insert({ ...cause, user_id: user.id })

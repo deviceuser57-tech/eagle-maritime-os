@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { vesselCertificationSchema, validate } from '@/lib/validations';
 
 export interface VesselCertification {
   id: string;
@@ -50,6 +51,8 @@ export const useVesselCertifications = () => {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
+      const { error: validationError } = validate(vesselCertificationSchema, certification);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('vessel_certifications')
         .insert([{ ...certification, user_id: user.id }])
