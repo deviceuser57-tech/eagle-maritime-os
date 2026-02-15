@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { insuranceClaimSchema, validate } from '@/lib/validations';
 
 export interface InsuranceClaim {
   id: string;
@@ -53,6 +54,8 @@ export const useInsuranceClaims = () => {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
+      const { error: validationError } = validate(insuranceClaimSchema, claim);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('insurance_claims')
         .insert([{ ...claim, user_id: user.id }])

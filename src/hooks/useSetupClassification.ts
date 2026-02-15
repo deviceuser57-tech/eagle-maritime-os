@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { classificationSocietySchema, flagStateSchema, validate } from '@/lib/validations';
 
 // Types for classification tables
 export interface ClassificationSociety {
@@ -48,6 +49,8 @@ export const useClassificationSocieties = () => {
   const addSociety = useMutation({
     mutationFn: async (society: Omit<ClassificationSociety, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user?.id) throw new Error('User not authenticated');
+      const { error: validationError } = validate(classificationSocietySchema, society);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_classification_societies')
         .insert({ ...society, user_id: user.id })
@@ -126,6 +129,8 @@ export const useFlagStates = () => {
   const addFlagState = useMutation({
     mutationFn: async (flagState: Omit<FlagState, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user?.id) throw new Error('User not authenticated');
+      const { error: validationError } = validate(flagStateSchema, flagState);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_flag_states')
         .insert({ ...flagState, user_id: user.id })

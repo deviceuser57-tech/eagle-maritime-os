@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { voyageSchema, validate } from '@/lib/validations';
 
 export interface Voyage {
   id: string;
@@ -52,6 +53,8 @@ export const useVoyages = () => {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
+      const { error: validationError } = validate(voyageSchema, voyage);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('voyages')
         .insert([{ ...voyage, user_id: user.id }])

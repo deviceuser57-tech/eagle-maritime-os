@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { projectSchema, validate } from '@/lib/validations';
 
 export interface Project {
   id: string;
@@ -50,6 +51,8 @@ export const useProjects = () => {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
+      const { error: validationError } = validate(projectSchema, project);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('projects')
         .insert([{ ...project, user_id: user.id }])

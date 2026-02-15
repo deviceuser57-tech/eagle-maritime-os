@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { crewRankSchema, nationalitySchema, contractTypeSchema, currencySchema, validate } from '@/lib/validations';
 
 // Types for crew configuration tables
 export interface CrewRank {
@@ -68,6 +69,8 @@ export const useCrewRanks = () => {
   const addRank = useMutation({
     mutationFn: async (rank: Omit<CrewRank, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user?.id) throw new Error('User not authenticated');
+      const { error: validationError } = validate(crewRankSchema, rank);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_crew_ranks')
         .insert({ ...rank, user_id: user.id })
@@ -146,6 +149,8 @@ export const useNationalities = () => {
   const addNationality = useMutation({
     mutationFn: async (nationality: Omit<Nationality, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user?.id) throw new Error('User not authenticated');
+      const { error: validationError } = validate(nationalitySchema, nationality);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_nationalities')
         .insert({ ...nationality, user_id: user.id })
@@ -224,6 +229,8 @@ export const useContractTypes = () => {
   const addContractType = useMutation({
     mutationFn: async (contractType: Omit<ContractType, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user?.id) throw new Error('User not authenticated');
+      const { error: validationError } = validate(contractTypeSchema, contractType);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_contract_types')
         .insert({ ...contractType, user_id: user.id })
@@ -302,6 +309,8 @@ export const useCurrencies = () => {
   const addCurrency = useMutation({
     mutationFn: async (currency: Omit<Currency, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user?.id) throw new Error('User not authenticated');
+      const { error: validationError } = validate(currencySchema, currency);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_currencies')
         .insert({ ...currency, user_id: user.id })

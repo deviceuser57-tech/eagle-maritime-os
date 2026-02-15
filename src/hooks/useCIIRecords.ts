@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { ciiRecordSchema, validate } from '@/lib/validations';
 
 export interface CIIRecord {
   id: string;
@@ -51,6 +52,8 @@ export const useCIIRecords = () => {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
+      const { error: validationError } = validate(ciiRecordSchema, record);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('cii_records')
         .insert([{ ...record, user_id: user.id }])
