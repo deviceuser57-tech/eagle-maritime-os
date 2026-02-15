@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { crewMemberSchema, validate } from '@/lib/validations';
 
 type CrewMember = Tables<'crew_members'>;
 type CrewMemberInsert = TablesInsert<'crew_members'>;
@@ -28,6 +29,9 @@ export const useCrewMembers = () => {
 
   const createCrewMember = useMutation({
     mutationFn: async (newMember: Omit<CrewMemberInsert, 'user_id'>) => {
+      const { error: validationError } = validate(crewMemberSchema, newMember);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+
       const { data, error } = await supabase
         .from('crew_members')
         .insert({ ...newMember, user_id: user?.id })

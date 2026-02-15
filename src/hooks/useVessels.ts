@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { vesselSchema, validate } from '@/lib/validations';
 
 export interface Vessel {
   id: string;
@@ -92,10 +93,16 @@ export const useVessels = () => {
   const addVessel = async (vessel: Omit<Vessel, 'id' | 'created_at' | 'updated_at'> & { user_id?: string }) => {
     if (!user) return { error: new Error('Not authenticated') };
 
+    const { data: validated, error: validationError } = validate(vesselSchema, vessel);
+    if (validationError) {
+      toast({ title: 'Validation Error', description: validationError.errors[0]?.message || 'Invalid input', variant: 'destructive' });
+      return { error: validationError };
+    }
+
     try {
       const { data, error } = await supabase
         .from('vessels')
-        .insert([{ ...vessel, user_id: user.id }] as any)
+        .insert([{ ...validated, user_id: user.id }] as any)
         .select()
         .single();
 

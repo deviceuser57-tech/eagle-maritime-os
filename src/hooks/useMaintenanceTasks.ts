@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { maintenanceTaskSchema, validate } from '@/lib/validations';
 
 export interface MaintenanceTask {
   id: string;
@@ -58,6 +59,12 @@ export const useMaintenanceTasks = () => {
 
   const addTask = async (task: Omit<MaintenanceTask, 'id' | 'created_at' | 'updated_at' | 'vessels'> & { user_id?: string }) => {
     if (!user) return { error: new Error('Not authenticated') };
+
+    const { error: validationError } = validate(maintenanceTaskSchema, task);
+    if (validationError) {
+      toast({ title: 'Validation Error', description: validationError.errors[0]?.message || 'Invalid input', variant: 'destructive' });
+      return { error: validationError };
+    }
 
     try {
       const { data, error } = await supabase
