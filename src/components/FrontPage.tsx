@@ -269,7 +269,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
 
       {/* Main Content Scrollable Area */}
       <div
-        className="relative z-10 flex flex-col items-center justify-center w-full max-w-7xl px-6 text-center py-[103px]"
+        className="relative z-10 flex flex-col items-center justify-center w-full max-w-7xl text-center px-0 py-[134px]"
         style={{ transformStyle: "preserve-3d" }}>
 
         {/* Animated Logo Container */}
@@ -320,7 +320,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
 
           <p
             ref={descRef}
-            className="text-lg md:text-xl text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed font-light"
+            className="text-lg md:text-xl mb-12 max-w-3xl mx-auto leading-relaxed font-light text-neutral-100"
             style={{ transform: "translateZ(40px)" }}>
 
             A high-performance maritime ecosystem integrating real-time
