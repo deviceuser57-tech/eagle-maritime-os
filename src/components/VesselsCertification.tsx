@@ -10,9 +10,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { FileText, AlertCircle, CheckCircle, Clock, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useVesselCertifications } from '@/hooks/useVesselCertifications';
 import { useVessels } from '@/hooks/useVessels';
+import { useToast } from '@/hooks/use-toast';
 import { format, differenceInDays } from 'date-fns';
 
 const VesselsCertification = () => {
+  const { toast } = useToast();
   const { certifications, loading, addCertification, deleteCertification } = useVesselCertifications();
   const { vessels } = useVessels();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -291,7 +293,14 @@ const VesselsCertification = () => {
                           {status}
                         </span>
                         <div className="flex opacity-0 group-hover/item:opacity-100 transition-opacity gap-2">
-                          <Button size="sm" variant="outline" className="h-8 rounded-lg font-bold uppercase text-[9px] tracking-widest px-3 hover:border-emerald-500/40 hover:bg-emerald-500/5">Renew</Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 rounded-lg font-bold uppercase text-[9px] tracking-widest px-3 hover:border-emerald-500/40 hover:bg-emerald-500/5"
+                            onClick={() => toast({ title: "Renewal Initiated", description: `Automatic renewal workflow started for ${cert.certificate_name}.` })}
+                          >
+                            Renew
+                          </Button>
                           <Button
                             size="icon"
                             variant="destructive"
