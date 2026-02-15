@@ -269,7 +269,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
 
       {/* Main Content Scrollable Area */}
       <div
-        className="relative z-10 flex flex-col items-center justify-center w-full max-w-7xl px-6 py-20 text-center"
+        className="relative z-10 flex flex-col items-center justify-center w-full max-w-7xl px-6 text-center py-[103px]"
         style={{ transformStyle: "preserve-3d" }}>
 
         {/* Animated Logo Container */}
@@ -355,7 +355,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
             className="group relative p-6 rounded-3xl bg-slate-900/40 backdrop-blur-xl border border-white/5 hover:border-primary/50 transition-all duration-500 flex flex-col items-center hover:-translate-y-4"
             style={{ transformStyle: "preserve-3d" }}>
 
-              <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl" />
+              <div className="absolute inset-0 bg-primary/5 transition-opacity rounded-3xl opacity-70" />
               <div
               className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center mb-4 group-hover:bg-primary shadow-xl transition-all duration-500"
               style={{ transform: "translateZ(30px)" }}>
@@ -374,7 +374,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
 
         {/* Signature Footer */}
         <div className="mt-20 flex flex-col items-center gap-4 opacity-40 hover:opacity-100 transition-opacity duration-500">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 mx-[24px] my-0">
             <div className="w-24 h-px bg-gradient-to-r from-transparent to-white/40" />
             <span className="text-xs tracking-[0.3em] font-medium uppercase">
               Maritime Authority 2026
