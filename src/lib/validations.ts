@@ -20,6 +20,16 @@ export const vesselSchema = z.object({
   year_built: z.number().int().min(1800).max(2100).optional().nullable(),
   classification_society: optionalSafeString(200),
   status: optionalSafeString(50),
+  class_number: optionalSafeString(100),
+  last_drydock_date: z.string().optional().nullable(),
+  next_drydock_date: z.string().optional().nullable(),
+  previous_dd_yard: optionalSafeString(200),
+  dd_remaining_tasks: optionalSafeString(5000),
+  vessel_photos: z.array(z.string()).optional().nullable(),
+  vessel_brochure: optionalSafeString(500),
+  painting_details: optionalSafeString(1000),
+  navigation_equipment: optionalSafeString(2000),
+  accommodations_pax: optionalSafeString(500),
 }).passthrough();
 
 // ── Audit ──

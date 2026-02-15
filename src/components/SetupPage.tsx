@@ -19,8 +19,8 @@ interface SetupCardConfig {
 }
 
 const SetupPage = () => {
-  const [editingItem, setEditingItem] = useState<{type: string;id: string;data: any;} | null>(null);
-  const [showAddForm, setShowAddForm] = useState<{type: string;config: SetupCardConfig;} | null>(null);
+  const [editingItem, setEditingItem] = useState<{ type: string; id: string; data: any; } | null>(null);
+  const [showAddForm, setShowAddForm] = useState<{ type: string; config: SetupCardConfig; } | null>(null);
   const [formData, setFormData] = useState<any>({});
 
   // Company hooks
@@ -50,7 +50,7 @@ const SetupPage = () => {
   const statutoryCerts = useCertificateTypes('statutory');
   const crewCerts = useCertificateTypes('crew');
 
-  const setupConfigs: Record<string, SetupCardConfig & {data: any[];isLoading: boolean;add: any;update: any;delete: any;}> = {
+  const setupConfigs: Record<string, SetupCardConfig & { data: any[]; isLoading: boolean; add: any; update: any; delete: any; }> = {
     ownerCompanies: {
       type: 'ownerCompanies',
       title: 'Owner Company',
@@ -288,104 +288,110 @@ const SetupPage = () => {
     const data = config.data || [];
 
     return (
-      <div className="maritime-card mb-4">
-        <div className="flex justify-between items-center p-4 bg-gradient-to-r from-slate-800 to-slate-700 text-white rounded-t-lg">
-          <h4 className="font-semibold">{config.title}s</h4>
+      <div className="maritime-card group overflow-hidden">
+        <div className="flex justify-between items-center p-5 bg-slate-900 border-b border-white/5">
+          <div>
+            <h4 className="font-bold text-base tracking-tight uppercase group-hover:text-primary transition-colors text-slate-100">{config.title} Registry</h4>
+            <p className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">System Core Configuration</p>
+          </div>
           <Button
             size="sm"
-            variant="outline"
             onClick={() => setShowAddForm({ type: configKey, config })}
-            className="btn-ocean bg-[#20818d]">
-
-            <Plus className="h-4 w-4 mr-1" />
-            Add New
+            className="btn-maritime px-4 h-9 rounded-lg text-[10px]"
+          >
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            Initialize
           </Button>
         </div>
 
         <div className="p-4">
           {config.isLoading ?
-          <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="ml-2 text-muted-foreground">Loading...</span>
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-tighter">Accessing Database...</p>
             </div> :
-          data.length === 0 ?
-          <div className="text-center text-muted-foreground py-8">
-              No {config.title.toLowerCase()}s configured yet. Click "Add New" to get started.
-            </div> :
+            data.length === 0 ?
+              <div className="text-center py-12 px-6 border-2 border-dashed border-border rounded-3xl bg-slate-500/5">
+                <p className="text-muted-foreground font-bold italic">Zero records detected in {config.title.toLowerCase()} sector.</p>
+                <Button variant="link" onClick={() => setShowAddForm({ type: configKey, config })} className="mt-2 text-primary font-black">
+                  + EXECUTE INITIAL DATA ENTRY
+                </Button>
+              </div> :
 
-          <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    {config.labels.map((label, index) =>
-                  <th key={index} className="text-left py-2 px-3 text-sm font-semibold text-muted-foreground">
-                        {label}
-                      </th>
-                  )}
-                    <th className="text-left py-2 px-3 text-sm font-semibold text-muted-foreground">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.map((item: any) =>
-                <tr key={item.id} className="border-b border-border/50 hover:bg-accent/50">
-                      {config.dbFields.map((field, fieldIndex) =>
-                  <td key={fieldIndex} className="py-2 px-3 text-sm">
-                          {editingItem?.type === configKey && editingItem?.id === item.id ?
-                    <Input
-                      value={editingItem.data[field] || ''}
-                      onChange={(e) => setEditingItem({
-                        ...editingItem,
-                        data: { ...editingItem.data, [field]: e.target.value }
-                      })}
-                      className="h-8" /> :
-
-
-                    <span>{item[field] || '-'}</span>
-                    }
-                        </td>
-                  )}
-                      <td className="py-2 px-3">
-                        {editingItem?.type === configKey && editingItem?.id === item.id ?
-                    <div className="flex gap-2">
-                            <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditItem(configKey, item.id, editingItem.data)}>
-
-                              <Save className="h-3 w-3" />
-                            </Button>
-                            <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingItem(null)}>
-
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div> :
-
-                    <div className="flex gap-2">
-                            <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingItem({ type: configKey, id: item.id, data: item })}>
-
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteItem(configKey, item.id)}>
-
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                    }
-                      </td>
+              <div className="overflow-x-auto scrollbar-hide">
+                <table className="w-full border-separate border-spacing-y-2">
+                  <thead>
+                    <tr>
+                      {config.labels.map((label, index) =>
+                        <th key={index} className="text-left pb-4 px-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                          {label}
+                        </th>
+                      )}
+                      <th className="text-right pb-4 px-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Operations</th>
                     </tr>
-                )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {data.map((item: any) =>
+                      <tr key={item.id} className="group/row bg-white/50 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 transition-all duration-300 shadow-sm hover:shadow-md rounded-2xl">
+                        {config.dbFields.map((field, fieldIndex) =>
+                          <td key={fieldIndex} className="py-4 px-4 text-sm font-medium text-foreground first:rounded-l-2xl last:rounded-r-2xl">
+                            {editingItem?.type === configKey && editingItem?.id === item.id ?
+                              <Input
+                                value={editingItem.data[field] || ''}
+                                onChange={(e) => setEditingItem({
+                                  ...editingItem,
+                                  data: { ...editingItem.data, [field]: e.target.value }
+                                })}
+                                className="h-10 rounded-xl bg-background border-primary/20 focus:ring-primary/40 font-bold" /> :
+                              <span className="group-hover/row:text-primary transition-colors">{item[field] || '-'}</span>
+                            }
+                          </td>
+                        )}
+                        <td className="py-4 px-4 text-right rounded-r-2xl">
+                          {editingItem?.type === configKey && editingItem?.id === item.id ?
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditItem(configKey, item.id, editingItem.data)}
+                                className="rounded-xl border-emerald-500/20 text-emerald-600 hover:bg-emerald-50"
+                              >
+                                <Save className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingItem(null)}
+                                className="rounded-xl"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div> :
+                            <div className="flex justify-end gap-2 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingItem({ type: configKey, id: item.id, data: item })}
+                                className="rounded-xl hover:text-primary hover:border-primary/40"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeleteItem(configKey, item.id)}
+                                className="rounded-xl shadow-lg shadow-destructive/20"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          }
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
           }
         </div>
       </div>);
@@ -415,13 +421,13 @@ const SetupPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {config.dbFields.map((field, index) =>
-            <div key={field} className="space-y-2">
+              <div key={field} className="space-y-2">
                 <Label htmlFor={field}>{config.labels[index]}</Label>
                 <Input
-                id={field}
-                value={formData[field] || ''}
-                onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
-                required={index === 0} />
+                  id={field}
+                  value={formData[field] || ''}
+                  onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                  required={index === 0} />
 
               </div>
             )}
@@ -444,87 +450,76 @@ const SetupPage = () => {
   const totalItems = Object.values(setupConfigs).reduce((sum, config) => sum + (config.data?.length || 0), 0);
 
   return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-4">
-          🛠️ Platform Setup
+    <div className="space-y-10 py-6">
+      <div className="text-center pb-8 border-b border-border">
+        <h2 className="text-3xl font-black tracking-tighter text-foreground mb-3 uppercase">
+          Platform Setup
         </h2>
-        <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+        <p className="text-base text-muted-foreground font-medium max-w-3xl mx-auto px-4">
           Configure the core data models, categories, and parameters that power the compliance management system.
-          All data is automatically saved to the database.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
         {/* Company & Vessel Data */}
         <div className="space-y-6">
-          <div className="maritime-card">
-            <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-4 rounded-t-lg">
-              <h3 className="text-lg font-bold">Company & Vessel Data</h3>
-            </div>
-            <div className="p-4 space-y-4 mx-0 px-0 py-[43px]">
-              {renderDataTable('ownerCompanies')}
-              {renderDataTable('operatorCompanies')}
-              {renderDataTable('technicalManagers')}
-              {renderDataTable('ismManagers')}
-              {renderDataTable('docIssuers')}
-            </div>
+          <div className="px-1 border-b border-border pb-3 mb-4">
+            <h3 className="text-base font-black uppercase tracking-tight">Company & Vessel Data</h3>
+          </div>
+          <div className="space-y-6">
+            {renderDataTable('ownerCompanies')}
+            {renderDataTable('operatorCompanies')}
+            {renderDataTable('technicalManagers')}
+            {renderDataTable('ismManagers')}
+            {renderDataTable('docIssuers')}
           </div>
         </div>
 
         {/* Crew Data */}
         <div className="space-y-6">
-          <div className="maritime-card">
-            <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-4 rounded-t-lg">
-              <h3 className="text-lg font-bold">Crew Data</h3>
-            </div>
-            <div className="p-4 space-y-4">
-              {renderDataTable('crewRanks')}
-              {renderDataTable('nationalities')}
-              {renderDataTable('contractTypes')}
-              {renderDataTable('currencies')}
-            </div>
+          <div className="px-1 border-b border-border pb-3 mb-4">
+            <h3 className="text-base font-black uppercase tracking-tight">Crew Data</h3>
+          </div>
+          <div className="space-y-6">
+            {renderDataTable('crewRanks')}
+            {renderDataTable('nationalities')}
+            {renderDataTable('contractTypes')}
+            {renderDataTable('currencies')}
           </div>
         </div>
 
         {/* Audit & Findings Data */}
         <div className="space-y-6">
-          <div className="maritime-card">
-            <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-4 rounded-t-lg">
-              <h3 className="text-lg font-bold">Audit & Findings Data</h3>
-            </div>
-            <div className="p-4 space-y-4">
-              {renderDataTable('auditTypes')}
-              {renderDataTable('findingTypes')}
-              {renderDataTable('findingStatuses')}
-              {renderDataTable('rootCauses')}
-            </div>
+          <div className="px-1 border-b border-border pb-3 mb-4">
+            <h3 className="text-base font-black uppercase tracking-tight">Audit & Findings Data</h3>
+          </div>
+          <div className="space-y-6">
+            {renderDataTable('auditTypes')}
+            {renderDataTable('findingTypes')}
+            {renderDataTable('findingStatuses')}
+            {renderDataTable('rootCauses')}
           </div>
         </div>
 
         {/* Classification & Risk Data */}
         <div className="space-y-6">
-          <div className="maritime-card">
-            <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-4 rounded-t-lg">
-              <h3 className="text-lg font-bold">Classification & Risk Data</h3>
-            </div>
-            <div className="p-4 space-y-4">
-              {renderDataTable('classificationSocieties')}
-              {renderDataTable('flagStates')}
-            </div>
+          <div className="px-1 border-b border-border pb-3 mb-4">
+            <h3 className="text-base font-black uppercase tracking-tight">Classification & Risk</h3>
+          </div>
+          <div className="space-y-6">
+            {renderDataTable('classificationSocieties')}
+            {renderDataTable('flagStates')}
           </div>
         </div>
 
         {/* Certificate Types */}
         <div className="space-y-6 lg:col-span-2">
-          <div className="maritime-card">
-            <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-4 rounded-t-lg">
-              <h3 className="text-lg font-bold">Certification Types</h3>
-            </div>
-            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {renderDataTable('statutoryCertificates')}
-              {renderDataTable('crewCertificates')}
-            </div>
+          <div className="px-1 border-b border-border pb-3 mb-4">
+            <h3 className="text-base font-black uppercase tracking-tight">Certification Types</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {renderDataTable('statutoryCertificates')}
+            {renderDataTable('crewCertificates')}
           </div>
         </div>
       </div>

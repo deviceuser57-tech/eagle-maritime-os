@@ -19,7 +19,7 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
       ]
     },
     {
-      title: "Initial Configuration", 
+      title: "Initial Configuration",
       items: [
         { id: "setup", label: "🛠️ Setup", badge: null },
         { id: "vessel-management", label: "⚓ Vessels", badge: null },
@@ -40,7 +40,6 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
       items: [
         { id: "operations", label: "🛥️ Operations", badge: null },
         { id: "maintenance", label: "🛠️ Maintenance", badge: null },
-        { id: "maintenance-planner", label: "📅 Maintenance Planner", badge: null },
         { id: "layout-mapper", label: "🗺️ Layout Mapper", badge: null }
       ]
     },
@@ -93,16 +92,20 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
   ];
 
   return (
-    <aside className="w-64 flex-shrink-0 maritime-sidebar flex flex-col h-screen">
+    <aside className="w-72 flex-shrink-0 maritime-sidebar flex flex-col h-screen shadow-2xl z-40">
       {/* Header */}
-      <div className="p-6 border-b border-white/10 flex justify-between items-center">
+      <div className="p-8 border-b border-border flex justify-between items-center bg-white/10 dark:bg-white/5 backdrop-blur-md">
         <div>
-          <h1 className="text-2xl font-bold text-white">EAGLE CAR'S</h1>
-          <p className="text-sm text-blue-200">Compliance Mgt.</p>
+          <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-br from-primary to-blue-600 bg-clip-text text-transparent">
+            EAGLE PLATFORM
+          </h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+            Vessel Governance System
+          </p>
         </div>
-        <button 
+        <button
           onClick={onThemeToggle}
-          className="p-2 rounded-full text-blue-200 hover:bg-white/10 transition-colors"
+          className="p-2.5 rounded-2xl bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 shadow-sm"
         >
           {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
@@ -110,24 +113,27 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
 
       {/* User Info */}
       {userEmail && (
-        <div className="px-4 py-3 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-primary/20">
-              <User className="h-4 w-4 text-primary" />
+        <div className="px-6 py-4 border-b border-border bg-slate-500/5">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center shadow-lg shadow-primary/20">
+              <User className="h-5 w-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-white truncate">{userEmail}</p>
-              <p className="text-xs text-blue-200">Authenticated</p>
+              <p className="text-sm font-bold text-foreground truncate">{userEmail.split('@')[0]}</p>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Online</p>
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-6">
+      <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-8 scrollbar-hide">
         {navigationSections.map((section, sectionIndex) => (
-          <div key={sectionIndex}>
-            <h3 className="px-3 text-xs font-semibold uppercase text-blue-200 tracking-wider mb-3">
+          <div key={sectionIndex} className="space-y-2">
+            <h3 className="px-4 text-[10px] font-black uppercase text-muted-foreground/60 tracking-[0.25em]">
               {section.title}
             </h3>
             <div className="space-y-1">
@@ -135,13 +141,12 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
                 <button
                   key={item.id}
                   onClick={() => onSectionChange(item.id)}
-                  className={`maritime-nav-link w-full text-left group ${
-                    activeSection === item.id ? 'active' : ''
-                  }`}
+                  className={`maritime-nav-link w-full text-left group gap-3 ${activeSection === item.id ? 'active' : ''
+                    }`}
                 >
-                  <span className="flex-1">{item.label}</span>
+                  <span className="flex-1 truncate group-hover:translate-x-1 transition-transform">{item.label}</span>
                   {item.badge && (
-                    <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
+                    <span className="bg-primary text-primary-foreground text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm">
                       {item.badge}
                     </span>
                   )}
@@ -154,13 +159,13 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
 
       {/* Sign Out Button */}
       {onSignOut && (
-        <div className="p-4 border-t border-white/10">
+        <div className="p-6 border-t border-border bg-slate-500/5 mt-auto">
           <button
             onClick={onSignOut}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-300 hover:bg-red-500/20 transition-colors"
+            className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-rose-500 hover:bg-rose-500/10 transition-all duration-300 font-bold text-sm shadow-sm hover:shadow-rose-500/5 group"
           >
-            <LogOut className="h-5 w-5" />
-            <span>Sign Out</span>
+            <LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+            <span>Terminate Session</span>
           </button>
         </div>
       )}

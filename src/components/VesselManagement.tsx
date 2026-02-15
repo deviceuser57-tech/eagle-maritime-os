@@ -12,10 +12,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { useVessels, Vessel } from '@/hooks/useVessels';
 import { useSetupCompanies } from '@/hooks/useSetupCompanies';
 import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
-import { 
-  Ship, 
-  Plus, 
-  Pencil, 
+import { useMaintenanceTasks } from '@/hooks/useMaintenanceTasks';
+import { format } from 'date-fns';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import {
+  Ship,
+  Plus,
+  Pencil,
   Trash2,
   Anchor,
   Flag,
@@ -24,7 +28,17 @@ import {
   Gauge,
   Shield,
   Building2,
-  Eye
+  Eye,
+  Loader2,
+  Calendar,
+  Wrench,
+  Camera,
+  FileText,
+  MessageSquare,
+  Sparkles,
+  Download,
+  Upload,
+  User
 } from 'lucide-react';
 
 interface VesselFormData {
@@ -67,6 +81,16 @@ interface VesselFormData {
   trading_area: string;
   hull_material: string;
   hull_coating: string;
+  // Drydocking & Extended
+  last_drydock_date: string;
+  next_drydock_date: string;
+  previous_dd_yard: string;
+  dd_remaining_tasks: string;
+  painting_details: string;
+  navigation_equipment: string;
+  accommodations_pax: string;
+  vessel_photos: string[];
+  vessel_brochure: string;
   // Financial
   purchase_price: string;
   insurance_value: string;
@@ -74,8 +98,6 @@ interface VesselFormData {
   // Dates
   keel_laid_date: string;
   delivery_date: string;
-  last_drydock_date: string;
-  next_drydock_date: string;
   // Companies
   owner_company_id: string;
   operator_company_id: string;
@@ -94,19 +116,31 @@ const initialFormData: VesselFormData = {
   max_speed: '', service_speed: '', fuel_consumption: '', fuel_type: '',
   lifeboats: '', liferafts: '', crew_capacity: '', passenger_capacity: '',
   cargo_capacity: '', trading_area: '', hull_material: '', hull_coating: '',
+  last_drydock_date: '', next_drydock_date: '', previous_dd_yard: '', dd_remaining_tasks: '',
+  painting_details: '', navigation_equipment: '', accommodations_pax: '',
+  vessel_photos: [], vessel_brochure: '',
   purchase_price: '', insurance_value: '', currency: 'USD',
-  keel_laid_date: '', delivery_date: '', last_drydock_date: '', next_drydock_date: '',
+  keel_laid_date: '', delivery_date: '',
   owner_company_id: '', operator_company_id: '', technical_manager_id: '', ism_manager_id: '',
   notes: ''
 };
 
 const VesselManagement = () => {
   const { vessels, loading, addVessel, updateVessel, deleteVessel } = useVessels();
+  const { addTask } = useMaintenanceTasks();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState(false);
   const [editingVessel, setEditingVessel] = useState<Vessel | null>(null);
   const [formData, setFormData] = useState<VesselFormData>(initialFormData);
   const [activeTab, setActiveTab] = useState('general');
+  const [aiInput, setAiInput] = useState('');
+  const [aiMessages, setAiMessages] = useState<any[]>([
+    {
+      role: 'assistant',
+      content: `Greetings. I have analyzed the registry for **${formData.name || 'this vessel'}**. You can ask me technical questions, request a summary, or ask me to generate a **Vessel Profile PDF** report for you to review and export.`
+    }
+  ]);
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
 
   // Setup data
   const ownerCompanies = useSetupCompanies('owner');
@@ -117,7 +151,7 @@ const VesselManagement = () => {
   const flagStatesHook = useFlagStates();
 
   const vesselTypes = [
-    'Bulk Carrier', 'Container Ship', 'Crude Oil Tanker', 'Product Tanker', 
+    'Bulk Carrier', 'Container Ship', 'Crude Oil Tanker', 'Product Tanker',
     'Chemical Tanker', 'LNG Carrier', 'LPG Carrier', 'General Cargo',
     'Passenger Ship', 'RoRo Ship', 'Vehicle Carrier', 'Offshore Supply Vessel',
     'Tugboat', 'Fishing Vessel', 'Yacht'
@@ -129,6 +163,179 @@ const VesselManagement = () => {
   const tradingAreas = ['Worldwide', 'Coastal', 'Short Sea', 'Inland Waterways', 'Restricted'];
   const statusOptions = ['active', 'inactive', 'maintenance', 'drydock', 'laid_up'];
   const currencies = ['USD', 'EUR', 'GBP', 'SGD', 'NOK', 'JPY'];
+
+  const handleSendAiMessage = async (e?: React.FormEvent, overridePrompt?: string) => {
+    e?.preventDefault();
+    const prompt = overridePrompt || aiInput;
+    if (!prompt.trim() || isAiGenerating) return;
+
+    const newMessages = [...aiMessages, { role: 'user', content: prompt }];
+    setAiMessages(newMessages);
+    setAiInput('');
+    setIsAiGenerating(true);
+
+    // Simulate AI response
+    setTimeout(() => {
+      let response = '';
+      if (prompt.toLowerCase().includes('report') || prompt.toLowerCase().includes('pdf')) {
+        response = `I am preparing the **Vessel Profile Report** for ${formData.name}. The dossier includes technical specs, maintenance history, and drydocking forecasts. You can download the finalized document using the buttons below.`;
+      } else if (prompt.toLowerCase().includes('dd') || prompt.toLowerCase().includes('drydock')) {
+        response = `Analyzing Drydocking specifications... Based on current data, the next DD is due on **${formData.next_drydock_date || 'TBD'}**. I recommend focusing on the **${formData.dd_remaining_tasks ? formData.dd_remaining_tasks.split('\n').length : 0}** pending tasks identified in the registry.`;
+      } else {
+        response = `Received your query regarding **${formData.name}**. Based on the technical data, this ${formData.vessel_type || 'vessel'} has a GT of ${formData.gross_tonnage || 'N/A'}. Is there a specific machinery or safety spec you'd like me to extract?`;
+      }
+
+      setAiMessages([...newMessages, { role: 'assistant', content: response }]);
+      setIsAiGenerating(false);
+    }, 1500);
+  };
+
+  const handleGenerateAiReport = () => {
+    setIsAiGenerating(true);
+    setAiMessages(prev => [...prev, { role: 'assistant', content: "System: Generating professional Vessel Profile PDF... Aggregating technical specifications, drydocking history, and machinery data." }]);
+
+    setTimeout(() => {
+      try {
+        const doc = new jsPDF();
+        const primaryColor = [15, 23, 42]; // Slate-900
+
+        // Header
+        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.rect(0, 0, 210, 40, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text('VESSEL REGISTRY PROFILE', 20, 20);
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`GENERATED: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}`, 20, 30);
+        doc.text('EAGLE MARITIME FLEET INTELLIGENCE', 140, 30);
+
+        // Core Data Section
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.setFontSize(14);
+        doc.text('1. ASSET IDENTITY', 20, 55);
+        doc.line(20, 57, 190, 57);
+
+        autoTable(doc, {
+          startY: 60,
+          head: [['Parameter', 'Specification Value']],
+          body: [
+            ['Vessel Name', formData.name || 'N/A'],
+            ['IMO Number', formData.imo_number || 'N/A'],
+            ['Call Sign', formData.call_sign || 'N/A'],
+            ['Vessel Type', formData.vessel_type || 'N/A'],
+            ['Status', formData.status || 'Active'],
+            ['Flag State', formData.flag_state || 'N/A'],
+            ['Classification', formData.classification_society || 'N/A'],
+          ],
+          theme: 'striped',
+          headStyles: { fillColor: primaryColor },
+        });
+
+        // Technical Specs
+        doc.setFontSize(14);
+        doc.text('2. TECHNICAL & MACHINERY', 20, (doc as any).lastAutoTable.finalY + 15);
+        doc.line(20, (doc as any).lastAutoTable.finalY + 17, 190, (doc as any).lastAutoTable.finalY + 17);
+
+        autoTable(doc, {
+          startY: (doc as any).lastAutoTable.finalY + 20,
+          body: [
+            ['Gross Tonnage', `${formData.gross_tonnage || 'N/A'} GT`],
+            ['Deadweight', `${formData.deadweight || 'N/A'} DWT`],
+            ['Length Overall', `${formData.length_overall || 'N/A'} m`],
+            ['Main Engine', `${formData.engine_make} ${formData.engine_model}`],
+            ['Engine Power', `${formData.engine_power || 'N/A'} kW`],
+            ['Propulsion', formData.propulsion_type || 'N/A'],
+          ],
+          margin: { left: 20 },
+          theme: 'grid',
+        });
+
+        // Drydocking Section
+        doc.setFontSize(14);
+        doc.text('3. DRYDOCKING FORECAST', 20, (doc as any).lastAutoTable.finalY + 15);
+
+        autoTable(doc, {
+          startY: (doc as any).lastAutoTable.finalY + 20,
+          head: [['Event', 'Date / Location']],
+          body: [
+            ['Last Drydock Date', formData.last_drydock_date || 'N/A'],
+            ['Previous DD Yard', formData.previous_dd_yard || 'N/A'],
+            ['Next Scheduled DD', formData.next_drydock_date || 'TBD'],
+          ],
+          theme: 'plain',
+          bodyStyles: { fontStyle: 'bold' }
+        });
+
+        if (formData.dd_remaining_tasks) {
+          doc.setFontSize(10);
+          doc.text('Outstanding DD Items:', 20, (doc as any).lastAutoTable.finalY + 10);
+          doc.setFontSize(8);
+          doc.setTextColor(100);
+          const splitTasks = doc.splitTextToSize(formData.dd_remaining_tasks, 170);
+          doc.text(splitTasks, 20, (doc as any).lastAutoTable.finalY + 15);
+        }
+
+        // 4. VESSEL IMAGERY SECTION
+        if (formData.vessel_photos && formData.vessel_photos.length > 0) {
+          doc.addPage();
+          doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+          doc.rect(0, 0, 210, 20, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(12);
+          doc.text('4. VESSEL IMAGERY & DOCUMENTATION', 20, 13);
+
+          doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+          doc.setFontSize(10);
+          doc.text('Current Visual Assets retrieved from the Digital Compliance Registry:', 20, 35);
+
+          let currentY = 45;
+          const photoLimit = Math.min(formData.vessel_photos.length, 2); // Limit to 2 for layout stability
+
+          for (let i = 0; i < photoLimit; i++) {
+            const photoUrl = formData.vessel_photos[i];
+            if (photoUrl) {
+              // Note: addImage works best with base64, but URLs can work depending on environment.
+              // For robustness we include a placeholder frame if image fails to render.
+              doc.setDrawColor(200);
+              doc.rect(20, currentY, 170, 90);
+              doc.text(`[ Photo Identifier: ${i + 1} - ${formData.name} ]`, 105, currentY + 45, { align: 'center' });
+
+              try {
+                // Attempting to add the actual image
+                doc.addImage(photoUrl, 'JPEG', 20, currentY, 170, 90);
+              } catch (e) {
+                doc.setFontSize(8);
+                doc.text('Image stream connection pending or CORS restricted.', 105, currentY + 55, { align: 'center' });
+              }
+              currentY += 105;
+            }
+          }
+        }
+
+        // Footer
+        const pageCount = (doc as any).internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.setTextColor(150);
+          doc.text(`Page ${i} of ${pageCount} - Confidential Asset Report`, 105, 285, { align: 'center' });
+        }
+
+        doc.save(`Vessel_Profile_${formData.name || 'Registry'}.pdf`);
+
+        setAiMessages(prev => [...prev, { role: 'assistant', content: `**Report Generated Successfully.**\nVessel: ${formData.name}\nExported to high-fidelity PDF format. The document includes structural, technical, and drydocking specifications.` }]);
+      } catch (err: any) {
+        console.error('PDF Generation Error:', err);
+        setAiMessages(prev => [...prev, { role: 'assistant', content: `Error generating PDF: ${err.message}` }]);
+      } finally {
+        setIsAiGenerating(false);
+      }
+    }, 2000);
+  };
 
   const handleOpenDialog = (vessel?: Vessel, view = false) => {
     if (vessel) {
@@ -170,13 +377,20 @@ const VesselManagement = () => {
         trading_area: vessel.trading_area || '',
         hull_material: vessel.hull_material || '',
         hull_coating: vessel.hull_coating || '',
+        last_drydock_date: vessel.last_drydock_date || '',
+        next_drydock_date: vessel.next_drydock_date || '',
+        previous_dd_yard: vessel.previous_dd_yard || '',
+        dd_remaining_tasks: vessel.dd_remaining_tasks || '',
+        painting_details: vessel.painting_details || '',
+        navigation_equipment: vessel.navigation_equipment || '',
+        accommodations_pax: vessel.accommodations_pax || '',
+        vessel_photos: vessel.vessel_photos || [],
+        vessel_brochure: vessel.vessel_brochure || '',
         purchase_price: vessel.purchase_price?.toString() || '',
         insurance_value: vessel.insurance_value?.toString() || '',
         currency: vessel.currency || 'USD',
         keel_laid_date: vessel.keel_laid_date || '',
         delivery_date: vessel.delivery_date || '',
-        last_drydock_date: vessel.last_drydock_date || '',
-        next_drydock_date: vessel.next_drydock_date || '',
         owner_company_id: vessel.owner_company_id || '',
         operator_company_id: vessel.operator_company_id || '',
         technical_manager_id: vessel.technical_manager_id || '',
@@ -194,7 +408,7 @@ const VesselManagement = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const vesselData: any = {
       name: formData.name,
       imo_number: formData.imo_number || null,
@@ -238,6 +452,13 @@ const VesselManagement = () => {
       delivery_date: formData.delivery_date || null,
       last_drydock_date: formData.last_drydock_date || null,
       next_drydock_date: formData.next_drydock_date || null,
+      previous_dd_yard: formData.previous_dd_yard || null,
+      dd_remaining_tasks: formData.dd_remaining_tasks || null,
+      painting_details: formData.painting_details || null,
+      navigation_equipment: formData.navigation_equipment || null,
+      accommodations_pax: formData.accommodations_pax || null,
+      vessel_photos: formData.vessel_photos || [],
+      vessel_brochure: formData.vessel_brochure || null,
       owner_company_id: formData.owner_company_id || null,
       operator_company_id: formData.operator_company_id || null,
       technical_manager_id: formData.technical_manager_id || null,
@@ -250,7 +471,7 @@ const VesselManagement = () => {
     } else {
       await addVessel(vesselData);
     }
-    
+
     setIsDialogOpen(false);
     setFormData(initialFormData);
     setEditingVessel(null);
@@ -263,14 +484,14 @@ const VesselManagement = () => {
   };
 
   const getStatusBadge = (status: string | null) => {
-    const statusStyles: Record<string, string> = {
-      active: 'bg-green-500/10 text-green-500 border-green-500/20',
-      inactive: 'bg-gray-500/10 text-gray-500 border-gray-500/20',
-      maintenance: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-      drydock: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-      laid_up: 'bg-red-500/10 text-red-500 border-red-500/20'
-    };
-    return statusStyles[status || 'active'] || statusStyles.active;
+    switch (status) {
+      case 'active': return 'status-valid';
+      case 'maintenance': return 'status-warning';
+      case 'inactive': return 'status-expired';
+      case 'drydock': return 'btn-ocean';
+      case 'laid_up': return 'status-critical';
+      default: return 'status-valid';
+    }
   };
 
   const stats = {
@@ -281,7 +502,7 @@ const VesselManagement = () => {
 
   const renderFormField = (id: string, label: string, value: string, onChange: (value: string) => void, type = 'text', placeholder = '') => (
     <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} className="text-xs font-black uppercase tracking-widest text-muted-foreground">{label}</Label>
       <Input
         id={id}
         type={type}
@@ -289,20 +510,21 @@ const VesselManagement = () => {
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={viewMode}
+        className="rounded-xl border-border bg-background/50 focus:ring-primary/20"
       />
     </div>
   );
 
   const renderSelectField = (id: string, label: string, value: string, onChange: (value: string) => void, options: string[] | { value: string; label: string }[]) => (
     <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} className="text-xs font-black uppercase tracking-widest text-muted-foreground">{label}</Label>
       <Select value={value} onValueChange={onChange} disabled={viewMode}>
-        <SelectTrigger>
+        <SelectTrigger className="rounded-xl border-border bg-background/50">
           <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="rounded-2xl border-border backdrop-blur-xl">
           {options.map((opt) => (
-            typeof opt === 'string' 
+            typeof opt === 'string'
               ? <SelectItem key={opt} value={opt}>{opt}</SelectItem>
               : <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
           ))}
@@ -312,194 +534,356 @@ const VesselManagement = () => {
   );
 
   return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-4">
-          ⚓ Vessel Management
-        </h2>
-        <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-          Comprehensive fleet management with detailed vessel tracking, technical specifications, and regulatory compliance.
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="maritime-card">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-primary/10">
-                <Ship className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Vessels</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="maritime-card">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-green-500/10">
-                <Anchor className="h-6 w-6 text-green-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Active</p>
-                <p className="text-2xl font-bold">{stats.active}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="maritime-card">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-yellow-500/10">
-                <Flag className="h-6 w-6 text-yellow-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">In Maintenance</p>
-                <p className="text-2xl font-bold">{stats.maintenance}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Actions */}
-      <div className="flex justify-end">
+    <div className="space-y-10 py-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border">
+        <div>
+          <h2 className="text-3xl font-black tracking-tighter text-foreground mb-2 uppercase px-1">
+            Asset Registry
+          </h2>
+          <p className="text-muted-foreground max-w-2xl text-base font-medium px-1">
+            Authorized vessel directory and technical specification database.
+          </p>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()} className="btn-maritime">
+            <Button onClick={() => handleOpenDialog()} className="btn-maritime px-6 h-12 rounded-xl text-sm">
               <Plus className="h-4 w-4 mr-2" />
-              Add Vessel
+              Register Vessel
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border-border backdrop-blur-2xl">
             <DialogHeader>
-              <DialogTitle>
-                {viewMode ? 'View Vessel Details' : (editingVessel ? 'Edit Vessel' : 'Add New Vessel')}
+              <DialogTitle className="text-xl font-black uppercase tracking-tight">
+                {viewMode ? 'Vessel Dossier' : (editingVessel ? 'Update Registry' : 'New Vessel Registration')}
               </DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-8 mt-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="general" className="text-xs"><Ship className="h-3 w-3 mr-1" />General</TabsTrigger>
-                  <TabsTrigger value="technical" className="text-xs"><Settings className="h-3 w-3 mr-1" />Technical</TabsTrigger>
-                  <TabsTrigger value="machinery" className="text-xs"><Gauge className="h-3 w-3 mr-1" />Machinery</TabsTrigger>
-                  <TabsTrigger value="safety" className="text-xs"><Shield className="h-3 w-3 mr-1" />Safety</TabsTrigger>
-                  <TabsTrigger value="management" className="text-xs"><Building2 className="h-3 w-3 mr-1" />Management</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-5 md:grid-cols-9 bg-muted/50 p-1 rounded-xl h-auto min-h-12 overflow-x-auto gap-1">
+                  <TabsTrigger value="general" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Ship className="h-3 w-3 mr-1" />Gen</TabsTrigger>
+                  <TabsTrigger value="technical" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Settings className="h-3 w-3 mr-1" />Tech</TabsTrigger>
+                  <TabsTrigger value="machinery" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Gauge className="h-3 w-3 mr-1" />Eng</TabsTrigger>
+                  <TabsTrigger value="safety" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Shield className="h-3 w-3 mr-1" />Safe</TabsTrigger>
+                  <TabsTrigger value="drydock" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Wrench className="h-3 w-3 mr-1" />DD</TabsTrigger>
+                  <TabsTrigger value="equipment" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Anchor className="h-3 w-3 mr-1" />Equip</TabsTrigger>
+                  <TabsTrigger value="media" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Camera className="h-3 w-3 mr-1" />Media</TabsTrigger>
+                  <TabsTrigger value="management" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Building2 className="h-3 w-3 mr-1" />Mgt</TabsTrigger>
+                  <TabsTrigger value="ai" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1 font-bold text-primary"><Sparkles className="h-3 w-3 mr-1" />AI</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="general" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {renderFormField('name', 'Vessel Name *', formData.name, (v) => setFormData({ ...formData, name: v }))}
-                    {renderFormField('imo_number', 'IMO Number', formData.imo_number, (v) => setFormData({ ...formData, imo_number: v }), 'text', 'e.g., 9876543')}
-                    {renderFormField('official_number', 'Official Number', formData.official_number, (v) => setFormData({ ...formData, official_number: v }))}
-                    {renderFormField('call_sign', 'Call Sign', formData.call_sign, (v) => setFormData({ ...formData, call_sign: v }))}
-                    {renderFormField('mmsi_number', 'MMSI Number', formData.mmsi_number, (v) => setFormData({ ...formData, mmsi_number: v }))}
-                    {renderSelectField('vessel_type', 'Vessel Type', formData.vessel_type, (v) => setFormData({ ...formData, vessel_type: v }), vesselTypes)}
-                    {renderSelectField('flag_state', 'Flag State', formData.flag_state, (v) => setFormData({ ...formData, flag_state: v }), 
-                      flagStatesHook.flagStates.length > 0 
-                        ? flagStatesHook.flagStates.map(f => ({ value: f.flag_name, label: f.flag_name }))
-                        : ['Panama', 'Liberia', 'Marshall Islands', 'Hong Kong', 'Singapore', 'Bahamas', 'Malta', 'Cyprus', 'Greece', 'Norway']
-                    )}
-                    {renderFormField('port_of_registry', 'Port of Registry', formData.port_of_registry, (v) => setFormData({ ...formData, port_of_registry: v }))}
-                    {renderFormField('year_built', 'Year Built', formData.year_built, (v) => setFormData({ ...formData, year_built: v }), 'number', 'e.g., 2020')}
-                    {renderSelectField('classification_society', 'Classification Society', formData.classification_society, (v) => setFormData({ ...formData, classification_society: v }),
-                      classificationSocieties.societies.length > 0
-                        ? classificationSocieties.societies.map(s => ({ value: s.society_name, label: `${s.society_name} (${s.abbreviation || ''})` }))
-                        : ['DNV GL', "Lloyd's Register", 'ABS', 'Bureau Veritas', 'ClassNK', 'RINA']
-                    )}
-                    {renderFormField('class_number', 'Class Number', formData.class_number, (v) => setFormData({ ...formData, class_number: v }))}
-                    {renderSelectField('status', 'Status', formData.status, (v) => setFormData({ ...formData, status: v }), statusOptions)}
-                    {renderSelectField('trading_area', 'Trading Area', formData.trading_area, (v) => setFormData({ ...formData, trading_area: v }), tradingAreas)}
-                  </div>
-                </TabsContent>
+                <div className="mt-6 bg-slate-500/5 p-6 rounded-2xl border border-border/50 min-h-[400px]">
+                  <TabsContent value="general" className="space-y-5 mt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                      {renderFormField('name', 'Vessel Name *', formData.name, (v) => setFormData({ ...formData, name: v }))}
+                      {renderFormField('imo_number', 'IMO Number', formData.imo_number, (v) => setFormData({ ...formData, imo_number: v }), 'text', '9876543')}
+                      {renderFormField('official_number', 'Official No', formData.official_number, (v) => setFormData({ ...formData, official_number: v }))}
+                      {renderFormField('call_sign', 'Call Sign', formData.call_sign, (v) => setFormData({ ...formData, call_sign: v }))}
+                      {renderFormField('mmsi_number', 'MMSI', formData.mmsi_number, (v) => setFormData({ ...formData, mmsi_number: v }))}
+                      {renderSelectField('vessel_type', 'Type', formData.vessel_type, (v) => setFormData({ ...formData, vessel_type: v }), vesselTypes)}
+                      {renderSelectField('flag_state', 'Flag', formData.flag_state, (v) => setFormData({ ...formData, flag_state: v }),
+                        flagStatesHook.flagStates.length > 0
+                          ? flagStatesHook.flagStates.map(f => ({ value: f.flag_name, label: f.flag_name }))
+                          : ['Panama', 'Liberia', 'Marshall Islands', 'Singapore', 'Bahamas', 'Malta']
+                      )}
+                      {renderFormField('port_of_registry', 'Port', formData.port_of_registry, (v) => setFormData({ ...formData, port_of_registry: v }))}
+                      {renderFormField('year_built', 'Built', formData.year_built, (v) => setFormData({ ...formData, year_built: v }), 'number', '2020')}
+                      {renderSelectField('classification_society', 'Class', formData.classification_society, (v) => setFormData({ ...formData, classification_society: v }),
+                        classificationSocieties.societies.length > 0
+                          ? classificationSocieties.societies.map(s => ({ value: s.society_name, label: `${s.society_name} (${s.abbreviation || ''})` }))
+                          : ['DNV GL', "Lloyd's Register", 'ABS', 'Bureau Veritas']
+                      )}
+                      {renderFormField('class_number', 'Class No', formData.class_number, (v) => setFormData({ ...formData, class_number: v }))}
+                      {renderSelectField('status', 'Status', formData.status, (v) => setFormData({ ...formData, status: v }), statusOptions)}
+                    </div>
+                  </TabsContent>
 
-                <TabsContent value="technical" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {renderFormField('gross_tonnage', 'Gross Tonnage (GT)', formData.gross_tonnage, (v) => setFormData({ ...formData, gross_tonnage: v }), 'number')}
-                    {renderFormField('net_tonnage', 'Net Tonnage (NT)', formData.net_tonnage, (v) => setFormData({ ...formData, net_tonnage: v }), 'number')}
-                    {renderFormField('deadweight', 'Deadweight (DWT)', formData.deadweight, (v) => setFormData({ ...formData, deadweight: v }), 'number')}
-                    {renderFormField('length_overall', 'Length Overall (m)', formData.length_overall, (v) => setFormData({ ...formData, length_overall: v }), 'number')}
-                    {renderFormField('beam', 'Beam (m)', formData.beam, (v) => setFormData({ ...formData, beam: v }), 'number')}
-                    {renderFormField('depth', 'Depth (m)', formData.depth, (v) => setFormData({ ...formData, depth: v }), 'number')}
-                    {renderFormField('draft', 'Draft (m)', formData.draft, (v) => setFormData({ ...formData, draft: v }), 'number')}
-                    {renderFormField('cargo_capacity', 'Cargo Capacity (cbm/TEU)', formData.cargo_capacity, (v) => setFormData({ ...formData, cargo_capacity: v }), 'number')}
-                    {renderSelectField('hull_material', 'Hull Material', formData.hull_material, (v) => setFormData({ ...formData, hull_material: v }), hullMaterials)}
-                    {renderFormField('hull_coating', 'Hull Coating', formData.hull_coating, (v) => setFormData({ ...formData, hull_coating: v }))}
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {renderFormField('keel_laid_date', 'Keel Laid Date', formData.keel_laid_date, (v) => setFormData({ ...formData, keel_laid_date: v }), 'date')}
-                    {renderFormField('delivery_date', 'Delivery Date', formData.delivery_date, (v) => setFormData({ ...formData, delivery_date: v }), 'date')}
-                    {renderFormField('last_drydock_date', 'Last Drydock Date', formData.last_drydock_date, (v) => setFormData({ ...formData, last_drydock_date: v }), 'date')}
-                    {renderFormField('next_drydock_date', 'Next Drydock Date', formData.next_drydock_date, (v) => setFormData({ ...formData, next_drydock_date: v }), 'date')}
-                  </div>
-                </TabsContent>
+                  <TabsContent value="technical" className="space-y-5 mt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                      {renderFormField('gross_tonnage', 'GT', formData.gross_tonnage, (v) => setFormData({ ...formData, gross_tonnage: v }), 'number')}
+                      {renderFormField('net_tonnage', 'NT', formData.net_tonnage, (v) => setFormData({ ...formData, net_tonnage: v }), 'number')}
+                      {renderFormField('deadweight', 'DWT', formData.deadweight, (v) => setFormData({ ...formData, deadweight: v }), 'number')}
+                      {renderFormField('length_overall', 'LOA (m)', formData.length_overall, (v) => setFormData({ ...formData, length_overall: v }), 'number')}
+                      {renderFormField('beam', 'Beam (m)', formData.beam, (v) => setFormData({ ...formData, beam: v }), 'number')}
+                      {renderFormField('depth', 'Depth (m)', formData.depth, (v) => setFormData({ ...formData, depth: v }), 'number')}
+                      {renderFormField('draft', 'Draft (m)', formData.draft, (v) => setFormData({ ...formData, draft: v }), 'number')}
+                      {renderFormField('cargo_capacity', 'Cargo Cap', formData.cargo_capacity, (v) => setFormData({ ...formData, cargo_capacity: v }), 'number')}
+                      {renderSelectField('hull_material', 'Hull Mat', formData.hull_material, (v) => setFormData({ ...formData, hull_material: v }), hullMaterials)}
+                      {renderFormField('hull_coating', 'Hull Coating', formData.hull_coating, (v) => setFormData({ ...formData, hull_coating: v }))}
+                    </div>
+                  </TabsContent>
 
-                <TabsContent value="machinery" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {renderFormField('engine_make', 'Engine Make', formData.engine_make, (v) => setFormData({ ...formData, engine_make: v }))}
-                    {renderFormField('engine_model', 'Engine Model', formData.engine_model, (v) => setFormData({ ...formData, engine_model: v }))}
-                    {renderFormField('engine_power', 'Engine Power (kW)', formData.engine_power, (v) => setFormData({ ...formData, engine_power: v }), 'number')}
-                    {renderSelectField('propulsion_type', 'Propulsion Type', formData.propulsion_type, (v) => setFormData({ ...formData, propulsion_type: v }), propulsionTypes)}
-                    {renderFormField('max_speed', 'Max Speed (knots)', formData.max_speed, (v) => setFormData({ ...formData, max_speed: v }), 'number')}
-                    {renderFormField('service_speed', 'Service Speed (knots)', formData.service_speed, (v) => setFormData({ ...formData, service_speed: v }), 'number')}
-                    {renderFormField('fuel_consumption', 'Fuel Consumption (MT/day)', formData.fuel_consumption, (v) => setFormData({ ...formData, fuel_consumption: v }), 'number')}
-                    {renderSelectField('fuel_type', 'Fuel Type', formData.fuel_type, (v) => setFormData({ ...formData, fuel_type: v }), fuelTypes)}
-                  </div>
-                </TabsContent>
+                  <TabsContent value="machinery" className="space-y-5 mt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                      {renderFormField('engine_make', 'Eng Make', formData.engine_make, (v) => setFormData({ ...formData, engine_make: v }))}
+                      {renderFormField('engine_model', 'Eng Model', formData.engine_model, (v) => setFormData({ ...formData, engine_model: v }))}
+                      {renderFormField('engine_power', 'Power (kW)', formData.engine_power, (v) => setFormData({ ...formData, engine_power: v }), 'number')}
+                      {renderSelectField('propulsion_type', 'Propulsion', formData.propulsion_type, (v) => setFormData({ ...formData, propulsion_type: v }), propulsionTypes)}
+                      {renderFormField('max_speed', 'Max (kn)', formData.max_speed, (v) => setFormData({ ...formData, max_speed: v }), 'number')}
+                      {renderFormField('service_speed', 'Service (kn)', formData.service_speed, (v) => setFormData({ ...formData, service_speed: v }), 'number')}
+                      {renderFormField('fuel_consumption', 'Cons (t/d)', formData.fuel_consumption, (v) => setFormData({ ...formData, fuel_consumption: v }), 'number')}
+                      {renderSelectField('fuel_type', 'Fuel', formData.fuel_type, (v) => setFormData({ ...formData, fuel_type: v }), fuelTypes)}
+                    </div>
+                  </TabsContent>
 
-                <TabsContent value="safety" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {renderFormField('lifeboats', 'Lifeboats', formData.lifeboats, (v) => setFormData({ ...formData, lifeboats: v }), 'number')}
-                    {renderFormField('liferafts', 'Liferafts', formData.liferafts, (v) => setFormData({ ...formData, liferafts: v }), 'number')}
-                    {renderFormField('crew_capacity', 'Crew Capacity', formData.crew_capacity, (v) => setFormData({ ...formData, crew_capacity: v }), 'number')}
-                    {renderFormField('passenger_capacity', 'Passenger Capacity', formData.passenger_capacity, (v) => setFormData({ ...formData, passenger_capacity: v }), 'number')}
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {renderFormField('purchase_price', 'Purchase Price', formData.purchase_price, (v) => setFormData({ ...formData, purchase_price: v }), 'number')}
-                    {renderFormField('insurance_value', 'Insurance Value', formData.insurance_value, (v) => setFormData({ ...formData, insurance_value: v }), 'number')}
-                    {renderSelectField('currency', 'Currency', formData.currency, (v) => setFormData({ ...formData, currency: v }), currencies)}
-                  </div>
-                </TabsContent>
+                  <TabsContent value="safety" className="space-y-5 mt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                      {renderFormField('lifeboats', 'Lifeboats', formData.lifeboats, (v) => setFormData({ ...formData, lifeboats: v }), 'number')}
+                      {renderFormField('liferafts', 'Liferafts', formData.liferafts, (v) => setFormData({ ...formData, liferafts: v }), 'number')}
+                      {renderFormField('crew_capacity', 'Crew Cap', formData.crew_capacity, (v) => setFormData({ ...formData, crew_capacity: v }), 'number')}
+                      {renderFormField('passenger_capacity', 'Pax Cap', formData.passenger_capacity, (v) => setFormData({ ...formData, passenger_capacity: v }), 'number')}
+                      {renderFormField('purchase_price', 'Price', formData.purchase_price, (v) => setFormData({ ...formData, purchase_price: v }), 'number')}
+                      {renderSelectField('currency', 'Currency', formData.currency, (v) => setFormData({ ...formData, currency: v }), currencies)}
+                    </div>
+                  </TabsContent>
 
-                <TabsContent value="management" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {renderSelectField('owner_company_id', 'Owner Company', formData.owner_company_id, (v) => setFormData({ ...formData, owner_company_id: v }),
-                      ownerCompanies.companies.map(c => ({ value: c.id, label: c.name }))
-                    )}
-                    {renderSelectField('operator_company_id', 'Operator Company', formData.operator_company_id, (v) => setFormData({ ...formData, operator_company_id: v }),
-                      operatorCompanies.companies.map(c => ({ value: c.id, label: c.name }))
-                    )}
-                    {renderSelectField('technical_manager_id', 'Technical Manager', formData.technical_manager_id, (v) => setFormData({ ...formData, technical_manager_id: v }),
-                      technicalManagers.companies.map(c => ({ value: c.id, label: c.name }))
-                    )}
-                    {renderSelectField('ism_manager_id', 'ISM Manager', formData.ism_manager_id, (v) => setFormData({ ...formData, ism_manager_id: v }),
-                      ismManagers.companies.map(c => ({ value: c.id, label: c.name }))
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Textarea
-                      id="notes"
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      placeholder="Additional notes about the vessel..."
-                      rows={4}
-                      disabled={viewMode}
-                    />
-                  </div>
-                </TabsContent>
+                  <TabsContent value="drydock" className="space-y-5 mt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {renderFormField('last_drydock_date', 'Previous DD Date', formData.last_drydock_date, (v) => setFormData({ ...formData, last_drydock_date: v }), 'date')}
+                      {renderFormField('previous_dd_yard', 'Previous DD Yard', formData.previous_dd_yard, (v) => setFormData({ ...formData, previous_dd_yard: v }), 'text', 'Yard name...')}
+                      {renderFormField('next_drydock_date', 'Next DD Date', formData.next_drydock_date, (v) => setFormData({ ...formData, next_drydock_date: v }), 'date')}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Remaining Tasks / Special Conditions (Previous DD)</Label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-[10px] font-bold text-primary hover:bg-primary/5 uppercase"
+                          onClick={async () => {
+                            if (!formData.dd_remaining_tasks || !editingVessel) {
+                              alert('Please save the vessel first and ensure tasks are listed.');
+                              return;
+                            }
+                            const tasks = formData.dd_remaining_tasks.split('\n').filter(t => t.trim());
+                            for (const task of tasks) {
+                              await addTask({
+                                title: task,
+                                description: `Carried forward from previous Drydocking at ${formData.previous_dd_yard || 'unknown yard'}.`,
+                                vessel_id: editingVessel.id,
+                                task_type: 'drydock',
+                                priority: 'medium',
+                                status: 'scheduled',
+                                due_date: formData.next_drydock_date || new Date().toISOString().split('T')[0],
+                                notes: 'Auto-promoted from Vessel Registry DD Remaining Tasks.',
+                                completed_date: null,
+                                assigned_to: null,
+                                estimated_hours: null,
+                                actual_hours: null,
+                                cost_estimate: null,
+                                actual_cost: null
+                              });
+                            }
+                            alert(`${tasks.length} tasks successfully promoted to Maintenance Planner.`);
+                          }}
+                        >
+                          <Plus className="h-3 w-3 mr-1" /> Add to Planner
+                        </Button>
+                      </div>
+                      <Textarea
+                        value={formData.dd_remaining_tasks}
+                        onChange={(e) => setFormData({ ...formData, dd_remaining_tasks: e.target.value })}
+                        placeholder="List items to be carried forward (one per line)..."
+                        rows={4}
+                        className="rounded-xl border-border bg-background/50 text-sm"
+                        disabled={viewMode}
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="equipment" className="space-y-5 mt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Painting & Coating Data</Label>
+                        <Textarea
+                          value={formData.painting_details}
+                          onChange={(e) => setFormData({ ...formData, painting_details: e.target.value })}
+                          placeholder="Type, system, last application details..."
+                          rows={4}
+                          className="rounded-xl border-border bg-background/50 text-sm"
+                          disabled={viewMode}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Crew Accommodations (PAX)</Label>
+                        <Textarea
+                          value={formData.accommodations_pax}
+                          onChange={(e) => setFormData({ ...formData, accommodations_pax: e.target.value })}
+                          placeholder="Cabin breakdown, amenities, capacity detail..."
+                          rows={4}
+                          className="rounded-xl border-border bg-background/50 text-sm"
+                          disabled={viewMode}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Navigation Aids & Equipment</Label>
+                      <Textarea
+                        value={formData.navigation_equipment}
+                        onChange={(e) => setFormData({ ...formData, navigation_equipment: e.target.value })}
+                        placeholder="Radar, GPS, ECDIS, Gyro, Auto-pilot technical details..."
+                        rows={6}
+                        className="rounded-xl border-border bg-background/50 text-sm"
+                        disabled={viewMode}
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="media" className="space-y-5 mt-0">
+                    <div className="space-y-4">
+                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Vessel Gallery (5 Photos Required)</Label>
+                      <div className="grid grid-cols-5 gap-3">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <div key={i} className="aspect-square rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 bg-slate-500/5 hover:bg-slate-500/10 transition-colors cursor-pointer group">
+                            {formData.vessel_photos[i - 1] ? (
+                              <img src={formData.vessel_photos[i - 1]} className="w-full h-full object-cover rounded-2xl" alt={`Vessel ${i}`} />
+                            ) : (
+                              <>
+                                <Camera className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                                <span className="text-[10px] font-bold text-muted-foreground/60">PHOTO {i}</span>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="pt-4 space-y-4">
+                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Approved Vessel Brochure (PDF)</Label>
+                        <div className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-background/50">
+                          <div className="p-3 rounded-xl bg-orange-500/10 text-orange-600">
+                            <FileText className="h-6 w-6" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-bold">{formData.vessel_brochure ? 'brochure_v1.pdf' : 'No brochure uploaded'}</p>
+                            <p className="text-xs text-muted-foreground uppercase font-medium">Technical Specification PDF</p>
+                          </div>
+                          <Button type="button" variant="outline" size="sm" className="rounded-xl h-9">
+                            <Upload className="h-3.5 w-3.5 mr-2" /> Upload
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="management" className="space-y-5 mt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {renderSelectField('owner_company_id', 'Owner', formData.owner_company_id, (v) => setFormData({ ...formData, owner_company_id: v }),
+                        ownerCompanies.companies.map(c => ({ value: c.id, label: c.name }))
+                      )}
+                      {renderSelectField('operator_company_id', 'Operator', formData.operator_company_id, (v) => setFormData({ ...formData, operator_company_id: v }),
+                        operatorCompanies.companies.map(c => ({ value: c.id, label: c.name }))
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="notes" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Operational Notes</Label>
+                      <Textarea
+                        id="notes"
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        placeholder="Log critical observations..."
+                        rows={3}
+                        className="rounded-xl border-border bg-background/50 focus:ring-primary/20 resize-none text-sm"
+                        disabled={viewMode}
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="ai" className="h-full mt-0">
+                    <div className="flex flex-col h-[450px] bg-slate-900 rounded-2xl border border-border overflow-hidden">
+                      <div className="p-4 border-b border-white/10 flex items-center justify-between bg-slate-950/50">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-primary" />
+                          <h4 className="text-xs font-black uppercase text-white tracking-widest">AI Vessel Intelligence</h4>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-white/60"
+                            onClick={() => {
+                              const content = aiMessages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
+                              const blob = new Blob([content], { type: 'text/plain' });
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = `AI_Analysis_${formData.name}.txt`;
+                              a.click();
+                            }}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
+                        {aiMessages.map((msg, idx) => (
+                          <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                            <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'assistant' ? 'bg-primary/20' : 'bg-slate-700'}`}>
+                              {msg.role === 'assistant' ? <Sparkles className="h-4 w-4 text-primary" /> : <User className="h-4 w-4 text-slate-400" />}
+                            </div>
+                            <div className={`rounded-2xl p-4 text-xs leading-relaxed max-w-[80%] border ${msg.role === 'assistant' ? 'bg-white/5 text-slate-200 border-white/5' : 'bg-primary/10 text-white border-primary/20'}`}>
+                              {msg.content}
+                            </div>
+                          </div>
+                        ))}
+                        {isAiGenerating && (
+                          <div className="flex gap-3 animate-pulse">
+                            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                              <Sparkles className="h-4 w-4 text-primary" />
+                            </div>
+                            <div className="flex-1 bg-white/5 rounded-2xl p-4 text-xs text-slate-400 italic">
+                              Analyzing vessel telemetry and registry data...
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4 bg-slate-950/50 border-t border-white/10">
+                        <form onSubmit={handleSendAiMessage} className="relative">
+                          <Input
+                            value={aiInput}
+                            onChange={(e) => setAiInput(e.target.value)}
+                            className="bg-white/5 border-white/10 rounded-xl pl-4 pr-12 text-xs text-white h-11 focus:ring-primary/40"
+                            placeholder="Ask about technical specs, DD history, or request a PDF report..."
+                          />
+                          <Button
+                            type="submit"
+                            size="icon"
+                            disabled={!aiInput.trim() || isAiGenerating}
+                            className="absolute right-1 top-1 h-9 w-9 bg-primary hover:bg-primary/80 rounded-lg"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                        </form>
+                        <div className="mt-3 flex gap-2">
+                          <Button
+                            variant="ghost"
+                            className="h-7 px-3 text-[10px] font-bold text-white/40 hover:text-white hover:bg-white/5 rounded-full border border-white/10 uppercase"
+                            onClick={handleGenerateAiReport}
+                            disabled={isAiGenerating}
+                          >
+                            Generate Report PDF
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="h-7 px-3 text-[10px] font-bold text-white/40 hover:text-white hover:bg-white/5 rounded-full border border-white/10 uppercase"
+                            onClick={() => handleSendAiMessage(undefined, "Analyze drydocking specifications and remaining tasks.")}
+                            disabled={isAiGenerating}
+                          >
+                            Check DD Specs
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </div>
               </Tabs>
 
-              <div className="flex justify-end gap-4 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  {viewMode ? 'Close' : 'Cancel'}
+              <div className="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl h-11 px-6 text-sm">
+                  {viewMode ? 'Close Portal' : 'Abort'}
                 </Button>
                 {!viewMode && (
-                  <Button type="submit" className="btn-maritime">
-                    {editingVessel ? 'Update Vessel' : 'Add Vessel'}
+                  <Button type="submit" className="btn-maritime h-11 px-8 text-sm">
+                    {editingVessel ? 'Update Dossier' : 'Finalize Registration'}
                   </Button>
                 )}
               </div>
@@ -508,87 +892,149 @@ const VesselManagement = () => {
         </Dialog>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="maritime-card group">
+          <CardContent className="p-8 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-3">Tactical Assets</p>
+              <p className="text-4xl font-black text-foreground group-hover:translate-x-1 transition-transform origin-left">{stats.total}</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-primary/5 text-primary">
+              <Ship className="h-8 w-8" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="maritime-card group">
+          <CardContent className="p-8 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-3">Operational</p>
+              <p className="text-4xl font-black text-emerald-600 group-hover:translate-x-1 transition-transform origin-left">{stats.active}</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-emerald-500/5 text-emerald-600">
+              <Gauge className="h-8 w-8" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="maritime-card group">
+          <CardContent className="p-8 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-3">Refitting</p>
+              <p className="text-4xl font-black text-amber-500 group-hover:translate-x-1 transition-transform origin-left">{stats.maintenance}</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-amber-500/5 text-amber-500">
+              <Settings className="h-8 w-8" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Vessels Table */}
-      <Card className="maritime-card">
-        <CardContent className="p-0">
+      <div className="maritime-card">
+        <div className="p-6 border-b border-border bg-slate-500/5">
+          <h3 className="font-bold text-base tracking-tight uppercase">Fleet Intelligence Table</h3>
+          <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">Verified Multi-vessel Monitoring Node</p>
+        </div>
+        <div className="p-0 overflow-x-auto scrollbar-hide">
           {loading ? (
-            <div className="p-8 text-center text-muted-foreground">Loading vessels...</div>
+            <div className="p-16 text-center flex flex-col items-center gap-4">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <p className="font-bold text-muted-foreground text-xs uppercase tracking-tighter">Decrypting Asset Data...</p>
+            </div>
           ) : vessels.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
-              <Ship className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No vessels found. Add your first vessel to get started.</p>
+            <div className="p-16 text-center text-muted-foreground border-t border-border/50">
+              <Ship className="h-12 w-12 mx-auto mb-4 opacity-20" />
+              <p className="font-bold text-base">Zero assets detected in current sector.</p>
+              <Button variant="link" onClick={() => handleOpenDialog()} className="mt-2 text-primary font-bold text-sm">
+                + INITIALIZE FIRST VESSEL RECORD
+              </Button>
             </div>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Vessel Name</TableHead>
-                  <TableHead>IMO Number</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Flag State</TableHead>
-                  <TableHead>GT / DWT</TableHead>
-                  <TableHead>Classification</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="border-none bg-slate-500/5 hover:bg-slate-500/5">
+                  <TableHead className="py-4 px-6 text-[10px] font-bold uppercase tracking-widest">Asset Dossier</TableHead>
+                  <TableHead className="py-4 px-6 text-[10px] font-bold uppercase tracking-widest">Identity</TableHead>
+                  <TableHead className="py-4 px-6 text-[10px] font-bold uppercase tracking-widest">Drydocking (LAST/NEXT)</TableHead>
+                  <TableHead className="py-4 px-6 text-[10px] font-bold uppercase tracking-widest">Metric (GT/DWT)</TableHead>
+                  <TableHead className="py-4 px-6 text-[10px] font-bold uppercase tracking-widest">Status Code</TableHead>
+                  <TableHead className="py-4 px-6 text-right text-[10px] font-bold uppercase tracking-widest">Operations</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {vessels.map((vessel) => (
-                  <TableRow key={vessel.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <Ship className="h-4 w-4 text-primary" />
-                        {vessel.name}
+                  <TableRow key={vessel.id} className="group/row hover:bg-primary/5 transition-colors border-border/40">
+                    <TableCell className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-primary/5 text-primary group-hover/row:scale-105 transition-transform">
+                          <Ship className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-foreground group-hover/row:text-primary transition-colors">{vessel.name}</p>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{vessel.vessel_type || 'Unclassified'}</p>
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Hash className="h-3 w-3 text-muted-foreground" />
-                        {vessel.imo_number || '-'}
+                    <TableCell className="py-4 px-6">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-tighter">IMO: {vessel.imo_number || '-'}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter">CS: {vessel.call_sign || '-'}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{vessel.vessel_type || '-'}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Flag className="h-3 w-3 text-muted-foreground" />
-                        {vessel.flag_state || '-'}
+                    <TableCell className="py-4 px-6">
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3 w-3 text-emerald-600/60" />
+                          <span className="text-[11px] font-bold">{vessel.last_drydock_date || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="h-3 w-3 text-amber-500/60" />
+                          <span className="text-[10px] font-bold text-amber-600">{vessel.next_drydock_date || 'TBD'}</span>
+                        </div>
+                        {vessel.previous_dd_yard && (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <Anchor className="h-2.5 w-2.5 text-muted-foreground/60" />
+                            <span className="text-[9px] font-medium text-muted-foreground truncate max-w-[100px]">{vessel.previous_dd_yard}</span>
+                          </div>
+                        )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      {vessel.gross_tonnage ? `${vessel.gross_tonnage.toLocaleString()} / ${vessel.deadweight?.toLocaleString() || '-'}` : '-'}
+                    <TableCell className="py-4 px-6">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold">{vessel.gross_tonnage?.toLocaleString() || '-'} GT</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{vessel.deadweight?.toLocaleString() || '-'} DWT</span>
+                      </div>
                     </TableCell>
-                    <TableCell>{vessel.classification_society || '-'}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusBadge(vessel.status)}>
+                    <TableCell className="py-4 px-6">
+                      <span className={getStatusBadge(vessel.status)}>
                         {vessel.status?.charAt(0).toUpperCase() + vessel.status?.slice(1).replace('_', ' ') || 'Active'}
-                      </Badge>
+                      </span>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                    <TableCell className="py-4 px-6 text-right">
+                      <div className="flex justify-end gap-2 opacity-0 group-hover/row:opacity-100 transition-all duration-300">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
                           onClick={() => handleOpenDialog(vessel, true)}
-                          title="View Details"
+                          className="h-8 w-8 rounded-lg hover:bg-primary/5 hover:text-primary border-primary/10"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
                           onClick={() => handleOpenDialog(vessel)}
-                          title="Edit"
+                          className="h-8 w-8 rounded-lg hover:bg-primary/5 hover:text-primary border-primary/10"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="destructive"
                           size="icon"
                           onClick={() => handleDelete(vessel.id)}
-                          className="text-destructive hover:text-destructive"
-                          title="Delete"
+                          className="h-8 w-8 rounded-lg shadow-sm"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </TableCell>
@@ -597,8 +1043,8 @@ const VesselManagement = () => {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

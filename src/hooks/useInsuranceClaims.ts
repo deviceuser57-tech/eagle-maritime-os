@@ -17,6 +17,7 @@ export interface InsuranceClaim {
   approved_amount: number | null;
   status: string;
   description: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }

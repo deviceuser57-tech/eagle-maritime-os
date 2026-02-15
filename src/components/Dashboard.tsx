@@ -21,10 +21,10 @@ const Dashboard = () => {
 
   // Fleet status data from real vessels
   const fleetStatusData = [
-    { name: 'Active', value: vessels.filter(v => v.status === 'active').length, color: '#22c55e' },
-    { name: 'Maintenance', value: vessels.filter(v => v.status === 'maintenance').length, color: '#f59e0b' },
-    { name: 'In Port', value: vessels.filter(v => v.status === 'inactive').length, color: '#3b82f6' },
-    { name: 'Drydock', value: vessels.filter(v => v.status === 'drydock').length, color: '#ef4444' }
+    { name: 'Active', value: vessels.filter(v => v.status === 'active').length, color: 'hsl(155 70% 45%)' },
+    { name: 'Maintenance', value: vessels.filter(v => v.status === 'maintenance').length, color: 'hsl(25 95% 55%)' },
+    { name: 'In Port', value: vessels.filter(v => v.status === 'inactive').length, color: 'hsl(205 85% 45%)' },
+    { name: 'Drydock', value: vessels.filter(v => v.status === 'drydock').length, color: 'hsl(0 80% 55%)' }
   ].filter(item => item.value > 0);
 
   // Compute compliance trends from real data (last 6 months)
@@ -33,16 +33,16 @@ const Dashboard = () => {
     for (let i = 5; i >= 0; i--) {
       const date = subMonths(new Date(), i);
       const monthName = format(date, 'MMM');
-      
+
       // Count valid vs expiring/expired certs for that month
       const validCerts = certifications.filter(c => {
         const expiry = new Date(c.expiry_date);
         return expiry > date;
       }).length;
-      
+
       const totalCerts = certifications.length || 1;
       const compliantPercent = Math.round((validCerts / totalCerts) * 100);
-      
+
       months.push({
         month: monthName,
         compliant: compliantPercent,
@@ -93,69 +93,89 @@ const Dashboard = () => {
   // Calculate real stats
   const activeAudits = audits.filter(a => a.status === 'in_progress' || a.status === 'scheduled').length;
   const openFindings = correctiveActions.filter(a => a.status !== 'completed').length;
-  
+
   const validCerts = certifications.filter(c => new Date(c.expiry_date) > new Date()).length;
   const totalCerts = certifications.length || 1;
   const complianceRate = Math.round((validCerts / totalCerts) * 100);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Synchronizing Intelligence...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-foreground mb-2">Fleet Management Dashboard</h2>
-        <p className="text-muted-foreground">
-          Central command center for monitoring vessel performance, compliance status, and key performance indicators in real-time.
-        </p>
+    <div className="space-y-8 py-6 px-4 max-w-[1600px] mx-auto">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border">
+        <div>
+          <h2 className="text-3xl font-black tracking-tight text-foreground mb-2 px-1">Fleet Overview</h2>
+          <p className="text-muted-foreground max-w-2xl text-base font-medium leading-relaxed px-1">
+            Centralized intelligence node monitoring operational performance and regulatory alignment.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Badge className="bg-primary/5 text-primary hover:bg-primary/10 transition-colors px-3 py-1.5 rounded-lg border border-primary/10 font-bold text-[10px] uppercase tracking-wider">
+            Real-time Feed Active
+          </Badge>
+        </div>
       </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="maritime-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Vessels</CardTitle>
+        <Card className="maritime-card group">
+          <CardHeader className="pb-2 pt-5 px-6">
+            <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em]">Total Assets</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{vessels.length}</div>
-            <p className="text-xs text-muted-foreground">{vessels.filter(v => v.status === 'active').length} active</p>
+          <CardContent className="px-6 pb-5">
+            <div className="text-3xl font-black text-foreground group-hover:translate-x-1 transition-transform origin-left">{vessels.length}</div>
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">{vessels.filter(v => v.status === 'active').length} Operational</p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="maritime-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Audits</CardTitle>
+        <Card className="maritime-card group">
+          <CardHeader className="pb-2 pt-5 px-6">
+            <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em]">Ongoing Audits</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{activeAudits}</div>
-            <p className="text-xs text-muted-foreground">{audits.filter(a => a.status === 'completed').length} completed</p>
+          <CardContent className="px-6 pb-5">
+            <div className="text-3xl font-black text-foreground group-hover:translate-x-1 transition-transform origin-left">{activeAudits}</div>
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">{audits.filter(a => a.status === 'completed').length} Resulted</p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="maritime-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Compliance Rate</CardTitle>
+        <Card className="maritime-card group overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-150" />
+          <CardHeader className="pb-2 pt-5 px-6">
+            <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em]">Compliance Rating</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${complianceRate >= 80 ? 'text-green-600' : complianceRate >= 60 ? 'text-orange-500' : 'text-destructive'}`}>
+          <CardContent className="px-6 pb-5">
+            <div className={`text-3xl font-black group-hover:translate-x-1 transition-transform origin-left ${complianceRate >= 80 ? 'text-emerald-500' : complianceRate >= 60 ? 'text-amber-500' : 'text-rose-500'}`}>
               {complianceRate}%
             </div>
-            <p className="text-xs text-muted-foreground">{validCerts} of {certifications.length} certs valid</p>
+            <p className="text-[10px] font-bold text-muted-foreground mt-2 uppercase tracking-wide">{validCerts} VALIDATED</p>
           </CardContent>
         </Card>
 
-        <Card className="maritime-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Open Actions</CardTitle>
+        <Card className="maritime-card group">
+          <CardHeader className="pb-2 pt-5 px-6">
+            <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em]">Open Findings</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${openFindings > 10 ? 'text-orange-600' : 'text-foreground'}`}>{openFindings}</div>
-            <p className="text-xs text-muted-foreground">{correctiveActions.filter(a => a.status === 'completed').length} resolved</p>
+          <CardContent className="px-6 pb-5">
+            <div className={`text-3xl font-black group-hover:translate-x-1 transition-transform origin-left ${openFindings > 10 ? 'text-rose-500' : 'text-foreground'}`}>{openFindings}</div>
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">{correctiveActions.filter(a => a.status === 'completed').length} Verified</p>
+            </div>
           </CardContent>
         </Card>
       </div>

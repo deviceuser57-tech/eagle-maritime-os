@@ -27,6 +27,11 @@ import SafetyManagement from '@/components/SafetyManagement';
 import DigitalCompliance from '@/components/DigitalCompliance';
 import InsuranceClaims from '@/components/InsuranceClaims';
 import Reports from '@/components/Reports';
+import SIMDashboard from '@/components/SIMDashboard';
+import LayoutMapper from '@/components/LayoutMapper';
+import PredictiveCompliance from '@/components/PredictiveCompliance';
+import MotionRiskAnalyzer from '@/components/MotionRiskAnalyzer';
+import DigitalTwin from '@/components/DigitalTwin';
 
 const IndexContent = () => {
   const { user, loading, signOut } = useAuth();
@@ -84,13 +89,18 @@ const IndexContent = () => {
       case 'digital-compliance': return <DigitalCompliance />;
       case 'insurance-claims': return <InsuranceClaims />;
       case 'reports': return <Reports />;
+      case 'sim-dashboard': return <SIMDashboard />;
+      case 'layout-mapper': return <LayoutMapper />;
+      case 'predictive-compliance': return <PredictiveCompliance />;
+      case 'motion-risk-analyzer': return <MotionRiskAnalyzer />;
+      case 'digital-twin': return <DigitalTwin />;
       default:
         return (
           <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-foreground mb-2">
+            <h2 className="text-2xl font-black tracking-tighter text-foreground mb-2 uppercase">
               {activeSection.charAt(0).toUpperCase() + activeSection.slice(1).replace(/-/g, ' ')}
             </h2>
-            <p className="text-muted-foreground">This section is under development.</p>
+            <p className="text-muted-foreground font-medium">This section is currently being integrated into the maritime node.</p>
           </div>
         );
     }
@@ -99,10 +109,10 @@ const IndexContent = () => {
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-white text-lg">Loading...</p>
+          <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-6 shadow-glow"></div>
+          <p className="text-foreground text-sm font-black uppercase tracking-[0.3em] animate-pulse">Syncing Vessel Core...</p>
         </div>
       </div>
     );
@@ -116,18 +126,19 @@ const IndexContent = () => {
   // If user is not authenticated, show auth page
   if (!user) {
     return (
-      <AuthPage 
+      <AuthPage
         onAuthSuccess={() => {
           // User successfully authenticated, they'll now see the dashboard
-        }} 
+          console.log("Authentication secure. Access granted.");
+        }}
       />
     );
   }
 
   // User is authenticated, show the main app
   return (
-    <div className="flex h-screen">
-      <Sidebar 
+    <div className="flex h-screen bg-background overflow-hidden preserve-3d">
+      <Sidebar
         activeSection={activeSection}
         onSectionChange={setActiveSection}
         theme={theme}
@@ -135,10 +146,19 @@ const IndexContent = () => {
         userEmail={user.email}
         onSignOut={handleSignOut}
       />
-      
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-        <UniversalSearch onSearch={handleSearch} />
-        {renderContent()}
+
+      <main className="flex-1 overflow-y-auto relative scrollbar-hide">
+        {/* Background Decorative Element */}
+        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+
+        <div className="relative z-10 p-6 sm:p-8 lg:p-10">
+          <div className="max-w-[1600px] mx-auto">
+            <UniversalSearch onSearch={handleSearch} />
+            <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+              {renderContent()}
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );

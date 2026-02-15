@@ -19,9 +19,35 @@ const CIIDashboard = () => {
     vessel_id: '',
     year: new Date().getFullYear().toString(),
     cii_value: '',
-    cii_rating: 'B',
+    cii_rating: 'C',
     target_cii: '',
+    fuel_consumption: '',
+    distance_travelled: '',
+    cargo_carried: '',
+    fuel_type: 'HFO',
+    notes: '',
   });
+
+  // IMO CO2 Conversion Factors (Cf)
+  const carbonFactors = {
+    'HFO': 3.114,
+    'LFO': 3.151,
+    'MDO': 3.206,
+    'LNG': 2.750,
+    'LPG': 3.000,
+  };
+
+  const calculateAttainedCII = () => {
+    const fuel = parseFloat(formData.fuel_consumption);
+    const dist = parseFloat(formData.distance_travelled);
+    const cap = parseFloat(formData.cargo_carried); // Capacity (DWT or GT)
+    const cf = carbonFactors[formData.fuel_type as keyof typeof carbonFactors] || 3.114;
+
+    if (fuel && dist && cap) {
+      const attained = (fuel * cf * 1000000) / (dist * cap);
+      setFormData(prev => ({ ...prev, cii_value: attained.toFixed(2) }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,17 +57,22 @@ const CIIDashboard = () => {
       cii_value: parseFloat(formData.cii_value),
       cii_rating: formData.cii_rating,
       target_value: formData.target_cii ? parseFloat(formData.target_cii) : null,
-      fuel_consumption: null,
-      distance_travelled: null,
-      cargo_carried: null,
-      notes: null,
+      fuel_consumption: parseFloat(formData.fuel_consumption) || null,
+      distance_travelled: parseFloat(formData.distance_travelled) || null,
+      cargo_carried: parseFloat(formData.cargo_carried) || null,
+      notes: formData.notes || null,
     });
     setFormData({
       vessel_id: '',
       year: new Date().getFullYear().toString(),
       cii_value: '',
-      cii_rating: 'B',
+      cii_rating: 'C',
       target_cii: '',
+      fuel_consumption: '',
+      distance_travelled: '',
+      cargo_carried: '',
+      fuel_type: 'HFO',
+      notes: '',
     });
     setIsDialogOpen(false);
   };
@@ -53,12 +84,13 @@ const CIIDashboard = () => {
   };
 
   // Calculate stats from real data
-  const avgCII = records.length > 0 
+  const avgCII = records.length > 0
     ? (records.reduce((sum, r) => sum + r.cii_value, 0) / records.length).toFixed(1)
     : '0.0';
-  
+
   const aRatedCount = records.filter(r => r.cii_rating === 'A').length;
-  
+  const criticalCount = records.filter(r => r.cii_rating === 'D' || r.cii_rating === 'E').length;
+
   // Group by year for trend chart
   const trendData = [...new Set(records.map(r => r.year))]
     .sort()
@@ -67,11 +99,6 @@ const CIIDashboard = () => {
       const avg = yearRecords.reduce((sum, r) => sum + r.cii_value, 0) / yearRecords.length;
       return { year: year.toString(), avg: parseFloat(avg.toFixed(1)) };
     });
-
-  // Calculate improvement
-  const improvement = trendData.length >= 2
-    ? (((trendData[0].avg - trendData[trendData.length - 1].avg) / trendData[0].avg) * 100).toFixed(0)
-    : '0';
 
   if (loading) {
     return (
@@ -82,214 +109,320 @@ const CIIDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-4">
         <div>
-          <h2 className="text-3xl font-bold text-foreground mb-2">🚢 CII Dashboard</h2>
-          <p className="text-muted-foreground">
-            Carbon Intensity Indicator monitoring and compliance tracking for your fleet.
-          </p>
+          <h2 className="text-3xl font-black tracking-tighter text-foreground mb-1 uppercase">Carbon Intelligence Node</h2>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px] font-bold border-primary/20 text-primary uppercase tracking-widest px-2 backdrop-blur-sm">
+              MARPOL Annex VI Compliance
+            </Badge>
+            <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-widest px-2 bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+              IMO Regulation 28 Tracking
+            </Badge>
+          </div>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Record
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Add CII Record</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="vessel_id">Vessel *</Label>
-                <Select value={formData.vessel_id} onValueChange={(v) => setFormData({ ...formData, vessel_id: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select vessel" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {vessels.map((vessel) => (
-                      <SelectItem key={vessel.id} value={vessel.id}>{vessel.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="year">Year *</Label>
-                  <Input
-                    id="year"
-                    type="number"
-                    value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                    required
-                    min="2020"
-                    max="2030"
-                  />
+        <div className="flex gap-3">
+          <Button variant="outline" className="rounded-xl border-primary/20 hover:bg-primary/5 font-bold uppercase text-[10px] tracking-widest">
+            Export SEEMP Data
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="btn-maritime rounded-xl px-6 font-bold uppercase text-[10px] tracking-widest">
+                <Plus className="h-3 w-3 mr-2" /> Log Annual Emissions
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl bg-slate-950 border-white/10 text-white">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-black uppercase tracking-widest text-primary">Log annual cii metrics</DialogTitle>
+                <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Data will be used for official SEEMP Part III reporting</p>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-white/60">Vessel</Label>
+                    <Select value={formData.vessel_id} onValueChange={(v) => setFormData({ ...formData, vessel_id: v })}>
+                      <SelectTrigger className="bg-white/5 border-white/10 rounded-xl">
+                        <SelectValue placeholder="Select target asset" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vessels.map((vessel) => (
+                          <SelectItem key={vessel.id} value={vessel.id}>{vessel.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-white/60">Reporting Year</Label>
+                    <Input
+                      type="number"
+                      value={formData.year}
+                      onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                      className="bg-white/5 border-white/10 rounded-xl"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cii_value">CII Value *</Label>
-                  <Input
-                    id="cii_value"
-                    type="number"
-                    step="0.1"
-                    value={formData.cii_value}
-                    onChange={(e) => setFormData({ ...formData, cii_value: e.target.value })}
-                    required
-                    placeholder="e.g., 6.2"
-                  />
+
+                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">Technical Work Parameters</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold text-white/60">FUEL CONSUMPTION (TON/YR)</Label>
+                      <Input
+                        type="number"
+                        value={formData.fuel_consumption}
+                        onChange={(e) => setFormData({ ...formData, fuel_consumption: e.target.value })}
+                        onBlur={calculateAttainedCII}
+                        className="bg-slate-900 border-white/10"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold text-white/60">FUEL TYPE (IMO CF FACTOR)</Label>
+                      <Select value={formData.fuel_type} onValueChange={(v) => { setFormData({ ...formData, fuel_type: v }); calculateAttainedCII(); }}>
+                        <SelectTrigger className="bg-slate-900 border-white/10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.keys(carbonFactors).map(f => <SelectItem key={f} value={f}>{f} (Cf: {carbonFactors[f as keyof typeof carbonFactors]})</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold text-white/60">DISTANCE TRAVELLED (NM)</Label>
+                      <Input
+                        type="number"
+                        value={formData.distance_travelled}
+                        onChange={(e) => setFormData({ ...formData, distance_travelled: e.target.value })}
+                        onBlur={calculateAttainedCII}
+                        className="bg-slate-900 border-white/10"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold text-white/60">VESSEL CAPACITY (DWT/GT)</Label>
+                      <Input
+                        type="number"
+                        value={formData.cargo_carried}
+                        onChange={(e) => setFormData({ ...formData, cargo_carried: e.target.value })}
+                        onBlur={calculateAttainedCII}
+                        className="bg-slate-900 border-white/10"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cii_rating">CII Rating *</Label>
-                  <Select value={formData.cii_rating} onValueChange={(v) => setFormData({ ...formData, cii_rating: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="A">A - Superior</SelectItem>
-                      <SelectItem value="B">B - Good</SelectItem>
-                      <SelectItem value="C">C - Moderate</SelectItem>
-                      <SelectItem value="D">D - Inferior</SelectItem>
-                      <SelectItem value="E">E - Poor</SelectItem>
-                    </SelectContent>
-                  </Select>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Attained CII Value</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.cii_value}
+                      readOnly
+                      className="bg-primary/20 border-primary font-black text-primary text-xl py-6 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-white/60">CII Rating (MARPOL Class)</Label>
+                    <Select value={formData.cii_rating} onValueChange={(v) => setFormData({ ...formData, cii_rating: v })}>
+                      <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="A">A - Superior Performance</SelectItem>
+                        <SelectItem value="B">B - Good Performance</SelectItem>
+                        <SelectItem value="C">C - Moderate (Threshold)</SelectItem>
+                        <SelectItem value="D">D - Sub-optimal (Corrective Action Needed)</SelectItem>
+                        <SelectItem value="E">E - Critical (Immediate SEEMP Action)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="target_cii">Target CII</Label>
-                  <Input
-                    id="target_cii"
-                    type="number"
-                    step="0.1"
-                    value={formData.target_cii}
-                    onChange={(e) => setFormData({ ...formData, target_cii: e.target.value })}
-                    placeholder="e.g., 5.8"
-                  />
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <Button type="button" variant="ghost" className="text-white hover:bg-white/5" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="btn-maritime px-8">
+                    Commit Record to Registry
+                  </Button>
                 </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  Add Record
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-4">
-        <Card className="maritime-card">
+        <Card className="maritime-card bg-slate-950 border-primary/20">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Fleet Avg CII</p>
-                <p className="text-2xl font-bold">{avgCII}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Fleet Intensity Avg</p>
+                <p className="text-3xl font-black text-white">{avgCII}</p>
+                <p className="text-[8px] font-bold text-primary uppercase mt-1">gCO2 / t.nm</p>
               </div>
-              <Ship className="h-8 w-8 text-primary" />
+              <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+                <Ship className="h-6 w-6" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="maritime-card">
+        <Card className="maritime-card bg-slate-950 border-emerald-500/20">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Improvement</p>
-                <p className={`text-2xl font-bold ${parseInt(improvement) > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
-                  {parseInt(improvement) > 0 ? `-${improvement}%` : '0%'}
-                </p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">A-Superior Compliance</p>
+                <p className="text-3xl font-black text-emerald-500">{aRatedCount}</p>
+                <p className="text-[8px] font-bold text-emerald-500/60 uppercase mt-1">Vessels at peak efficiency</p>
               </div>
-              <TrendingDown className="h-8 w-8 text-green-500" />
+              <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
+                <Award className="h-6 w-6" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="maritime-card">
+        <Card className="maritime-card bg-slate-950 border-rose-500/20">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">A-Rated Vessels</p>
-                <p className="text-2xl font-bold">{aRatedCount}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Critical Intervention</p>
+                <p className="text-3xl font-black text-rose-500">{criticalCount}</p>
+                <p className="text-[8px] font-bold text-rose-500/60 uppercase mt-1">Requires SEEMP corrective action</p>
               </div>
-              <Award className="h-8 w-8 text-green-500" />
+              <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-500">
+                <Target className="h-6 w-6" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="maritime-card">
+        <Card className="maritime-card bg-primary/5 border-primary/20">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Records</p>
-                <p className="text-2xl font-bold">{records.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 mb-1">Total Fleet Records</p>
+                <p className="text-3xl font-black text-primary">{records.length}</p>
+                <p className="text-[8px] font-bold text-primary/40 uppercase mt-1">Validated emission cycles</p>
               </div>
-              <Target className="h-8 w-8 text-primary" />
+              <TrendingDown className="h-8 w-8 text-primary/20" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="maritime-card">
+        <Card className="maritime-card bg-slate-950 border-white/5">
           <CardHeader>
-            <CardTitle>Fleet CII Trend</CardTitle>
+            <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Fleet Carbon Intensity Trend</CardTitle>
           </CardHeader>
           <CardContent>
             {trendData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="year" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="avg" fill="hsl(var(--primary))" name="Average CII" />
+                  <defs>
+                    <linearGradient id="primaryGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#020617', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                    itemStyle={{ color: 'hsl(var(--primary))', fontWeight: 'bold', fontSize: '10px', textTransform: 'uppercase' }}
+                  />
+                  <Bar dataKey="avg" fill="url(#primaryGradient)" radius={[4, 4, 0, 0]} name="AVERAGE CII" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No CII records yet. Add records to see trends.
+                No emission cycles recorded for this fleet node.
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="maritime-card">
-          <CardHeader>
-            <CardTitle>Vessel CII Ratings</CardTitle>
+        <Card className="maritime-card bg-slate-950 border-white/5">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Vessel Compliance Registry</CardTitle>
+            <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-primary">View Full Archive</Button>
           </CardHeader>
           <CardContent>
             {records.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No CII records yet. Add your first record above.</p>
+              <p className="text-muted-foreground text-center py-8">Emission registry is currently empty.</p>
             ) : (
               <div className="space-y-4">
                 {records.slice(0, 5).map((record) => (
-                  <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium">{record.vessels?.name || 'Unknown vessel'}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Current: {record.cii_value} | Target: {record.target_value || 'N/A'} | Year: {record.year}
-                      </p>
+                  <div key={record.id} className="group relative overflow-hidden p-5 border border-white/5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-black text-sm uppercase text-white tracking-tight">{record.vessels?.name || 'Unknown Asset'}</p>
+                          {(record.cii_rating === 'D' || record.cii_rating === 'E') && (
+                            <Badge className="bg-rose-500/20 text-rose-500 border-rose-500/30 text-[8px] font-black uppercase px-2">SEEMP III ALERT</Badge>
+                          )}
+                        </div>
+                        <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
+                          CY {record.year} | {record.cii_value} gCO2 / t.nm
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="text-[10px] font-black text-white/20 uppercase mb-1">MARPOL Rating</p>
+                          <Badge className={`
+                            text-[10px] font-black uppercase px-3 py-1 rounded-lg
+                            ${record.cii_rating === 'A' ? 'bg-emerald-500 text-slate-950' :
+                              record.cii_rating === 'B' ? 'bg-blue-500 text-slate-950' :
+                                record.cii_rating === 'C' ? 'bg-yellow-500 text-slate-950' :
+                                  record.cii_rating === 'D' ? 'bg-orange-500 text-slate-950' :
+                                    'bg-rose-500 text-slate-950'}
+                          `}>
+                            CLASS {record.cii_rating}
+                          </Badge>
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-white/10 hover:text-rose-500 hover:bg-rose-500/10"
+                          onClick={() => handleDelete(record.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={
-                        record.cii_rating === 'A' ? 'default' :
-                        record.cii_rating === 'B' ? 'secondary' : 'destructive'
-                      }>
-                        Rating: {record.cii_rating}
-                      </Badge>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(record.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+
+                    {/* Compliance Spectrum Visualization */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-[8px] font-black text-white/20 uppercase tracking-[0.2em]">
+                        <span>A - Superior</span>
+                        <span>C - Required</span>
+                        <span>E - Critical</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden flex relative">
+                        <div className="h-full bg-emerald-500/40 w-[20%]" />
+                        <div className="h-full bg-blue-500/40 w-[20%]" />
+                        <div className="h-full bg-yellow-500/40 w-[20%]" />
+                        <div className="h-full bg-orange-500/40 w-[20%]" />
+                        <div className="h-full bg-rose-500/40 w-[20%]" />
+
+                        {/* Compliance Pointer */}
+                        <div
+                          className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_10px_white] z-10 transition-all duration-1000"
+                          style={{
+                            left: `${record.cii_rating === 'A' ? '10%' :
+                                record.cii_rating === 'B' ? '30%' :
+                                  record.cii_rating === 'C' ? '50%' :
+                                    record.cii_rating === 'D' ? '70%' :
+                                      '90%'
+                              }`
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}

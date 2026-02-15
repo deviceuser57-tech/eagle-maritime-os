@@ -44,6 +44,13 @@ export interface Vessel {
   delivery_date: string | null;
   last_drydock_date: string | null;
   next_drydock_date: string | null;
+  previous_dd_yard: string | null;
+  dd_remaining_tasks: string | null;
+  vessel_photos: string[] | null;
+  vessel_brochure: string | null;
+  painting_details: string | null;
+  navigation_equipment: string | null;
+  accommodations_pax: string | null;
   trading_area: string | null;
   hull_material: string | null;
   hull_coating: string | null;

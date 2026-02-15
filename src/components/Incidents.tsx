@@ -25,6 +25,10 @@ const Incidents = () => {
     location: '',
     description: '',
     reported_by: '',
+    root_cause: '',
+    risk_category: 'Operational',
+    witnesses: '',
+    immediate_action: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,6 +37,12 @@ const Incidents = () => {
       ...formData,
       vessel_id: formData.vessel_id || null,
       incident_date: formData.incident_date || new Date().toISOString(),
+      notes: JSON.stringify({
+        root_cause: formData.root_cause,
+        risk_category: formData.risk_category,
+        witnesses: formData.witnesses,
+        immediate_action: formData.immediate_action
+      })
     });
     setFormData({
       title: '',
@@ -43,6 +53,10 @@ const Incidents = () => {
       location: '',
       description: '',
       reported_by: '',
+      root_cause: '',
+      risk_category: 'Operational',
+      witnesses: '',
+      immediate_action: '',
     });
     setIsDialogOpen(false);
   };
@@ -176,13 +190,56 @@ const Incidents = () => {
                   />
                 </div>
                 <div className="space-y-2 col-span-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">Situation Description *</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Detailed description of the incident..."
-                    rows={4}
+                    placeholder="Full account of the occurrence as per SOLAS/ISM requirements..."
+                    rows={3}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="risk_category">Risk Category (HSQE)</Label>
+                  <Select value={formData.risk_category} onValueChange={(v) => setFormData({ ...formData, risk_category: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Operational">Operational</SelectItem>
+                      <SelectItem value="Environmental">Environmental</SelectItem>
+                      <SelectItem value="Safety">Technical/Safety</SelectItem>
+                      <SelectItem value="Security">Security/ISPS</SelectItem>
+                      <SelectItem value="Commercial">Commercial</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="witnesses">Witnesses / Crew Involved</Label>
+                  <Input
+                    id="witnesses"
+                    value={formData.witnesses}
+                    onChange={(e) => setFormData({ ...formData, witnesses: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="immediate_action">Immediate Action Taken (Containment)</Label>
+                  <Textarea
+                    id="immediate_action"
+                    value={formData.immediate_action}
+                    onChange={(e) => setFormData({ ...formData, immediate_action: e.target.value })}
+                    rows={2}
+                  />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="root_cause">Preliminary Root Cause Analysis (RCA)</Label>
+                  <Textarea
+                    id="root_cause"
+                    value={formData.root_cause}
+                    onChange={(e) => setFormData({ ...formData, root_cause: e.target.value })}
+                    placeholder="Identify primary failure node (Human, Technical, Organizational)..."
+                    rows={2}
                   />
                 </div>
               </div>
@@ -283,8 +340,8 @@ const Incidents = () => {
                         {format(new Date(incident.incident_date), 'MMM dd, yyyy')}
                       </p>
                     </div>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="ghost"
                       onClick={() => deleteIncident.mutate(incident.id)}
                     >

@@ -23,6 +23,11 @@ const InsuranceClaims = () => {
     incident_date: '',
     description: '',
     status: 'submitted',
+    policy_number: '',
+    insurer_name: '',
+    broker_name: '',
+    loss_adjuster: '',
+    deductible_amount: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,12 +39,17 @@ const InsuranceClaims = () => {
       incident_date: formData.incident_date || null,
       description: formData.description || null,
       status: formData.status,
-      policy_number: null,
-      insurer_name: null,
+      policy_number: formData.policy_number || null,
+      insurer_name: formData.insurer_name || null,
       claim_number: null,
       submitted_date: new Date().toISOString().split('T')[0],
       resolved_date: null,
       approved_amount: null,
+      notes: JSON.stringify({
+        broker: formData.broker_name,
+        loss_adjuster: formData.loss_adjuster,
+        deductible: formData.deductible_amount
+      })
     });
     setFormData({
       vessel_id: '',
@@ -48,6 +58,11 @@ const InsuranceClaims = () => {
       incident_date: '',
       description: '',
       status: 'submitted',
+      policy_number: '',
+      insurer_name: '',
+      broker_name: '',
+      loss_adjuster: '',
+      deductible_amount: '',
     });
     setIsDialogOpen(false);
   };
@@ -131,7 +146,41 @@ const InsuranceClaims = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="claim_amount">Claim Amount ($)</Label>
+                  <Label htmlFor="policy_number">Marine Policy #</Label>
+                  <Input
+                    id="policy_number"
+                    value={formData.policy_number}
+                    onChange={(e) => setFormData({ ...formData, policy_number: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="insurer_name">Lead Insurer</Label>
+                  <Select value={formData.insurer_name} onValueChange={(v) => setFormData({ ...formData, insurer_name: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Insurer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Gard">Gard P&I</SelectItem>
+                      <SelectItem value="Skuld">Skuld</SelectItem>
+                      <SelectItem value="Allianz">Allianz Global Corporate</SelectItem>
+                      <SelectItem value="Britannia">Britannia P&I</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="broker_name">Assigned Broker</Label>
+                  <Input id="broker_name" value={formData.broker_name} onChange={(e) => setFormData({ ...formData, broker_name: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="loss_adjuster">Loss Adjuster</Label>
+                  <Input id="loss_adjuster" value={formData.loss_adjuster} onChange={(e) => setFormData({ ...formData, loss_adjuster: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="claim_amount">Estimated Loss (USD)</Label>
                   <Input
                     id="claim_amount"
                     type="number"
@@ -140,21 +189,26 @@ const InsuranceClaims = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="incident_date">Incident Date</Label>
-                  <Input
-                    id="incident_date"
-                    type="date"
-                    value={formData.incident_date}
-                    onChange={(e) => setFormData({ ...formData, incident_date: e.target.value })}
-                  />
+                  <Label htmlFor="deductible_amount">Deductible</Label>
+                  <Input id="deductible_amount" type="number" value={formData.deductible_amount} onChange={(e) => setFormData({ ...formData, deductible_amount: e.target.value })} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
+                <Label htmlFor="incident_date">Incident Date</Label>
+                <Input
+                  id="incident_date"
+                  type="date"
+                  value={formData.incident_date}
+                  onChange={(e) => setFormData({ ...formData, incident_date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Event Narrative *</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Comprehensive narrative of the casualty or event..."
                   required
                   rows={3}
                 />
@@ -251,7 +305,7 @@ const InsuranceClaims = () => {
                     </div>
                     <Badge variant={
                       claim.status === 'settled' ? 'default' :
-                      claim.status === 'approved' ? 'secondary' : 'outline'
+                        claim.status === 'approved' ? 'secondary' : 'outline'
                     }>
                       {claim.status.replace('_', ' ')}
                     </Badge>
