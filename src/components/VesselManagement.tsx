@@ -38,7 +38,8 @@ import {
   Sparkles,
   Download,
   Upload,
-  User
+  User,
+  Clock
 } from 'lucide-react';
 
 interface VesselFormData {
@@ -232,7 +233,7 @@ const VesselManagement = () => {
             ['Classification', formData.classification_society || 'N/A'],
           ],
           theme: 'striped',
-          headStyles: { fillColor: primaryColor },
+          headStyles: { fillColor: primaryColor as [number, number, number] },
         });
 
         // Technical Specs

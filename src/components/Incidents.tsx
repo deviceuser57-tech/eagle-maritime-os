@@ -34,11 +34,16 @@ const Incidents = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await createIncident.mutateAsync({
-      ...formData,
+      title: formData.title,
+      incident_type: formData.incident_type,
+      severity: formData.severity,
       vessel_id: formData.vessel_id || null,
       incident_date: formData.incident_date || new Date().toISOString(),
-      notes: JSON.stringify({
-        root_cause: formData.root_cause,
+      location: formData.location,
+      description: formData.description,
+      reported_by: formData.reported_by,
+      root_cause: formData.root_cause,
+      corrective_actions: JSON.stringify({
         risk_category: formData.risk_category,
         witnesses: formData.witnesses,
         immediate_action: formData.immediate_action
