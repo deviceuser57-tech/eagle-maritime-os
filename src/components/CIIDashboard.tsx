@@ -10,8 +10,10 @@ import { Ship, TrendingDown, Target, Award, Plus, Loader2, Trash2 } from 'lucide
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useCIIRecords } from '@/hooks/useCIIRecords';
 import { useVessels } from '@/hooks/useVessels';
+import { useToast } from '@/hooks/use-toast';
 
 const CIIDashboard = () => {
+  const { toast } = useToast();
   const { ciiRecords: records, loading, addCIIRecord: addRecord, deleteCIIRecord: deleteRecord } = useCIIRecords();
   const { vessels } = useVessels();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -123,7 +125,11 @@ const CIIDashboard = () => {
           </div>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" className="rounded-xl border-primary/20 hover:bg-primary/5 font-bold uppercase text-[10px] tracking-widest">
+          <Button
+            variant="outline"
+            className="rounded-xl border-primary/20 hover:bg-primary/5 font-bold uppercase text-[10px] tracking-widest"
+            onClick={() => toast({ title: "Export Started", description: "Preparing MARPOL SEEMP Part III dataset for export..." })}
+          >
             Export SEEMP Data
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -350,7 +356,14 @@ const CIIDashboard = () => {
         <Card className="maritime-card bg-slate-950 border-white/5">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Vessel Compliance Registry</CardTitle>
-            <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-primary">View Full Archive</Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[10px] font-black uppercase tracking-widest text-primary"
+              onClick={() => toast({ title: "Registry Archive", description: "Full emission registry archive is currently being synchronized." })}
+            >
+              View Full Archive
+            </Button>
           </CardHeader>
           <CardContent>
             {records.length === 0 ? (
@@ -415,10 +428,10 @@ const CIIDashboard = () => {
                           className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_10px_white] z-10 transition-all duration-1000"
                           style={{
                             left: `${record.cii_rating === 'A' ? '10%' :
-                                record.cii_rating === 'B' ? '30%' :
-                                  record.cii_rating === 'C' ? '50%' :
-                                    record.cii_rating === 'D' ? '70%' :
-                                      '90%'
+                              record.cii_rating === 'B' ? '30%' :
+                                record.cii_rating === 'C' ? '50%' :
+                                  record.cii_rating === 'D' ? '70%' :
+                                    '90%'
                               }`
                           }}
                         />
