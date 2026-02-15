@@ -17,147 +17,213 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
   const ctaRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const wavesRef = useRef<HTMLDivElement>(null);
+  const floatingElementsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Initial states
+      // 3D Perspective setup
+      gsap.set(containerRef.current, { perspective: 1200 });
+
+      // Initial states with 3D positions
       gsap.set([logoRef.current, titleRef.current, subtitleRef.current, descRef.current, ctaRef.current], {
         opacity: 0,
-        y: 50
+        y: 100,
+        z: -200,
+        rotationX: -45,
       });
+
       gsap.set(featuresRef.current?.children || [], {
         opacity: 0,
-        y: 80,
-        scale: 0.9
+        y: 150,
+        z: -300,
+        rotationY: 45,
+        scale: 0.8
       });
 
-      // Main timeline
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      // Main timeline for 3D entrance
+      const tl = gsap.timeline({ defaults: { ease: 'expo.out', duration: 1.5 } });
 
-      // Logo animation with bounce
       tl.to(logoRef.current, {
         opacity: 1,
         y: 0,
-        duration: 1,
-        ease: 'elastic.out(1, 0.5)'
+        z: 0,
+        rotationX: 0,
+        duration: 2,
+        ease: 'elastic.out(1, 0.75)'
       })
-      // Title slide in
-      .to(titleRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.8
-      }, '-=0.5')
-      // Subtitle
-      .to(subtitleRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6
-      }, '-=0.4')
-      // Description
-      .to(descRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6
-      }, '-=0.3')
-      // CTA Button
-      .to(ctaRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6
-      }, '-=0.2')
-      // Features staggered
-      .to(featuresRef.current?.children || [], {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        duration: 0.8,
-        stagger: 0.15,
-        ease: 'back.out(1.4)'
-      }, '-=0.3');
+        .to(titleRef.current, {
+          opacity: 1,
+          y: 0,
+          z: 50,
+          rotationX: 0,
+        }, '-=1.6')
+        .to(subtitleRef.current, {
+          opacity: 1,
+          y: 0,
+          z: 30,
+          rotationX: 0,
+        }, '-=1.4')
+        .to(descRef.current, {
+          opacity: 1,
+          y: 0,
+          z: 20,
+          rotationX: 0,
+        }, '-=1.3')
+        .to(ctaRef.current, {
+          opacity: 1,
+          y: 0,
+          z: 40,
+          rotationX: 0,
+        }, '-=1.2')
+        .to(featuresRef.current?.children || [], {
+          opacity: 1,
+          y: 0,
+          z: 0,
+          rotationY: 0,
+          scale: 1,
+          stagger: 0.1,
+          duration: 1.2,
+          ease: 'back.out(1.7)'
+        }, '-=1');
 
-      // Continuous wave animation
-      if (wavesRef.current) {
-        gsap.to(wavesRef.current.children, {
-          y: -10,
-          duration: 2,
-          ease: 'sine.inOut',
-          stagger: 0.2,
-          repeat: -1,
-          yoyo: true
+      // Floating 3D objects animation
+      if (floatingElementsRef.current) {
+        Array.from(floatingElementsRef.current.children).forEach((el, i) => {
+          gsap.to(el, {
+            y: 'random(-40, 40)',
+            x: 'random(-30, 30)',
+            z: 'random(-100, 100)',
+            rotation: 'random(-360, 360)',
+            duration: `random(3, 6)`,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+            delay: i * 0.2
+          });
         });
       }
 
-      // Logo pulse animation
-      gsap.to(logoRef.current, {
-        scale: 1.05,
-        duration: 2,
-        ease: 'sine.inOut',
-        repeat: -1,
-        yoyo: true,
-        delay: 1.5
-      });
+      // Continuous wave animation with depth
+      if (wavesRef.current) {
+        gsap.to(wavesRef.current.children, {
+          y: -15,
+          z: i => i * 20,
+          opacity: i => 0.1 + (i * 0.05),
+          duration: 3,
+          ease: 'sine.inOut',
+          stagger: {
+            each: 0.4,
+            repeat: -1,
+            yoyo: true
+          }
+        });
+      }
+
+      // Mouse tracking parallax effect
+      const handleMouseMove = (e: MouseEvent) => {
+        const { clientX, clientY } = e;
+        const xPos = (clientX / window.innerWidth - 0.5) * 2;
+        const yPos = (clientY / window.innerHeight - 0.5) * 2;
+
+        gsap.to(heroRef.current, {
+          rotationY: xPos * 8,
+          rotationX: -yPos * 8,
+          duration: 1,
+          ease: 'power2.out'
+        });
+
+        // Parallax depth for background elements
+        if (floatingElementsRef.current) {
+          gsap.to(floatingElementsRef.current.children, {
+            x: i => xPos * (i + 1) * 20,
+            y: i => yPos * (i + 1) * 20,
+            duration: 1.5,
+            ease: 'power1.out'
+          });
+        }
+      };
+
+      window.addEventListener('mousemove', handleMouseMove);
+      return () => window.removeEventListener('mousemove', handleMouseMove);
+
     }, containerRef);
 
     return () => ctx.revert();
   }, []);
 
   const features = [
-  { icon: Ship, title: 'Fleet Tracking', desc: 'Real-time vessel monitoring & status' },
-  { icon: Shield, title: 'Compliance', desc: 'ISM, ISPS & regulatory adherence' },
-  { icon: BarChart3, title: 'Analytics', desc: 'CII ratings & performance metrics' },
-  { icon: Users, title: 'Crew Management', desc: 'Certifications & scheduling' },
-  { icon: FileCheck, title: 'Audit Trail', desc: 'Complete documentation system' },
-  { icon: Anchor, title: 'Port Operations', desc: 'Voyage planning & logistics' }];
-
+    { icon: Ship, title: 'Fleet Tracking', desc: 'Real-time vessel monitoring & status' },
+    { icon: Shield, title: 'Compliance', desc: 'ISM, ISPS & regulatory adherence' },
+    { icon: BarChart3, title: 'Analytics', desc: 'CII ratings & performance metrics' },
+    { icon: Users, title: 'Crew Management', desc: 'Certifications & scheduling' },
+    { icon: FileCheck, title: 'Audit Trail', desc: 'Complete documentation system' },
+    { icon: Anchor, title: 'Port Operations', desc: 'Voyage planning & logistics' }
+  ];
 
   return (
     <div
       ref={containerRef}
-      className="min-h-screen w-full overflow-hidden bg-gradient-to-br from-[hsl(210,90%,12%)] via-[hsl(205,85%,20%)] to-[hsl(210,80%,8%)] text-white relative">
+      className="min-h-screen w-full overflow-hidden bg-[radial-gradient(circle_at_center,_hsl(210,90%,18%)_0%,_hsl(210,90%,8%)_100%)] text-white relative flex items-center justify-center"
+      style={{ perspective: '1500px' }}
+    >
+      {/* 3D Floating Elements in Background */}
+      <div ref={floatingElementsRef} className="absolute inset-0 pointer-events-none opacity-30">
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-lg border border-white/10 bg-white/5 backdrop-blur-md"
+            style={{
+              width: `${Math.random() * 60 + 20}px`,
+              height: `${Math.random() * 60 + 20}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              transformStyle: 'preserve-3d'
+            }}
+          />
+        ))}
+      </div>
 
-      {/* Animated Background Elements */}
+      {/* Radiant Glow Layers */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(hsl(205,85%,50%) 1px, transparent 1px),
-                              linear-gradient(90deg, hsl(205,85%,50%) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px'
-          }} />
-
-        
-        {/* Glowing orbs */}
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-[hsl(205,85%,35%)] opacity-10 blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-[hsl(38,95%,55%)] opacity-10 blur-[100px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[hsl(185,80%,45%)] opacity-5 blur-[150px]" />
+        <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] rounded-full bg-primary/10 blur-[160px] animate-pulse" />
+        <div className="absolute bottom-1/4 -right-1/4 w-[600px] h-[600px] rounded-full bg-maritime-accent/10 blur-[130px]" />
       </div>
 
-      {/* Wave decoration */}
-      <div ref={wavesRef} className="absolute bottom-0 left-0 right-0 h-32 overflow-hidden">
-        <svg viewBox="0 0 1440 120" className="absolute bottom-0 w-full h-full opacity-20">
-          <path fill="hsl(205,85%,50%)" d="M0,60 C360,120 720,0 1080,60 C1260,90 1350,80 1440,60 L1440,120 L0,120 Z" />
-        </svg>
-        <svg viewBox="0 0 1440 120" className="absolute bottom-0 w-full h-full opacity-15 translate-y-2">
-          <path fill="hsl(185,80%,45%)" d="M0,80 C240,40 480,100 720,70 C960,40 1200,90 1440,60 L1440,120 L0,120 Z" />
-        </svg>
-        <svg viewBox="0 0 1440 120" className="absolute bottom-0 w-full h-full opacity-10 translate-y-4">
-          <path fill="hsl(38,95%,55%)" d="M0,90 C180,70 360,100 540,80 C720,60 900,90 1080,75 C1260,60 1350,85 1440,70 L1440,120 L0,120 Z" />
-        </svg>
-      </div>
+      {/* Grid Floor with Perspective */}
+      <div
+        className="absolute bottom-0 w-[200%] h-[100%] left-[-50%] opacity-[0.05]"
+        style={{
+          backgroundImage: `linear-gradient(to bottom, transparent, hsl(205,85%,50%)), 
+                            linear-gradient(90deg, hsl(205,85%,50%) 1px, transparent 1px),
+                            linear-gradient(0deg, hsl(205,85%,50%) 1px, transparent 1px)`,
+          backgroundSize: '100% 100%, 60px 60px, 60px 60px',
+          transform: 'rotateX(75deg) translateY(50%)',
+          transformOrigin: 'bottom center'
+        }}
+      />
 
-      {/* Main Content */}
-      <div ref={heroRef} className="relative z-10 flex flex-col items-center justify-center min-h-screen px-0 py-[57px] mx-0 my-0">
-        {/* Logo */}
+      {/* Main Hero Section with 3D Content */}
+      <div
+        ref={heroRef}
+        className="relative z-10 flex flex-col items-center justify-center max-w-7xl px-6 py-20 text-center"
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        {/* Animated Logo Container */}
         <div
           ref={logoRef}
-          className="mb-8 relative">
-
-          <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-[hsl(205,85%,45%)] to-[hsl(185,80%,35%)] flex items-center justify-center shadow-2xl shadow-[hsl(205,85%,35%)]/30 border-2 border-white/10">
-            <div className="text-6xl md:text-7xl">🦅</div>
+          className="mb-12 relative group"
+          style={{ transformStyle: 'preserve-3d' }}
+        >
+          <div className="relative w-32 h-32 md:w-44 md:h-44 transform-gpu transition-transform duration-500 group-hover:scale-110" style={{ transformStyle: 'preserve-3d' }}>
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary via-maritime-accent to-blue-600 blur-2xl opacity-40 group-hover:opacity-60 transition-opacity" />
+            <div className="relative h-full w-full rounded-full bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center shadow-3xl border border-white/20 overflow-hidden">
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
+              <span className="text-7xl md:text-8xl select-none filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">🦅</span>
+            </div>
+            {/* Spinning Ring */}
+            <div className="absolute -inset-4 rounded-full border-2 border-white/5 border-t-white/20 animate-[spin_8s_linear_infinite]" />
+            <div className="absolute -inset-8 rounded-full border border-white/5 border-b-white/10 animate-[spin_12s_linear_infinite_reverse]" />
           </div>
-          <div className="absolute -inset-4 rounded-full border border-white/10 animate-pulse" />
-          <div className="absolute -inset-8 rounded-full border border-white/5 px-0 py-[15px] my-0" />
         </div>
 
         {/* Title */}
@@ -165,70 +231,88 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           ref={titleRef}
           className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4 tracking-tight">
 
-          <span className="bg-gradient-to-r from-white via-[hsl(185,80%,70%)] to-[hsl(38,95%,65%)] bg-clip-text text-transparent font-mono font-bold mb-[30px] pr-[38px] pt-[12px] my-[5px] mx-[36px] py-0 px-[51px] text-center text-9xl">EAGLE PLATFORM
+          <span className="bg-gradient-to-r from-white via-[hsl(185,80%,70%)] to-[hsl(38,95%,65%)] bg-clip-text text-transparent font-mono font-bold mb-[30px] pr-[38px] pt-[12px] my-[5px] mx-[36px] py-0 px-[51px] text-8xl text-center">EAGLE PLATFORM
 
           </span>
         </h1>
 
-        {/* Subtitle */}
         <h2
           ref={subtitleRef}
-          className="text-xl md:text-2xl lg:text-3xl font-medium text-[hsl(185,80%,70%)] mb-3 my-[35px]">
-
-          Vessel Compliance Management
+          className="text-2xl md:text-3xl lg:text-4xl font-light text-maritime-accent mb-8 tracking-[0.2em] uppercase"
+          style={{ transform: 'translateZ(60px)' }}
+        >
+          Evolution of Vessel Governance
         </h2>
 
-        {/* Description */}
         <p
           ref={descRef}
-          className="text-base md:text-lg text-white/60 mb-10 max-w-2xl text-center leading-relaxed">
-
-          Complete maritime operations platform for safety excellence, 
-          regulatory compliance, and fleet performance optimization
+          className="text-lg md:text-xl text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed font-light"
+          style={{ transform: 'translateZ(40px)' }}
+        >
+          A high-performance maritime ecosystem integrating real-time intelligence,
+          absolute compliance, and automated fleet excellence.
         </p>
+      </div>
 
-        {/* CTA Button */}
-        <div ref={ctaRef}>
-          <Button
-            onClick={onEnterDashboard}
-            size="lg"
-            className="group relative px-8 py-6 text-lg font-semibold rounded-2xl bg-gradient-to-r from-[hsl(205,85%,45%)] to-[hsl(185,80%,40%)] hover:from-[hsl(205,85%,50%)] hover:to-[hsl(185,80%,45%)] text-white shadow-xl shadow-[hsl(205,85%,35%)]/30 border border-white/10 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+      {/* CTA Section */}
+      <div ref={ctaRef} style={{ transform: 'translateZ(80px)' }}>
+        <Button
+          onClick={onEnterDashboard}
+          size="xl"
+          className="group relative px-12 py-8 text-xl font-bold rounded-full bg-white text-slate-950 hover:bg-primary hover:text-white transition-all duration-500 shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-primary/40 overflow-hidden"
+        >
+          <span className="relative z-10 flex items-center gap-4">
+            LAUNCH SYSTEM
+            <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
+          </span>
+          <div className="absolute inset-0 bg-gradient-to-r from-primary to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        </Button>
+      </div>
 
-            <span className="flex items-center gap-3">
-              Enter Dashboard
-              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </span>
-          </Button>
-        </div>
+      {/* Enhanced Features Grid */}
+      <div
+        ref={featuresRef}
+        className="mt-20 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 max-w-6xl w-full">
 
-        {/* Features Grid */}
-        <div
-          ref={featuresRef}
-          className="mt-20 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 max-w-6xl w-full">
-
-          {features.map((feature, index) =>
+        {features.map((feature, index) =>
           <div
             key={index}
-            className="group p-4 md:p-5 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-[hsl(205,85%,50%)]/30 transition-all duration-300 cursor-default py-[40px]">
+            className="group p-4 md:p-5 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-[hsl(205,85%,50%)]/30 transition-all duration-300 cursor-default">
 
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(205,85%,45%)] to-[hsl(185,80%,40%)] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg shadow-[hsl(205,85%,35%)]/20">
-                <feature.icon className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="font-semibold text-white mb-1 text-sm md:text-base">{feature.title}</h3>
-              <p className="text-xs md:text-sm text-white/50 leading-relaxed">{feature.desc}</p>
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(205,85%,45%)] to-[hsl(185,80%,40%)] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg shadow-[hsl(205,85%,35%)]/20">
+              <feature.icon className="w-6 h-6 text-white" />
             </div>
-          )}
-        </div>
-
-        {/* Bottom accent line */}
-        <div className="mt-16 flex items-center gap-4 text-white/30 text-sm">
-          <div className="w-12 h-px bg-gradient-to-r from-transparent to-white/20" />
-          <span className="">Maritime Excellence Since 2025 , Elhamy Sobhy 
-Copyrights Reserved </span>
-          <div className="w-12 h-px bg-gradient-to-l from-transparent to-white/20" />
-        </div>
+            <h3 className="font-bold text-white mb-2 text-base md:text-lg group-hover:text-primary transition-colors">{feature.title}</h3>
+            <p className="text-xs md:text-sm text-slate-500 leading-tight text-center group-hover:text-slate-300">{feature.desc}</p>
+          </div>
+        ))}
       </div>
-    </div>);
+
+      {/* Signature Footer */}
+      <div className="mt-20 flex flex-col items-center gap-4 opacity-40 hover:opacity-100 transition-opacity duration-500">
+        <div className="flex items-center gap-6">
+          <div className="w-24 h-px bg-gradient-to-r from-transparent to-white/40" />
+          <span className="text-xs tracking-[0.3em] font-medium uppercase">Maritime Authority 2026</span>
+          <div className="w-24 h-px bg-gradient-to-l from-transparent to-white/40" />
+        </div>
+        <p className="text-[10px] text-slate-500">© Eagle Tech Systems • Chief Architect Elhamy Sobhy</p>
+      </div>
+    </div>
+
+      {/* Decorative Wave System */ }
+  <div ref={wavesRef} className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none overflow-hidden">
+    {[...Array(3)].map((_, i) => (
+      <svg key={i} viewBox="0 0 1440 320" className="absolute bottom-0 w-full h-full preserve-3d">
+        <path
+          fill={i === 0 ? 'hsl(205,85%,45%)' : i === 1 ? 'hsl(185,80%,40%)' : 'hsl(210,90%,15%)'}
+          fillOpacity={0.1 + i * 0.1}
+          d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,128C960,139,1056,181,1152,197.3C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+        />
+      </svg>
+    ))}
+  </div>
+    </div >
+  );
 };
 
 export default FrontPage;

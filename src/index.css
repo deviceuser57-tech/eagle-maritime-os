@@ -205,4 +205,12 @@
     @apply text-white border border-white/20 hover:bg-white/20;
     background: hsl(var(--ocean-blue) / 0.1);
   }
+  /* 3D Utilities */
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  
+  .perspective-1200 {
+    perspective: 1200px;
+  }
 }
