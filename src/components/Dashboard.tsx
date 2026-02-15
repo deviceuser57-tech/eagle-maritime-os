@@ -131,7 +131,10 @@ const Dashboard = ({ onSectionChange }: DashboardProps) => {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="maritime-card group">
+        <Card
+          className="maritime-card group cursor-pointer hover:border-primary/50 transition-all"
+          onClick={() => onSectionChange?.('vessel-management')}
+        >
           <CardHeader className="pb-2 pt-5 px-6">
             <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em]">Total Assets</CardTitle>
           </CardHeader>
@@ -144,7 +147,10 @@ const Dashboard = ({ onSectionChange }: DashboardProps) => {
           </CardContent>
         </Card>
 
-        <Card className="maritime-card group">
+        <Card
+          className="maritime-card group cursor-pointer hover:border-primary/50 transition-all"
+          onClick={() => onSectionChange?.('audit-execution')}
+        >
           <CardHeader className="pb-2 pt-5 px-6">
             <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em]">Ongoing Audits</CardTitle>
           </CardHeader>
@@ -173,7 +179,10 @@ const Dashboard = ({ onSectionChange }: DashboardProps) => {
           </CardContent>
         </Card>
 
-        <Card className="maritime-card group">
+        <Card
+          className="maritime-card group cursor-pointer hover:border-primary/50 transition-all"
+          onClick={() => onSectionChange?.('audit-findings')}
+        >
           <CardHeader className="pb-2 pt-5 px-6">
             <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em]">Open Findings</CardTitle>
           </CardHeader>

@@ -10,9 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ClipboardCheck, FileText, Camera, CheckSquare, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useAudits } from '@/hooks/useAudits';
 import { useVessels } from '@/hooks/useVessels';
+import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 const AuditExecution = () => {
+  const { toast } = useToast();
   const { audits, isLoading, createAudit, updateAudit, deleteAudit } = useAudits();
   const { vessels } = useVessels();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -230,8 +232,8 @@ const AuditExecution = () => {
                       <Badge variant={audit.status === 'completed' ? 'secondary' : 'default'}>
                         {audit.status}
                       </Badge>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="ghost"
                         onClick={() => deleteAudit.mutate(audit.id)}
                       >
@@ -246,14 +248,20 @@ const AuditExecution = () => {
                   </div>
                   <div className="flex gap-2">
                     {audit.status === 'in_progress' && (
-                      <Button 
+                      <Button
                         size="sm"
                         onClick={() => updateAudit.mutate({ id: audit.id, status: 'completed', completed_date: new Date().toISOString().split('T')[0] })}
                       >
                         Complete Audit
                       </Button>
                     )}
-                    <Button size="sm" variant="outline">View Details</Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => toast({ title: "Audit Details", description: `Opening comprehensive report for audit #${audit.id.slice(0, 8)}...` })}
+                    >
+                      View Details
+                    </Button>
                   </div>
                 </div>
               ))}
