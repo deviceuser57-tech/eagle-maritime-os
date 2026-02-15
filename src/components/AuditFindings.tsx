@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, AlertCircle, Info, Loader2 } from 'lucide-react';
 import { useCorrectiveActions } from '@/hooks/useCorrectiveActions';
 import { useAudits } from '@/hooks/useAudits';
+import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 const AuditFindings = () => {
+  const { toast } = useToast();
   const { correctiveActions, loading } = useCorrectiveActions();
   const { audits, isLoading: auditsLoading } = useAudits();
 
@@ -94,7 +96,7 @@ const AuditFindings = () => {
               {correctiveActions.slice(0, 10).map((finding) => {
                 const isOverdue = finding.due_date && new Date(finding.due_date) < new Date() && finding.status !== 'completed';
                 const severityVariant = isOverdue ? 'destructive' : finding.status === 'completed' ? 'secondary' : 'outline';
-                
+
                 return (
                   <div key={finding.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex-1">
@@ -117,7 +119,13 @@ const AuditFindings = () => {
                           {finding.due_date ? format(new Date(finding.due_date), 'MMM dd, yyyy') : 'No due date'}
                         </p>
                       </div>
-                      <Button size="sm" variant="outline">Details</Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => toast({ title: "Finding Details", description: `Accessing full dossier and evidence for finding #${finding.id.slice(0, 8)}...` })}
+                      >
+                        Details
+                      </Button>
                     </div>
                   </div>
                 );

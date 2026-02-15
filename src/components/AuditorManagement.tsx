@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { UserCheck, ClipboardCheck, Star, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useAuditors } from '@/hooks/useAuditors';
 import { useAudits } from '@/hooks/useAudits';
+import { useToast } from '@/hooks/use-toast';
 
 const AuditorManagement = () => {
+  const { toast } = useToast();
   const { auditors, loading, addAuditor, deleteAuditor } = useAuditors();
   const { audits } = useAudits();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -240,7 +242,13 @@ const AuditorManagement = () => {
                     <Badge variant={auditor.status === 'available' ? 'default' : 'secondary'}>
                       {auditor.status}
                     </Badge>
-                    <Button size="sm" variant="outline">Assign</Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => toast({ title: "Auditor Assignment", description: `Drafting assignment order for ${auditor.name}. Select a scheduled audit to proceed.` })}
+                    >
+                      Assign
+                    </Button>
                     <Button
                       size="sm"
                       variant="ghost"
