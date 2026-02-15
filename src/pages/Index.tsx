@@ -65,35 +65,35 @@ const IndexContent = () => {
 
   const renderContent = () => {
     switch (activeSection) {
-      case 'dashboard':return <Dashboard />;
-      case 'ai-assistant':return <AIAssistant />;
-      case 'user-auth':return <AuthPage />;
-      case 'setup':return <SetupPage />;
-      case 'vessel-management':return <VesselManagement />;
-      case 'vessels-certification':return <VesselsCertification />;
-      case 'crew-management':return <CrewManagement />;
-      case 'auditor-management':return <AuditorManagement />;
-      case 'rules-regulations':return <RulesRegulations />;
-      case 'cii-dashboard':return <CIIDashboard />;
-      case 'operations':return <Operations />;
-      case 'maintenance':return <Maintenance />;
-      case 'projects':return <Projects />;
-      case 'audit-plan':return <AuditPlan />;
-      case 'audit-execution':return <AuditExecution />;
-      case 'audit-findings':return <AuditFindings />;
-      case 'corrective-action':return <CorrectiveAction />;
-      case 'interactive-closure':return <InteractiveClosure />;
-      case 'incidents':return <Incidents />;
-      case 'communications':return <Communications />;
-      case 'sms':return <SafetyManagement />;
-      case 'digital-compliance':return <DigitalCompliance />;
-      case 'insurance-claims':return <InsuranceClaims />;
-      case 'reports':return <Reports />;
-      case 'sim-dashboard':return <SIMDashboard />;
-      case 'layout-mapper':return <LayoutMapper />;
-      case 'predictive-compliance':return <PredictiveCompliance />;
-      case 'motion-risk-analyzer':return <MotionRiskAnalyzer />;
-      case 'digital-twin':return <DigitalTwin />;
+      case 'dashboard': return <Dashboard onSectionChange={setActiveSection} />;
+      case 'ai-assistant': return <AIAssistant />;
+      case 'user-auth': return <AuthPage />;
+      case 'setup': return <SetupPage />;
+      case 'vessel-management': return <VesselManagement />;
+      case 'vessels-certification': return <VesselsCertification />;
+      case 'crew-management': return <CrewManagement />;
+      case 'auditor-management': return <AuditorManagement />;
+      case 'rules-regulations': return <RulesRegulations />;
+      case 'cii-dashboard': return <CIIDashboard />;
+      case 'operations': return <Operations />;
+      case 'maintenance': return <Maintenance />;
+      case 'projects': return <Projects />;
+      case 'audit-plan': return <AuditPlan />;
+      case 'audit-execution': return <AuditExecution />;
+      case 'audit-findings': return <AuditFindings />;
+      case 'corrective-action': return <CorrectiveAction />;
+      case 'interactive-closure': return <InteractiveClosure />;
+      case 'incidents': return <Incidents />;
+      case 'communications': return <Communications />;
+      case 'sms': return <SafetyManagement />;
+      case 'digital-compliance': return <DigitalCompliance />;
+      case 'insurance-claims': return <InsuranceClaims />;
+      case 'reports': return <Reports />;
+      case 'sim-dashboard': return <SIMDashboard />;
+      case 'layout-mapper': return <LayoutMapper />;
+      case 'predictive-compliance': return <PredictiveCompliance />;
+      case 'motion-risk-analyzer': return <MotionRiskAnalyzer />;
+      case 'digital-twin': return <DigitalTwin />;
       default:
         return (
           <div className="space-y-6">

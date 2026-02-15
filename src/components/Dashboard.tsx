@@ -10,7 +10,11 @@ import { useCorrectiveActions } from '@/hooks/useCorrectiveActions';
 import { Loader2 } from 'lucide-react';
 import { differenceInDays, format, subMonths } from 'date-fns';
 
-const Dashboard = () => {
+interface DashboardProps {
+  onSectionChange?: (section: string) => void;
+}
+
+const Dashboard = ({ onSectionChange }: DashboardProps) => {
   const { vessels, loading: vesselsLoading } = useVessels();
   const { audits, isLoading: auditsLoading } = useAudits();
   const { incidents, isLoading: incidentsLoading } = useIncidents();
@@ -153,7 +157,10 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="maritime-card group overflow-hidden relative">
+        <Card
+          className="maritime-card group overflow-hidden relative cursor-pointer hover:border-primary/50 transition-all"
+          onClick={() => onSectionChange?.('vessels-certification')}
+        >
           <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-150" />
           <CardHeader className="pb-2 pt-5 px-6">
             <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em]">Compliance Rating</CardTitle>
