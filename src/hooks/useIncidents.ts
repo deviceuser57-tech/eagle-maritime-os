@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { incidentSchema, validate } from '@/lib/validations';
 
 type Incident = Tables<'incidents'>;
 type IncidentInsert = TablesInsert<'incidents'>;
@@ -28,6 +29,9 @@ export const useIncidents = () => {
 
   const createIncident = useMutation({
     mutationFn: async (newIncident: Omit<IncidentInsert, 'user_id'>) => {
+      const { error: validationError } = validate(incidentSchema, newIncident);
+      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+
       const { data, error } = await supabase
         .from('incidents')
         .insert({ ...newIncident, user_id: user?.id })

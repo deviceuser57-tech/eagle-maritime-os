@@ -121,8 +121,19 @@ export const useCustomRegulations = () => {
     const path = `${user.id}/${Date.now()}_${file.name}`;
     const { error } = await supabase.storage.from('regulations').upload(path, file);
     if (error) { toast.error('Upload failed: ' + error.message); return null; }
-    const { data } = supabase.storage.from('regulations').getPublicUrl(path);
-    return { url: data.publicUrl, name: file.name };
+    const { data, error: signedError } = await supabase.storage
+      .from('regulations')
+      .createSignedUrl(path, 3600);
+    if (signedError || !data) { toast.error('Failed to generate secure URL'); return null; }
+    return { url: data.signedUrl, name: file.name };
+  };
+
+  const getSignedUrl = async (path: string): Promise<string | null> => {
+    const { data, error } = await supabase.storage
+      .from('regulations')
+      .createSignedUrl(path, 3600);
+    if (error || !data) return null;
+    return data.signedUrl;
   };
 
   return {
@@ -134,5 +145,6 @@ export const useCustomRegulations = () => {
     assignVessel,
     removeVesselAssignment,
     uploadFile,
+    getSignedUrl,
   };
 };
