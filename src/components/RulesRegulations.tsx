@@ -75,9 +75,30 @@ const RulesRegulations = () => {
     setIsAddOpen(false);
   };
 
-  const handleAssignVessel = async (regId: string) => {
+  const handleAssignVessel = async (regId: string, standardReg?: typeof STANDARD_REGULATIONS[0]) => {
     if (!assignVesselId) return;
-    await assignVessel.mutateAsync({ regulation_id: regId, vessel_id: assignVesselId });
+    let finalRegId = regId;
+    // If it's a standard regulation, ensure it exists in custom_regulations first
+    if (standardReg) {
+      const existing = regulations.find(r => r.code === standardReg.code);
+      if (existing) {
+        finalRegId = existing.id;
+      } else {
+        const created = await createRegulation.mutateAsync({
+          code: standardReg.code,
+          title: standardReg.title,
+          description: null,
+          category: standardReg.category,
+          version: standardReg.version,
+          link: standardReg.link,
+          notes: null,
+          file_url: null,
+          file_name: null,
+        });
+        finalRegId = created.id;
+      }
+    }
+    await assignVessel.mutateAsync({ regulation_id: finalRegId, vessel_id: assignVesselId });
     setAssignVesselId('');
   };
 
@@ -252,13 +273,16 @@ const RulesRegulations = () => {
               <div className="text-center py-8 text-muted-foreground">No regulations match your search.</div>
             ) : (
               filtered.map((reg) => {
-                const vesselAssignments = !reg.isStandard ? regulationVessels.filter(rv => rv.regulation_id === reg.id) : [];
+                // For standard regs, check if a matching custom_regulations record exists
+                const matchedCustomReg = reg.isStandard ? regulations.find(r => r.code === reg.code) : null;
+                const dbId = reg.isStandard ? (matchedCustomReg?.id || reg.id) : reg.id;
+                const vesselAssignments = regulationVessels.filter(rv => rv.regulation_id === dbId);
                 const isExpanded = selectedRegulation === reg.id;
 
                 return (
                   <div key={reg.id} className="border rounded-lg hover:bg-accent/50 transition-colors">
                     <div className="flex items-center justify-between p-4">
-                      <div className="flex-1 cursor-pointer" onClick={() => !reg.isStandard && setSelectedRegulation(isExpanded ? null : reg.id)}>
+                      <div className="flex-1 cursor-pointer" onClick={() => setSelectedRegulation(isExpanded ? null : reg.id)}>
                         <div className="flex items-center gap-2">
                           <p className="font-medium">{reg.code} - {reg.title}</p>
                           {reg.isStandard && <Badge variant="outline" className="text-xs">IMO Standard</Badge>}
@@ -272,7 +296,7 @@ const RulesRegulations = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">{reg.category}</Badge>
-                        {!reg.isStandard && vesselAssignments.length > 0 && (
+                        {vesselAssignments.length > 0 && (
                           <Badge variant="secondary"><Ship className="h-3 w-3 mr-1" />{vesselAssignments.length} vessels</Badge>
                         )}
                         {reg.isStandard && 'link' in reg && reg.link && (
@@ -294,7 +318,7 @@ const RulesRegulations = () => {
                     </div>
 
                     {/* Expanded section for custom regulations - vessel assignment */}
-                    {!reg.isStandard && isExpanded && (
+                    {isExpanded && (
                       <div className="border-t px-4 py-3 bg-muted/30 space-y-3">
                         {!reg.isStandard && (reg as any).description && (
                           <p className="text-sm text-muted-foreground">{(reg as any).description}</p>
@@ -310,7 +334,7 @@ const RulesRegulations = () => {
                               ))}
                             </SelectContent>
                           </Select>
-                          <Button size="sm" onClick={() => handleAssignVessel(reg.id)} disabled={!assignVesselId}>
+                          <Button size="sm" onClick={() => handleAssignVessel(dbId, reg.isStandard ? STANDARD_REGULATIONS.find(s => s.code === reg.code) : undefined)} disabled={!assignVesselId}>
                             <Plus className="h-3 w-3 mr-1" />Assign
                           </Button>
                         </div>
