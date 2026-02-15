@@ -165,7 +165,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           ref={titleRef}
           className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4 tracking-tight">
 
-          <span className="bg-gradient-to-r from-white via-[hsl(185,80%,70%)] to-[hsl(38,95%,65%)] bg-clip-text text-transparent font-mono font-bold mb-[30px] pr-[38px] pt-[12px] my-[5px] mx-[36px] py-0 px-[51px] text-8xl text-center">EAGLE PLATFORM
+          <span className="bg-gradient-to-r from-white via-[hsl(185,80%,70%)] to-[hsl(38,95%,65%)] bg-clip-text text-transparent font-mono font-bold mb-[30px] pr-[38px] pt-[12px] my-[5px] mx-[36px] py-0 px-[51px] text-center text-9xl">EAGLE PLATFORM
 
           </span>
         </h1>
@@ -209,7 +209,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           {features.map((feature, index) =>
           <div
             key={index}
-            className="group p-4 md:p-5 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-[hsl(205,85%,50%)]/30 transition-all duration-300 cursor-default">
+            className="group p-4 md:p-5 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-[hsl(205,85%,50%)]/30 transition-all duration-300 cursor-default py-[40px]">
 
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(205,85%,45%)] to-[hsl(185,80%,40%)] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg shadow-[hsl(205,85%,35%)]/20">
                 <feature.icon className="w-6 h-6 text-white" />
