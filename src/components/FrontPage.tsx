@@ -165,7 +165,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           ref={titleRef}
           className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4 tracking-tight">
 
-          <span className="bg-gradient-to-r from-white via-[hsl(185,80%,70%)] to-[hsl(38,95%,65%)] bg-clip-text text-transparent my-0 mx-0 px-0 font-mono font-bold text-right mb-[30px] pr-[38px] pt-[12px] py-0 text-9xl">EAGLE PLATFORM
+          <span className="bg-gradient-to-r from-white via-[hsl(185,80%,70%)] to-[hsl(38,95%,65%)] bg-clip-text text-transparent font-mono font-bold mb-[30px] pr-[38px] pt-[12px] my-[5px] mx-[36px] py-0 px-[51px] text-8xl text-center">EAGLE PLATFORM
 
           </span>
         </h1>
