@@ -7,8 +7,8 @@ import {
   BarChart3,
   Users,
   FileCheck,
-  ChevronRight,
-} from "lucide-react";
+  ChevronRight } from
+"lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface FrontPageProps {
@@ -35,18 +35,18 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
       // Initial states with 3D positions
       gsap.set(
         [
-          logoRef.current,
-          titleRef.current,
-          subtitleRef.current,
-          descRef.current,
-          ctaRef.current,
-        ],
+        logoRef.current,
+        titleRef.current,
+        subtitleRef.current,
+        descRef.current,
+        ctaRef.current],
+
         {
           opacity: 0,
           y: 100,
           z: -200,
-          rotationX: -45,
-        },
+          rotationX: -45
+        }
       );
 
       gsap.set(featuresRef.current?.children || [], {
@@ -54,12 +54,12 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
         y: 150,
         z: -300,
         rotationY: 45,
-        scale: 0.8,
+        scale: 0.8
       });
 
       // Main timeline for 3D entrance
       const tl = gsap.timeline({
-        defaults: { ease: "expo.out", duration: 1.5 },
+        defaults: { ease: "expo.out", duration: 1.5 }
       });
 
       tl.to(logoRef.current, {
@@ -68,62 +68,62 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
         z: 0,
         rotationX: 0,
         duration: 2,
-        ease: "elastic.out(1, 0.75)",
-      })
-        .to(
-          titleRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            z: 50,
-            rotationX: 0,
-          },
-          "-=1.6",
-        )
-        .to(
-          subtitleRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            z: 30,
-            rotationX: 0,
-          },
-          "-=1.4",
-        )
-        .to(
-          descRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            z: 20,
-            rotationX: 0,
-          },
-          "-=1.3",
-        )
-        .to(
-          ctaRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            z: 40,
-            rotationX: 0,
-          },
-          "-=1.2",
-        )
-        .to(
-          featuresRef.current?.children || [],
-          {
-            opacity: 1,
-            y: 0,
-            z: 0,
-            rotationY: 0,
-            scale: 1,
-            stagger: 0.1,
-            duration: 1.2,
-            ease: "back.out(1.7)",
-          },
-          "-=1",
-        );
+        ease: "elastic.out(1, 0.75)"
+      }).
+      to(
+        titleRef.current,
+        {
+          opacity: 1,
+          y: 0,
+          z: 50,
+          rotationX: 0
+        },
+        "-=1.6"
+      ).
+      to(
+        subtitleRef.current,
+        {
+          opacity: 1,
+          y: 0,
+          z: 30,
+          rotationX: 0
+        },
+        "-=1.4"
+      ).
+      to(
+        descRef.current,
+        {
+          opacity: 1,
+          y: 0,
+          z: 20,
+          rotationX: 0
+        },
+        "-=1.3"
+      ).
+      to(
+        ctaRef.current,
+        {
+          opacity: 1,
+          y: 0,
+          z: 40,
+          rotationX: 0
+        },
+        "-=1.2"
+      ).
+      to(
+        featuresRef.current?.children || [],
+        {
+          opacity: 1,
+          y: 0,
+          z: 0,
+          rotationY: 0,
+          scale: 1,
+          stagger: 0.1,
+          duration: 1.2,
+          ease: "back.out(1.7)"
+        },
+        "-=1"
+      );
 
       // Floating 3D objects animation
       if (floatingElementsRef.current) {
@@ -137,7 +137,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
             repeat: -1,
             yoyo: true,
             ease: "sine.inOut",
-            delay: i * 0.2,
+            delay: i * 0.2
           });
         });
       }
@@ -153,8 +153,8 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           stagger: {
             each: 0.4,
             repeat: -1,
-            yoyo: true,
-          },
+            yoyo: true
+          }
         });
       }
 
@@ -168,7 +168,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           rotationY: xPos * 8,
           rotationX: -yPos * 8,
           duration: 1,
-          ease: "power2.out",
+          ease: "power2.out"
         });
 
         // Parallax depth for background elements
@@ -177,7 +177,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
             x: (i) => xPos * (i + 1) * 20,
             y: (i) => yPos * (i + 1) * 20,
             duration: 1.5,
-            ease: "power1.out",
+            ease: "power1.out"
           });
         }
       };
@@ -190,62 +190,62 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
   }, []);
 
   const features = [
-    {
-      icon: Ship,
-      title: "Fleet Tracking",
-      desc: "Real-time vessel monitoring & status",
-    },
-    {
-      icon: Shield,
-      title: "Compliance",
-      desc: "ISM, ISPS & regulatory adherence",
-    },
-    {
-      icon: BarChart3,
-      title: "Analytics",
-      desc: "CII ratings & performance metrics",
-    },
-    {
-      icon: Users,
-      title: "Crew Management",
-      desc: "Certifications & scheduling",
-    },
-    {
-      icon: FileCheck,
-      title: "Audit Trail",
-      desc: "Complete documentation system",
-    },
-    {
-      icon: Anchor,
-      title: "Port Operations",
-      desc: "Voyage planning & logistics",
-    },
-  ];
+  {
+    icon: Ship,
+    title: "Fleet Tracking",
+    desc: "Real-time vessel monitoring & status"
+  },
+  {
+    icon: Shield,
+    title: "Compliance",
+    desc: "ISM, ISPS & regulatory adherence"
+  },
+  {
+    icon: BarChart3,
+    title: "Analytics",
+    desc: "CII ratings & performance metrics"
+  },
+  {
+    icon: Users,
+    title: "Crew Management",
+    desc: "Certifications & scheduling"
+  },
+  {
+    icon: FileCheck,
+    title: "Audit Trail",
+    desc: "Complete documentation system"
+  },
+  {
+    icon: Anchor,
+    title: "Port Operations",
+    desc: "Voyage planning & logistics"
+  }];
+
 
   return (
     <div
       ref={containerRef}
       className="min-h-screen w-full overflow-hidden bg-[radial-gradient(circle_at_center,_hsl(210,90%,18%)_0%,_hsl(210,90%,8%)_100%)] text-white relative flex flex-col items-center justify-center"
-      style={{ perspective: "1500px" }}
-    >
+      style={{ perspective: "1500px" }}>
+
       {/* 3D Floating Elements in Background */}
       <div
         ref={floatingElementsRef}
-        className="absolute inset-0 pointer-events-none opacity-30"
-      >
-        {[...Array(12)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-lg border border-white/10 bg-white/5 backdrop-blur-md"
-            style={{
-              width: `${Math.random() * 60 + 20}px`,
-              height: `${Math.random() * 60 + 20}px`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              transformStyle: "preserve-3d",
-            }}
-          />
-        ))}
+        className="absolute inset-0 pointer-events-none opacity-30">
+
+        {[...Array(12)].map((_, i) =>
+        <div
+          key={i}
+          className="absolute rounded-lg border border-white/10 bg-white/5 backdrop-blur-md"
+          style={{
+            width: `${Math.random() * 60 + 20}px`,
+            height: `${Math.random() * 60 + 20}px`,
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            transformStyle: "preserve-3d"
+          }} />
+
+        )}
       </div>
 
       {/* Radiant Glow Layers */}
@@ -263,25 +263,25 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
                             linear-gradient(0deg, hsl(205,85%,50%) 1px, transparent 1px)`,
           backgroundSize: "100% 100%, 60px 60px, 60px 60px",
           transform: "rotateX(75deg) translateY(50%)",
-          transformOrigin: "bottom center",
-        }}
-      />
+          transformOrigin: "bottom center"
+        }} />
+
 
       {/* Main Content Scrollable Area */}
       <div
         className="relative z-10 flex flex-col items-center justify-center w-full max-w-7xl px-6 py-20 text-center"
-        style={{ transformStyle: "preserve-3d" }}
-      >
+        style={{ transformStyle: "preserve-3d" }}>
+
         {/* Animated Logo Container */}
         <div
           ref={logoRef}
           className="mb-12 relative group"
-          style={{ transformStyle: "preserve-3d" }}
-        >
+          style={{ transformStyle: "preserve-3d" }}>
+
           <div
             className="relative w-32 h-32 md:w-44 md:h-44 transform-gpu transition-transform duration-500 group-hover:scale-110"
-            style={{ transformStyle: "preserve-3d" }}
-          >
+            style={{ transformStyle: "preserve-3d" }}>
+
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary via-maritime-accent to-blue-600 blur-2xl opacity-40 group-hover:opacity-60 transition-opacity" />
             <div className="relative h-full w-full rounded-full bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center shadow-3xl border border-white/20 overflow-hidden">
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
@@ -300,8 +300,8 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           <h1
             ref={titleRef}
             className="text-6xl md:text-8xl lg:text-9xl font-black mb-6 tracking-tighter"
-            style={{ transform: "translateZ(100px)" }}
-          >
+            style={{ transform: "translateZ(100px)" }}>
+
             <span className="inline-block bg-gradient-to-b from-white via-slate-200 to-slate-500 bg-clip-text text-transparent italic">
               EAGLE
             </span>
@@ -313,16 +313,16 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           <h2
             ref={subtitleRef}
             className="text-2xl md:text-3xl lg:text-4xl font-light text-maritime-accent mb-8 tracking-[0.2em] uppercase"
-            style={{ transform: "translateZ(60px)" }}
-          >
+            style={{ transform: "translateZ(60px)" }}>
+
             Evolution of Vessel Governance
           </h2>
 
           <p
             ref={descRef}
             className="text-lg md:text-xl text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed font-light"
-            style={{ transform: "translateZ(40px)" }}
-          >
+            style={{ transform: "translateZ(40px)" }}>
+
             A high-performance maritime ecosystem integrating real-time
             intelligence, absolute compliance, and automated fleet excellence.
           </p>
@@ -333,8 +333,8 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           <Button
             onClick={onEnterDashboard}
             size="xl"
-            className="group relative px-12 py-8 text-xl font-bold rounded-full bg-white text-slate-950 hover:bg-primary hover:text-white transition-all duration-500 shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-primary/40 overflow-hidden"
-          >
+            className="group relative px-12 py-8 text-xl font-bold rounded-full bg-white text-slate-950 hover:bg-primary hover:text-white transition-all duration-500 shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-primary/40 overflow-hidden">
+
             <span className="relative z-10 flex items-center gap-4">
               LAUNCH SYSTEM
               <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
@@ -347,19 +347,19 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
         <div
           ref={featuresRef}
           className="mt-24 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 w-full"
-          style={{ transformStyle: "preserve-3d" }}
-        >
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="group relative p-6 rounded-3xl bg-slate-900/40 backdrop-blur-xl border border-white/5 hover:border-primary/50 transition-all duration-500 flex flex-col items-center hover:-translate-y-4"
-              style={{ transformStyle: "preserve-3d" }}
-            >
+          style={{ transformStyle: "preserve-3d" }}>
+
+          {features.map((feature, index) =>
+          <div
+            key={index}
+            className="group relative p-6 rounded-3xl bg-slate-900/40 backdrop-blur-xl border border-white/5 hover:border-primary/50 transition-all duration-500 flex flex-col items-center hover:-translate-y-4"
+            style={{ transformStyle: "preserve-3d" }}>
+
               <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl" />
               <div
-                className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center mb-4 group-hover:bg-primary shadow-xl transition-all duration-500"
-                style={{ transform: "translateZ(30px)" }}
-              >
+              className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center mb-4 group-hover:bg-primary shadow-xl transition-all duration-500"
+              style={{ transform: "translateZ(30px)" }}>
+
                 <feature.icon className="w-8 h-8 text-primary group-hover:text-white transition-colors" />
               </div>
               <h3 className="font-bold text-white mb-2 text-base md:text-lg group-hover:text-primary transition-colors">
@@ -369,7 +369,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
                 {feature.desc}
               </p>
             </div>
-          ))}
+          )}
         </div>
 
         {/* Signature Footer */}
@@ -381,7 +381,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
             </span>
             <div className="w-24 h-px bg-gradient-to-l from-transparent to-white/40" />
           </div>
-          <p className="text-[10px] text-slate-500">
+          <p className="text-lg text-[#f7f8f8] font-bold">
             © Eagle Tech Systems • Chief Architect Elhamy Sobhy
           </p>
         </div>
@@ -390,30 +390,30 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
       {/* Decorative Wave System */}
       <div
         ref={wavesRef}
-        className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none overflow-hidden"
-      >
-        {[...Array(3)].map((_, i) => (
-          <svg
-            key={i}
-            viewBox="0 0 1440 320"
-            className="absolute bottom-0 w-full h-full preserve-3d"
-          >
+        className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none overflow-hidden">
+
+        {[...Array(3)].map((_, i) =>
+        <svg
+          key={i}
+          viewBox="0 0 1440 320"
+          className="absolute bottom-0 w-full h-full preserve-3d">
+
             <path
-              fill={
-                i === 0
-                  ? "hsl(205,85%,45%)"
-                  : i === 1
-                    ? "hsl(185,80%,40%)"
-                    : "hsl(210,90%,15%)"
-              }
-              fillOpacity={0.1 + i * 0.1}
-              d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,128C960,139,1056,181,1152,197.3C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-            />
+            fill={
+            i === 0 ?
+            "hsl(205,85%,45%)" :
+            i === 1 ?
+            "hsl(185,80%,40%)" :
+            "hsl(210,90%,15%)"
+            }
+            fillOpacity={0.1 + i * 0.1}
+            d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,128C960,139,1056,181,1152,197.3C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" />
+
           </svg>
-        ))}
+        )}
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default FrontPage;
