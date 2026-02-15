@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,15 +7,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Award, Stethoscope, Plus, Loader2, Trash2 } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Users, Award, Stethoscope, Plus, Loader2, Trash2, Camera } from 'lucide-react';
 import { useCrewMembers } from '@/hooks/useCrewMembers';
 import { useVessels } from '@/hooks/useVessels';
 import { format } from 'date-fns';
 
 const CrewManagement = () => {
-  const { crewMembers, isLoading, createCrewMember, deleteCrewMember } = useCrewMembers();
+  const { crewMembers, isLoading, createCrewMember, deleteCrewMember, uploadPhoto, getPhotoUrl } = useCrewMembers();
   const { vessels } = useVessels();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [crewPhotoUrls, setCrewPhotoUrls] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -29,13 +34,47 @@ const CrewManagement = () => {
     status: 'active',
   });
 
+  // Load signed URLs for crew photos
+  useEffect(() => {
+    const loadPhotos = async () => {
+      const urls: Record<string, string> = {};
+      for (const crew of crewMembers) {
+        if (crew.photo_url && !crewPhotoUrls[crew.id]) {
+          const url = await getPhotoUrl(crew.photo_url);
+          if (url) urls[crew.id] = url;
+        }
+      }
+      if (Object.keys(urls).length > 0) {
+        setCrewPhotoUrls(prev => ({ ...prev, ...urls }));
+      }
+    };
+    loadPhotos();
+  }, [crewMembers]);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedPhoto(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    let photo_url: string | null = null;
+    if (selectedPhoto) {
+      setUploadingPhoto(true);
+      photo_url = await uploadPhoto(selectedPhoto);
+      setUploadingPhoto(false);
+    }
+
     await createCrewMember.mutateAsync({
       ...formData,
       vessel_id: formData.vessel_id || null,
       certificate_expiry: formData.certificate_expiry || null,
-    });
+      photo_url,
+    } as any);
     setFormData({
       first_name: '',
       last_name: '',
@@ -48,6 +87,8 @@ const CrewManagement = () => {
       certificate_expiry: '',
       status: 'active',
     });
+    setSelectedPhoto(null);
+    setPhotoPreview(null);
     setIsDialogOpen(false);
   };
 
@@ -89,6 +130,28 @@ const CrewManagement = () => {
               <DialogTitle>Add New Crew Member</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Photo Upload */}
+              <div className="flex items-center gap-4">
+                <Avatar className="h-20 w-20">
+                  {photoPreview ? (
+                    <AvatarImage src={photoPreview} alt="Preview" />
+                  ) : (
+                    <AvatarFallback className="bg-muted">
+                      <Camera className="h-8 w-8 text-muted-foreground" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="space-y-1">
+                  <Label htmlFor="photo">Crew Photo</Label>
+                  <Input
+                    id="photo"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="w-[250px]"
+                  />
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="first_name">First Name *</Label>
@@ -201,9 +264,9 @@ const CrewManagement = () => {
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createCrewMember.isPending}>
-                  {createCrewMember.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Add Crew Member
+                <Button type="submit" disabled={createCrewMember.isPending || uploadingPhoto}>
+                  {(createCrewMember.isPending || uploadingPhoto) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  {uploadingPhoto ? 'Uploading photo...' : 'Add Crew Member'}
                 </Button>
               </div>
             </form>
@@ -281,11 +344,21 @@ const CrewManagement = () => {
                 <div className="space-y-4">
                   {crewMembers.map((crew) => (
                     <div key={crew.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium">{crew.first_name} {crew.last_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {crew.rank} {crew.vessels?.name && `- ${crew.vessels.name}`}
-                        </p>
+                      <div className="flex items-center gap-3 flex-1">
+                        <Avatar className="h-10 w-10">
+                          {crewPhotoUrls[crew.id] ? (
+                            <AvatarImage src={crewPhotoUrls[crew.id]} alt={`${crew.first_name} ${crew.last_name}`} />
+                          ) : null}
+                          <AvatarFallback className="bg-muted text-sm">
+                            {crew.first_name[0]}{crew.last_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{crew.first_name} {crew.last_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {crew.rank} {crew.vessels?.name && `- ${crew.vessels.name}`}
+                          </p>
+                        </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <Badge variant={crew.status === 'active' ? 'default' : 'secondary'}>

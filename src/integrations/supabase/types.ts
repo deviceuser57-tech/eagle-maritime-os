@@ -343,6 +343,7 @@ export type Database = {
           last_name: string
           nationality: string | null
           phone: string | null
+          photo_url: string | null
           rank: string
           status: string | null
           updated_at: string
@@ -361,6 +362,7 @@ export type Database = {
           last_name: string
           nationality?: string | null
           phone?: string | null
+          photo_url?: string | null
           rank: string
           status?: string | null
           updated_at?: string
@@ -379,6 +381,7 @@ export type Database = {
           last_name?: string
           nationality?: string | null
           phone?: string | null
+          photo_url?: string | null
           rank?: string
           status?: string | null
           updated_at?: string

@@ -89,6 +89,20 @@ export const useCrewMembers = () => {
     },
   });
 
+  const uploadPhoto = async (file: File): Promise<string | null> => {
+    if (!user) return null;
+    const path = `${user.id}/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from('crew-photos').upload(path, file);
+    if (error) { toast.error('Photo upload failed: ' + error.message); return null; }
+    return path;
+  };
+
+  const getPhotoUrl = async (path: string): Promise<string | null> => {
+    const { data, error } = await supabase.storage.from('crew-photos').createSignedUrl(path, 3600);
+    if (error || !data) return null;
+    return data.signedUrl;
+  };
+
   return {
     crewMembers,
     isLoading,
@@ -96,5 +110,7 @@ export const useCrewMembers = () => {
     createCrewMember,
     updateCrewMember,
     deleteCrewMember,
+    uploadPhoto,
+    getPhotoUrl,
   };
 };
