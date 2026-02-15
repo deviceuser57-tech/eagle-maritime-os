@@ -85,7 +85,7 @@ export const useVessels = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setVessels((data as Vessel[]) || []);
+      setVessels((data as unknown as Vessel[]) || []);
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -114,7 +114,7 @@ export const useVessels = () => {
         .single();
 
       if (error) throw error;
-      setVessels(prev => [data as Vessel, ...prev]);
+      setVessels(prev => [data as unknown as Vessel, ...prev]);
       toast({ title: 'Success', description: 'Vessel added successfully' });
       return { data, error: null };
     } catch (error: any) {
@@ -133,7 +133,7 @@ export const useVessels = () => {
         .single();
 
       if (error) throw error;
-      setVessels(prev => prev.map(v => v.id === id ? (data as Vessel) : v));
+      setVessels(prev => prev.map(v => v.id === id ? (data as unknown as Vessel) : v));
       toast({ title: 'Success', description: 'Vessel updated successfully' });
       return { data, error: null };
     } catch (error: any) {

@@ -44,12 +44,7 @@ const InsuranceClaims = () => {
       claim_number: null,
       submitted_date: new Date().toISOString().split('T')[0],
       resolved_date: null,
-      approved_amount: null,
-      notes: JSON.stringify({
-        broker: formData.broker_name,
-        loss_adjuster: formData.loss_adjuster,
-        deductible: formData.deductible_amount
-      })
+      approved_amount: null
     });
     setFormData({
       vessel_id: '',
