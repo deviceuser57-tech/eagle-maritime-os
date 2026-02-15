@@ -1,7 +1,15 @@
-import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
-import { Anchor, Ship, Shield, BarChart3, Users, FileCheck, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import {
+  Anchor,
+  Ship,
+  Shield,
+  BarChart3,
+  Users,
+  FileCheck,
+  ChevronRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface FrontPageProps {
   onEnterDashboard: () => void;
@@ -25,23 +33,34 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
       gsap.set(containerRef.current, { perspective: 1200 });
 
       // Initial states with 3D positions
-      gsap.set([logoRef.current, titleRef.current, subtitleRef.current, descRef.current, ctaRef.current], {
-        opacity: 0,
-        y: 100,
-        z: -200,
-        rotationX: -45,
-      });
+      gsap.set(
+        [
+          logoRef.current,
+          titleRef.current,
+          subtitleRef.current,
+          descRef.current,
+          ctaRef.current,
+        ],
+        {
+          opacity: 0,
+          y: 100,
+          z: -200,
+          rotationX: -45,
+        },
+      );
 
       gsap.set(featuresRef.current?.children || [], {
         opacity: 0,
         y: 150,
         z: -300,
         rotationY: 45,
-        scale: 0.8
+        scale: 0.8,
       });
 
       // Main timeline for 3D entrance
-      const tl = gsap.timeline({ defaults: { ease: 'expo.out', duration: 1.5 } });
+      const tl = gsap.timeline({
+        defaults: { ease: "expo.out", duration: 1.5 },
+      });
 
       tl.to(logoRef.current, {
         opacity: 1,
@@ -49,56 +68,76 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
         z: 0,
         rotationX: 0,
         duration: 2,
-        ease: 'elastic.out(1, 0.75)'
+        ease: "elastic.out(1, 0.75)",
       })
-        .to(titleRef.current, {
-          opacity: 1,
-          y: 0,
-          z: 50,
-          rotationX: 0,
-        }, '-=1.6')
-        .to(subtitleRef.current, {
-          opacity: 1,
-          y: 0,
-          z: 30,
-          rotationX: 0,
-        }, '-=1.4')
-        .to(descRef.current, {
-          opacity: 1,
-          y: 0,
-          z: 20,
-          rotationX: 0,
-        }, '-=1.3')
-        .to(ctaRef.current, {
-          opacity: 1,
-          y: 0,
-          z: 40,
-          rotationX: 0,
-        }, '-=1.2')
-        .to(featuresRef.current?.children || [], {
-          opacity: 1,
-          y: 0,
-          z: 0,
-          rotationY: 0,
-          scale: 1,
-          stagger: 0.1,
-          duration: 1.2,
-          ease: 'back.out(1.7)'
-        }, '-=1');
+        .to(
+          titleRef.current,
+          {
+            opacity: 1,
+            y: 0,
+            z: 50,
+            rotationX: 0,
+          },
+          "-=1.6",
+        )
+        .to(
+          subtitleRef.current,
+          {
+            opacity: 1,
+            y: 0,
+            z: 30,
+            rotationX: 0,
+          },
+          "-=1.4",
+        )
+        .to(
+          descRef.current,
+          {
+            opacity: 1,
+            y: 0,
+            z: 20,
+            rotationX: 0,
+          },
+          "-=1.3",
+        )
+        .to(
+          ctaRef.current,
+          {
+            opacity: 1,
+            y: 0,
+            z: 40,
+            rotationX: 0,
+          },
+          "-=1.2",
+        )
+        .to(
+          featuresRef.current?.children || [],
+          {
+            opacity: 1,
+            y: 0,
+            z: 0,
+            rotationY: 0,
+            scale: 1,
+            stagger: 0.1,
+            duration: 1.2,
+            ease: "back.out(1.7)",
+          },
+          "-=1",
+        );
 
       // Floating 3D objects animation
       if (floatingElementsRef.current) {
         Array.from(floatingElementsRef.current.children).forEach((el, i) => {
           gsap.to(el, {
-            y: 'random(-40, 40)',
-            x: 'random(-30, 30)',
-            z: 'random(-100, 100)',
-            rotation: 'random(-360, 360)',
+            y: "random(-40, 40)",
+            x: "random(-30, 30)",
+            z: "random(-100, 100)",
+            rotation: "random(-360, 360)",
             duration: `random(3, 6)`,
             repeat: -1,
             yoyo: true,
-            ease: 'sine.inOut',
-            delay: i * 0.2
+            ease: "sine.inOut",
+            delay: i * 0.2,
           });
         });
       }
@@ -107,15 +146,15 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
       if (wavesRef.current) {
         gsap.to(wavesRef.current.children, {
           y: -15,
-          z: i => i * 20,
-          opacity: i => 0.1 + (i * 0.05),
+          z: (i) => i * 20,
+          opacity: (i) => 0.1 + i * 0.05,
           duration: 3,
-          ease: 'sine.inOut',
+          ease: "sine.inOut",
           stagger: {
             each: 0.4,
             repeat: -1,
-            yoyo: true
-          }
+            yoyo: true,
+          },
         });
       }
 
@@ -129,45 +168,71 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           rotationY: xPos * 8,
           rotationX: -yPos * 8,
           duration: 1,
-          ease: 'power2.out'
+          ease: "power2.out",
         });
 
         // Parallax depth for background elements
         if (floatingElementsRef.current) {
           gsap.to(floatingElementsRef.current.children, {
-            x: i => xPos * (i + 1) * 20,
-            y: i => yPos * (i + 1) * 20,
+            x: (i) => xPos * (i + 1) * 20,
+            y: (i) => yPos * (i + 1) * 20,
             duration: 1.5,
-            ease: 'power1.out'
+            ease: "power1.out",
           });
         }
       };
 
-      window.addEventListener('mousemove', handleMouseMove);
-      return () => window.removeEventListener('mousemove', handleMouseMove);
-
+      window.addEventListener("mousemove", handleMouseMove);
+      return () => window.removeEventListener("mousemove", handleMouseMove);
     }, containerRef);
 
     return () => ctx.revert();
   }, []);
 
   const features = [
-    { icon: Ship, title: 'Fleet Tracking', desc: 'Real-time vessel monitoring & status' },
-    { icon: Shield, title: 'Compliance', desc: 'ISM, ISPS & regulatory adherence' },
-    { icon: BarChart3, title: 'Analytics', desc: 'CII ratings & performance metrics' },
-    { icon: Users, title: 'Crew Management', desc: 'Certifications & scheduling' },
-    { icon: FileCheck, title: 'Audit Trail', desc: 'Complete documentation system' },
-    { icon: Anchor, title: 'Port Operations', desc: 'Voyage planning & logistics' }
+    {
+      icon: Ship,
+      title: "Fleet Tracking",
+      desc: "Real-time vessel monitoring & status",
+    },
+    {
+      icon: Shield,
+      title: "Compliance",
+      desc: "ISM, ISPS & regulatory adherence",
+    },
+    {
+      icon: BarChart3,
+      title: "Analytics",
+      desc: "CII ratings & performance metrics",
+    },
+    {
+      icon: Users,
+      title: "Crew Management",
+      desc: "Certifications & scheduling",
+    },
+    {
+      icon: FileCheck,
+      title: "Audit Trail",
+      desc: "Complete documentation system",
+    },
+    {
+      icon: Anchor,
+      title: "Port Operations",
+      desc: "Voyage planning & logistics",
+    },
   ];
 
   return (
     <div
       ref={containerRef}
-      className="min-h-screen w-full overflow-hidden bg-[radial-gradient(circle_at_center,_hsl(210,90%,18%)_0%,_hsl(210,90%,8%)_100%)] text-white relative flex items-center justify-center"
-      style={{ perspective: '1500px' }}
+      className="min-h-screen w-full overflow-hidden bg-[radial-gradient(circle_at_center,_hsl(210,90%,18%)_0%,_hsl(210,90%,8%)_100%)] text-white relative flex flex-col items-center justify-center"
+      style={{ perspective: "1500px" }}
     >
       {/* 3D Floating Elements in Background */}
-      <div ref={floatingElementsRef} className="absolute inset-0 pointer-events-none opacity-30">
+      <div
+        ref={floatingElementsRef}
+        className="absolute inset-0 pointer-events-none opacity-30"
+      >
         {[...Array(12)].map((_, i) => (
           <div
             key={i}
@@ -177,7 +242,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
               height: `${Math.random() * 60 + 20}px`,
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
-              transformStyle: 'preserve-3d'
+              transformStyle: "preserve-3d",
             }}
           />
         ))}
@@ -196,29 +261,33 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           backgroundImage: `linear-gradient(to bottom, transparent, hsl(205,85%,50%)), 
                             linear-gradient(90deg, hsl(205,85%,50%) 1px, transparent 1px),
                             linear-gradient(0deg, hsl(205,85%,50%) 1px, transparent 1px)`,
-          backgroundSize: '100% 100%, 60px 60px, 60px 60px',
-          transform: 'rotateX(75deg) translateY(50%)',
-          transformOrigin: 'bottom center'
+          backgroundSize: "100% 100%, 60px 60px, 60px 60px",
+          transform: "rotateX(75deg) translateY(50%)",
+          transformOrigin: "bottom center",
         }}
       />
 
-      {/* Main Hero Section with 3D Content */}
+      {/* Main Content Scrollable Area */}
       <div
-        ref={heroRef}
-        className="relative z-10 flex flex-col items-center justify-center max-w-7xl px-6 py-20 text-center"
-        style={{ transformStyle: 'preserve-3d' }}
+        className="relative z-10 flex flex-col items-center justify-center w-full max-w-7xl px-6 py-20 text-center"
+        style={{ transformStyle: "preserve-3d" }}
       >
         {/* Animated Logo Container */}
         <div
           ref={logoRef}
           className="mb-12 relative group"
-          style={{ transformStyle: 'preserve-3d' }}
+          style={{ transformStyle: "preserve-3d" }}
         >
-          <div className="relative w-32 h-32 md:w-44 md:h-44 transform-gpu transition-transform duration-500 group-hover:scale-110" style={{ transformStyle: 'preserve-3d' }}>
+          <div
+            className="relative w-32 h-32 md:w-44 md:h-44 transform-gpu transition-transform duration-500 group-hover:scale-110"
+            style={{ transformStyle: "preserve-3d" }}
+          >
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary via-maritime-accent to-blue-600 blur-2xl opacity-40 group-hover:opacity-60 transition-opacity" />
             <div className="relative h-full w-full rounded-full bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center shadow-3xl border border-white/20 overflow-hidden">
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
-              <span className="text-7xl md:text-8xl select-none filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">🦅</span>
+              <span className="text-7xl md:text-8xl select-none filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                🦅
+              </span>
             </div>
             {/* Spinning Ring */}
             <div className="absolute -inset-4 rounded-full border-2 border-white/5 border-t-white/20 animate-[spin_8s_linear_infinite]" />
@@ -226,92 +295,124 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           </div>
         </div>
 
-        {/* Title */}
-        <h1
-          ref={titleRef}
-          className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4 tracking-tight">
+        {/* Hero Content */}
+        <div ref={heroRef} style={{ transformStyle: "preserve-3d" }}>
+          <h1
+            ref={titleRef}
+            className="text-6xl md:text-8xl lg:text-9xl font-black mb-6 tracking-tighter"
+            style={{ transform: "translateZ(100px)" }}
+          >
+            <span className="inline-block bg-gradient-to-b from-white via-slate-200 to-slate-500 bg-clip-text text-transparent italic">
+              EAGLE
+            </span>
+            <span className="inline-block px-4 bg-gradient-to-r from-primary to-orange-400 bg-clip-text text-transparent">
+              PLATFORM
+            </span>
+          </h1>
 
-          <span className="bg-gradient-to-r from-white via-[hsl(185,80%,70%)] to-[hsl(38,95%,65%)] bg-clip-text text-transparent font-mono font-bold mb-[30px] pr-[38px] pt-[12px] my-[5px] mx-[36px] py-0 px-[51px] text-8xl text-center">EAGLE PLATFORM
+          <h2
+            ref={subtitleRef}
+            className="text-2xl md:text-3xl lg:text-4xl font-light text-maritime-accent mb-8 tracking-[0.2em] uppercase"
+            style={{ transform: "translateZ(60px)" }}
+          >
+            Evolution of Vessel Governance
+          </h2>
 
-          </span>
-        </h1>
+          <p
+            ref={descRef}
+            className="text-lg md:text-xl text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed font-light"
+            style={{ transform: "translateZ(40px)" }}
+          >
+            A high-performance maritime ecosystem integrating real-time
+            intelligence, absolute compliance, and automated fleet excellence.
+          </p>
+        </div>
 
-        <h2
-          ref={subtitleRef}
-          className="text-2xl md:text-3xl lg:text-4xl font-light text-maritime-accent mb-8 tracking-[0.2em] uppercase"
-          style={{ transform: 'translateZ(60px)' }}
+        {/* CTA Section */}
+        <div ref={ctaRef} style={{ transform: "translateZ(80px)" }}>
+          <Button
+            onClick={onEnterDashboard}
+            size="xl"
+            className="group relative px-12 py-8 text-xl font-bold rounded-full bg-white text-slate-950 hover:bg-primary hover:text-white transition-all duration-500 shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-primary/40 overflow-hidden"
+          >
+            <span className="relative z-10 flex items-center gap-4">
+              LAUNCH SYSTEM
+              <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
+            </span>
+            <div className="absolute inset-0 bg-gradient-to-r from-primary to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          </Button>
+        </div>
+
+        {/* Enhanced Features Grid */}
+        <div
+          ref={featuresRef}
+          className="mt-24 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 w-full"
+          style={{ transformStyle: "preserve-3d" }}
         >
-          Evolution of Vessel Governance
-        </h2>
-
-        <p
-          ref={descRef}
-          className="text-lg md:text-xl text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed font-light"
-          style={{ transform: 'translateZ(40px)' }}
-        >
-          A high-performance maritime ecosystem integrating real-time intelligence,
-          absolute compliance, and automated fleet excellence.
-        </p>
-      </div>
-
-      {/* CTA Section */}
-      <div ref={ctaRef} style={{ transform: 'translateZ(80px)' }}>
-        <Button
-          onClick={onEnterDashboard}
-          size="xl"
-          className="group relative px-12 py-8 text-xl font-bold rounded-full bg-white text-slate-950 hover:bg-primary hover:text-white transition-all duration-500 shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-primary/40 overflow-hidden"
-        >
-          <span className="relative z-10 flex items-center gap-4">
-            LAUNCH SYSTEM
-            <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
-          </span>
-          <div className="absolute inset-0 bg-gradient-to-r from-primary to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        </Button>
-      </div>
-
-      {/* Enhanced Features Grid */}
-      <div
-        ref={featuresRef}
-        className="mt-20 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 max-w-6xl w-full">
-
-        {features.map((feature, index) =>
-          <div
-            key={index}
-            className="group p-4 md:p-5 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-[hsl(205,85%,50%)]/30 transition-all duration-300 cursor-default">
-
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(205,85%,45%)] to-[hsl(185,80%,40%)] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg shadow-[hsl(205,85%,35%)]/20">
-              <feature.icon className="w-6 h-6 text-white" />
+          {features.map((feature, index) => (
+            <div
+              key={index}
+              className="group relative p-6 rounded-3xl bg-slate-900/40 backdrop-blur-xl border border-white/5 hover:border-primary/50 transition-all duration-500 flex flex-col items-center hover:-translate-y-4"
+              style={{ transformStyle: "preserve-3d" }}
+            >
+              <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl" />
+              <div
+                className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center mb-4 group-hover:bg-primary shadow-xl transition-all duration-500"
+                style={{ transform: "translateZ(30px)" }}
+              >
+                <feature.icon className="w-8 h-8 text-primary group-hover:text-white transition-colors" />
+              </div>
+              <h3 className="font-bold text-white mb-2 text-base md:text-lg group-hover:text-primary transition-colors">
+                {feature.title}
+              </h3>
+              <p className="text-xs md:text-sm text-slate-500 leading-tight text-center group-hover:text-slate-300">
+                {feature.desc}
+              </p>
             </div>
-            <h3 className="font-bold text-white mb-2 text-base md:text-lg group-hover:text-primary transition-colors">{feature.title}</h3>
-            <p className="text-xs md:text-sm text-slate-500 leading-tight text-center group-hover:text-slate-300">{feature.desc}</p>
+          ))}
+        </div>
+
+        {/* Signature Footer */}
+        <div className="mt-20 flex flex-col items-center gap-4 opacity-40 hover:opacity-100 transition-opacity duration-500">
+          <div className="flex items-center gap-6">
+            <div className="w-24 h-px bg-gradient-to-r from-transparent to-white/40" />
+            <span className="text-xs tracking-[0.3em] font-medium uppercase">
+              Maritime Authority 2026
+            </span>
+            <div className="w-24 h-px bg-gradient-to-l from-transparent to-white/40" />
           </div>
+          <p className="text-[10px] text-slate-500">
+            © Eagle Tech Systems • Chief Architect Elhamy Sobhy
+          </p>
+        </div>
+      </div>
+
+      {/* Decorative Wave System */}
+      <div
+        ref={wavesRef}
+        className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none overflow-hidden"
+      >
+        {[...Array(3)].map((_, i) => (
+          <svg
+            key={i}
+            viewBox="0 0 1440 320"
+            className="absolute bottom-0 w-full h-full preserve-3d"
+          >
+            <path
+              fill={
+                i === 0
+                  ? "hsl(205,85%,45%)"
+                  : i === 1
+                    ? "hsl(185,80%,40%)"
+                    : "hsl(210,90%,15%)"
+              }
+              fillOpacity={0.1 + i * 0.1}
+              d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,128C960,139,1056,181,1152,197.3C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+            />
+          </svg>
         ))}
       </div>
-
-      {/* Signature Footer */}
-      <div className="mt-20 flex flex-col items-center gap-4 opacity-40 hover:opacity-100 transition-opacity duration-500">
-        <div className="flex items-center gap-6">
-          <div className="w-24 h-px bg-gradient-to-r from-transparent to-white/40" />
-          <span className="text-xs tracking-[0.3em] font-medium uppercase">Maritime Authority 2026</span>
-          <div className="w-24 h-px bg-gradient-to-l from-transparent to-white/40" />
-        </div>
-        <p className="text-[10px] text-slate-500">© Eagle Tech Systems • Chief Architect Elhamy Sobhy</p>
-      </div>
     </div>
-
-      {/* Decorative Wave System */ }
-  <div ref={wavesRef} className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none overflow-hidden">
-    {[...Array(3)].map((_, i) => (
-      <svg key={i} viewBox="0 0 1440 320" className="absolute bottom-0 w-full h-full preserve-3d">
-        <path
-          fill={i === 0 ? 'hsl(205,85%,45%)' : i === 1 ? 'hsl(185,80%,40%)' : 'hsl(210,90%,15%)'}
-          fillOpacity={0.1 + i * 0.1}
-          d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,128C960,139,1056,181,1152,197.3C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-        />
-      </svg>
-    ))}
-  </div>
-    </div >
   );
 };
 
