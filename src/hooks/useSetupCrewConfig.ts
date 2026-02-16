@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
 import { crewRankSchema, nationalitySchema, contractTypeSchema, currencySchema, validate } from '@/lib/validations';
 
@@ -48,32 +49,33 @@ export interface Currency {
 // Hook for Crew Ranks
 export const useCrewRanks = () => {
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: ranks = [], isLoading, error } = useQuery({
-    queryKey: ['setup_crew_ranks', user?.id],
+    queryKey: ['setup_crew_ranks', orgId],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!orgId) return [];
       const { data, error } = await supabase
         .from('setup_crew_ranks')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('org_id', orgId)
         .order('rank_order', { ascending: true });
       if (error) throw error;
       return data as CrewRank[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!orgId,
   });
 
   const addRank = useMutation({
-    mutationFn: async (rank: Omit<CrewRank, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      if (!user?.id) throw new Error('User not authenticated');
+    mutationFn: async (rank: Omit<CrewRank, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
+      if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(crewRankSchema, rank);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_crew_ranks')
-        .insert({ ...rank, user_id: user.id })
+        .insert({ ...rank, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -128,32 +130,33 @@ export const useCrewRanks = () => {
 // Hook for Nationalities
 export const useNationalities = () => {
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: nationalities = [], isLoading, error } = useQuery({
-    queryKey: ['setup_nationalities', user?.id],
+    queryKey: ['setup_nationalities', orgId],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!orgId) return [];
       const { data, error } = await supabase
         .from('setup_nationalities')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('org_id', orgId)
         .order('country_name', { ascending: true });
       if (error) throw error;
       return data as Nationality[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!orgId,
   });
 
   const addNationality = useMutation({
-    mutationFn: async (nationality: Omit<Nationality, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      if (!user?.id) throw new Error('User not authenticated');
+    mutationFn: async (nationality: Omit<Nationality, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
+      if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(nationalitySchema, nationality);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_nationalities')
-        .insert({ ...nationality, user_id: user.id })
+        .insert({ ...nationality, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -208,32 +211,33 @@ export const useNationalities = () => {
 // Hook for Contract Types
 export const useContractTypes = () => {
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: contractTypes = [], isLoading, error } = useQuery({
-    queryKey: ['setup_contract_types', user?.id],
+    queryKey: ['setup_contract_types', orgId],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!orgId) return [];
       const { data, error } = await supabase
         .from('setup_contract_types')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('org_id', orgId)
         .order('contract_name', { ascending: true });
       if (error) throw error;
       return data as ContractType[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!orgId,
   });
 
   const addContractType = useMutation({
-    mutationFn: async (contractType: Omit<ContractType, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      if (!user?.id) throw new Error('User not authenticated');
+    mutationFn: async (contractType: Omit<ContractType, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
+      if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(contractTypeSchema, contractType);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
-      const { data, error } = await supabase
+      const { data, error = null } = await supabase
         .from('setup_contract_types')
-        .insert({ ...contractType, user_id: user.id })
+        .insert({ ...contractType, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -288,32 +292,33 @@ export const useContractTypes = () => {
 // Hook for Currencies
 export const useCurrencies = () => {
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: currencies = [], isLoading, error } = useQuery({
-    queryKey: ['setup_currencies', user?.id],
+    queryKey: ['setup_currencies', orgId],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!orgId) return [];
       const { data, error } = await supabase
         .from('setup_currencies')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('org_id', orgId)
         .order('currency_code', { ascending: true });
       if (error) throw error;
       return data as Currency[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!orgId,
   });
 
   const addCurrency = useMutation({
-    mutationFn: async (currency: Omit<Currency, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      if (!user?.id) throw new Error('User not authenticated');
+    mutationFn: async (currency: Omit<Currency, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
+      if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(currencySchema, currency);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_currencies')
-        .insert({ ...currency, user_id: user.id })
+        .insert({ ...currency, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
