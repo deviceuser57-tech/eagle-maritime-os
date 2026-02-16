@@ -269,7 +269,7 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
 
       {/* Main Content Scrollable Area */}
       <div
-        className="relative z-10 flex flex-col items-center justify-center w-full max-w-7xl text-center px-0 py-[134px]"
+        className="relative z-10 flex flex-col items-center justify-center w-full max-w-7xl text-center px-0 py-[109px]"
         style={{ transformStyle: "preserve-3d" }}>
 
         {/* Animated Logo Container */}
