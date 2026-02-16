@@ -1,4 +1,6 @@
-import { Moon, Sun, LogOut, User } from 'lucide-react';
+import { useState } from 'react';
+import { Moon, Sun, LogOut, User, ChevronDown, Building2 } from 'lucide-react';
+import { useOrganization } from '@/hooks/useOrganization';
 
 interface SidebarProps {
   activeSection: string;
@@ -10,6 +12,9 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEmail, onSignOut }: SidebarProps) => {
+  const { organizations, activeOrganization, setActiveOrganization } = useOrganization();
+  const [showOrgSwitcher, setShowOrgSwitcher] = useState(false);
+
   const navigationSections = [
     {
       title: "Core System & AI Support",
@@ -75,6 +80,12 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
       ]
     },
     {
+      title: "Connectivity & API",
+      items: [
+        { id: "integrations", label: "🔗 External Integrations", badge: null }
+      ]
+    },
+    {
       title: "Reporting & Oversight",
       items: [
         { id: "reports", label: "📄 Reports", badge: null },
@@ -94,21 +105,67 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
   return (
     <aside className="w-72 flex-shrink-0 maritime-sidebar flex flex-col h-screen shadow-2xl z-40">
       {/* Header */}
-      <div className="p-8 border-b border-border flex justify-between items-center bg-card/50 backdrop-blur-md">
-        <div>
-          <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-br from-primary to-primary/60 bg-clip-text text-transparent">
-            EAGLE PLATFORM
-          </h1>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-            Vessel Governance System
-          </p>
+      <div className="p-8 border-b border-border space-y-6 bg-white/10 dark:bg-white/5 backdrop-blur-md">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-br from-primary to-blue-600 bg-clip-text text-transparent">
+              EAGLE PLATFORM
+            </h1>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              Vessel Governance System
+            </p>
+          </div>
+          <button
+            onClick={onThemeToggle}
+            className="p-2.5 rounded-2xl bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 shadow-sm"
+          >
+            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </button>
         </div>
-        <button
-          onClick={onThemeToggle}
-          className="p-2.5 rounded-2xl bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 shadow-sm"
-        >
-          {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </button>
+
+        {/* Organization Switcher */}
+        {activeOrganization && (
+          <div className="relative pt-2">
+            <button
+              onClick={() => setShowOrgSwitcher(!showOrgSwitcher)}
+              className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-500/10 hover:bg-slate-500/20 transition-all duration-300 group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <Building2 className="h-4 w-4 text-primary" />
+                </div>
+                <div className="text-left overflow-hidden">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Fleet</p>
+                  <p className="text-sm font-bold text-foreground truncate max-w-[120px]">{activeOrganization.name}</p>
+                </div>
+              </div>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${showOrgSwitcher ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showOrgSwitcher && (
+              <div className="absolute top-full left-0 w-full mt-2 p-2 rounded-2xl bg-card border border-border shadow-2xl animate-in fade-in slide-in-from-top-2 z-50">
+                <p className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b border-border mb-1">Switch Fleet</p>
+                <div className="space-y-1 max-h-[200px] overflow-y-auto scrollbar-hide">
+                  {organizations.map((org) => (
+                    <button
+                      key={org.id}
+                      onClick={() => {
+                        setActiveOrganization(org.id);
+                        setShowOrgSwitcher(false);
+                      }}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${activeOrganization.id === org.id
+                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                        : 'hover:bg-primary/10 text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                      {org.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* User Info */}
@@ -121,8 +178,8 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground truncate">{userEmail.split('@')[0]}</p>
               <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Online</p>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active Node</p>
               </div>
             </div>
           </div>

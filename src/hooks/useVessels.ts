@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useOrganization } from '@/hooks/useOrganization';
 import { vesselSchema, validate } from '@/lib/validations';
 
 export interface Vessel {
@@ -44,8 +45,8 @@ export interface Vessel {
   delivery_date: string | null;
   last_drydock_date: string | null;
   next_drydock_date: string | null;
-  previous_dd_yard: string | null;
-  dd_remaining_tasks: string | null;
+  previous_yard: string | null;
+  remaining_tasks: string | null;
   vessel_photos: string[] | null;
   vessel_brochure: string | null;
   painting_details: string | null;
@@ -63,16 +64,18 @@ export interface Vessel {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  org_id: string;
 }
 
 export const useVessels = () => {
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
 
   const fetchVessels = async () => {
-    if (!user) {
+    if (!user || !orgId) {
       setVessels([]);
       setLoading(false);
       return;
@@ -82,6 +85,7 @@ export const useVessels = () => {
       const { data, error } = await supabase
         .from('vessels')
         .select('*')
+        .eq('org_id', orgId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -97,8 +101,8 @@ export const useVessels = () => {
     }
   };
 
-  const addVessel = async (vessel: Omit<Vessel, 'id' | 'created_at' | 'updated_at'> & { user_id?: string }) => {
-    if (!user) return { error: new Error('Not authenticated') };
+  const addVessel = async (vessel: Omit<Vessel, 'id' | 'created_at' | 'updated_at' | 'org_id'> & { user_id?: string; org_id?: string }) => {
+    if (!user || !orgId) return { error: new Error('Not authenticated or no active organization') };
 
     const { data: validated, error: validationError } = validate(vesselSchema, vessel);
     if (validationError) {
@@ -109,7 +113,7 @@ export const useVessels = () => {
     try {
       const { data, error } = await supabase
         .from('vessels')
-        .insert([{ ...validated, user_id: user.id }] as any)
+        .insert([{ ...validated, user_id: user.id, org_id: orgId }] as any)
         .select()
         .single();
 
@@ -124,11 +128,14 @@ export const useVessels = () => {
   };
 
   const updateVessel = async (id: string, updates: Partial<Vessel>) => {
+    if (!orgId) return { error: new Error('No active organization') };
+
     try {
       const { data, error } = await supabase
         .from('vessels')
         .update(updates as any)
         .eq('id', id)
+        .eq('org_id', orgId)
         .select()
         .single();
 
@@ -143,11 +150,14 @@ export const useVessels = () => {
   };
 
   const deleteVessel = async (id: string) => {
+    if (!orgId) return { error: new Error('No active organization') };
+
     try {
       const { error } = await supabase
         .from('vessels')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('org_id', orgId);
 
       if (error) throw error;
       setVessels(prev => prev.filter(v => v.id !== id));
@@ -161,7 +171,7 @@ export const useVessels = () => {
 
   useEffect(() => {
     fetchVessels();
-  }, [user]);
+  }, [user, orgId]);
 
   return { vessels, loading, addVessel, updateVessel, deleteVessel, refetch: fetchVessels };
 };

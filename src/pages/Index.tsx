@@ -32,6 +32,7 @@ import LayoutMapper from '@/components/LayoutMapper';
 import PredictiveCompliance from '@/components/PredictiveCompliance';
 import MotionRiskAnalyzer from '@/components/MotionRiskAnalyzer';
 import DigitalTwin from '@/components/DigitalTwin';
+import IntegrationSettings from '@/components/IntegrationSettings';
 
 const IndexContent = () => {
   const { user, loading, signOut } = useAuth();
@@ -94,6 +95,7 @@ const IndexContent = () => {
       case 'predictive-compliance': return <PredictiveCompliance />;
       case 'motion-risk-analyzer': return <MotionRiskAnalyzer />;
       case 'digital-twin': return <DigitalTwin />;
+      case 'integrations': return <IntegrationSettings />;
       default:
         return (
           <div className="space-y-6">

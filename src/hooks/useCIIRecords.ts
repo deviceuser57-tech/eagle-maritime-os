@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
-import { ciiRecordSchema, validate } from '@/lib/validations';
+import { invokeService } from '@/lib/service-client';
 
 export interface CIIRecord {
   id: string;
@@ -24,10 +25,11 @@ export const useCIIRecords = () => {
   const [ciiRecords, setCIIRecords] = useState<CIIRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
 
   const fetchCIIRecords = async () => {
-    if (!user) {
+    if (!user || !orgId) {
       setCIIRecords([]);
       setLoading(false);
       return;
@@ -37,6 +39,7 @@ export const useCIIRecords = () => {
       const { data, error } = await supabase
         .from('cii_records')
         .select('*, vessels(name)')
+        .eq('org_id', orgId)
         .order('year', { ascending: false });
 
       if (error) throw error;
@@ -48,34 +51,56 @@ export const useCIIRecords = () => {
     }
   };
 
-  const addCIIRecord = async (record: Omit<CIIRecord, 'id' | 'created_at' | 'updated_at'>) => {
-    if (!user) return { error: new Error('Not authenticated') };
+  const addCIIRecord = async (params: {
+    vessel_id: string | null;
+    year: number;
+    fuel_consumption: number | null;
+    distance_travelled: number | null;
+    cargo_carried: number | null;
+    fuel_type: string;
+    target_value: number | null;
+    notes: string | null;
+  }) => {
+    if (!user || !orgId) return { error: { message: 'Not authenticated or no active organization' } };
 
     try {
-      const { error: validationError } = validate(ciiRecordSchema, record);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
-      const { data, error } = await supabase
-        .from('cii_records')
-        .insert([{ ...record, user_id: user.id }])
-        .select()
-        .single();
+      const { data, error } = await invokeService<{ id: string }>(
+        'rpc_log_cii_entry',
+        {
+          p_org_id: orgId,
+          p_vessel_id: params.vessel_id,
+          p_year: params.year,
+          p_fuel_consumption: params.fuel_consumption,
+          p_distance_travelled: params.distance_travelled,
+          p_cargo_carried: params.cargo_carried,
+          p_fuel_type: params.fuel_type,
+          p_target_cii: params.target_value,
+          p_notes: params.notes
+        }
+      );
 
-      if (error) throw error;
-      setCIIRecords(prev => [data, ...prev]);
-      toast({ title: 'Success', description: 'CII record added successfully' });
+      if (error) {
+        toast({ title: 'Service Error', description: error.message, variant: 'destructive' });
+        return { error };
+      }
+
+      fetchCIIRecords(); // Refresh to get calculated fields
+      toast({ title: 'Success', description: 'CII record logged and rated by domain service.' });
       return { data, error: null };
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return { error };
     }
   };
-
   const updateCIIRecord = async (id: string, updates: Partial<CIIRecord>) => {
+    if (!orgId) return { error: { message: 'No active organization' } };
+
     try {
       const { data, error } = await supabase
         .from('cii_records')
         .update(updates)
         .eq('id', id)
+        .eq('org_id', orgId)
         .select()
         .single();
 
@@ -90,11 +115,14 @@ export const useCIIRecords = () => {
   };
 
   const deleteCIIRecord = async (id: string) => {
+    if (!orgId) return { error: { message: 'No active organization' } };
+
     try {
       const { error } = await supabase
         .from('cii_records')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('org_id', orgId);
 
       if (error) throw error;
       setCIIRecords(prev => prev.filter(r => r.id !== id));
@@ -108,7 +136,7 @@ export const useCIIRecords = () => {
 
   useEffect(() => {
     fetchCIIRecords();
-  }, [user]);
+  }, [user, orgId]);
 
   return { ciiRecords, loading, addCIIRecord, updateCIIRecord, deleteCIIRecord, refetch: fetchCIIRecords };
 };

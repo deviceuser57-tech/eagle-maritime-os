@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,14 @@ import { Ship, TrendingDown, Target, Award, Plus, Loader2, Trash2 } from 'lucide
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useCIIRecords } from '@/hooks/useCIIRecords';
 import { useVessels } from '@/hooks/useVessels';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
 
 const CIIDashboard = () => {
   const { toast } = useToast();
-  const { ciiRecords: records, loading, addCIIRecord: addRecord, deleteCIIRecord: deleteRecord } = useCIIRecords();
+  const { ciiRecords: records, loading, addCIIRecord: addRecord, deleteCIIRecord: deleteRecord, refetch } = useCIIRecords();
   const { vessels } = useVessels();
+  const { orgId } = useOrganization();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     vessel_id: '',
@@ -30,40 +32,19 @@ const CIIDashboard = () => {
     notes: '',
   });
 
-  // IMO CO2 Conversion Factors (Cf)
-  const carbonFactors = {
-    'HFO': 3.114,
-    'LFO': 3.151,
-    'MDO': 3.206,
-    'LNG': 2.750,
-    'LPG': 3.000,
-  };
-
-  const calculateAttainedCII = () => {
-    const fuel = parseFloat(formData.fuel_consumption);
-    const dist = parseFloat(formData.distance_travelled);
-    const cap = parseFloat(formData.cargo_carried); // Capacity (DWT or GT)
-    const cf = carbonFactors[formData.fuel_type as keyof typeof carbonFactors] || 3.114;
-
-    if (fuel && dist && cap) {
-      const attained = (fuel * cf * 1000000) / (dist * cap);
-      setFormData(prev => ({ ...prev, cii_value: attained.toFixed(2) }));
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await addRecord({
       vessel_id: formData.vessel_id || null,
       year: parseInt(formData.year),
-      cii_value: parseFloat(formData.cii_value),
-      cii_rating: formData.cii_rating,
-      target_value: formData.target_cii ? parseFloat(formData.target_cii) : null,
       fuel_consumption: parseFloat(formData.fuel_consumption) || null,
       distance_travelled: parseFloat(formData.distance_travelled) || null,
       cargo_carried: parseFloat(formData.cargo_carried) || null,
+      fuel_type: formData.fuel_type,
+      target_value: formData.target_cii ? parseFloat(formData.target_cii) : null,
       notes: formData.notes || null,
     });
+
     setFormData({
       vessel_id: '',
       year: new Date().getFullYear().toString(),
@@ -84,6 +65,11 @@ const CIIDashboard = () => {
       await deleteRecord(id);
     }
   };
+
+  useEffect(() => {
+    if (orgId) refetch();
+  }, [orgId]);
+  // ... rest of the component
 
   // Calculate stats from real data
   const avgCII = records.length > 0
@@ -178,18 +164,21 @@ const CIIDashboard = () => {
                         type="number"
                         value={formData.fuel_consumption}
                         onChange={(e) => setFormData({ ...formData, fuel_consumption: e.target.value })}
-                        onBlur={calculateAttainedCII}
                         className="bg-slate-900 border-white/10"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] font-bold text-white/60">FUEL TYPE (IMO CF FACTOR)</Label>
-                      <Select value={formData.fuel_type} onValueChange={(v) => { setFormData({ ...formData, fuel_type: v }); calculateAttainedCII(); }}>
+                      <Select value={formData.fuel_type} onValueChange={(v) => { setFormData({ ...formData, fuel_type: v }); }}>
                         <SelectTrigger className="bg-slate-900 border-white/10">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {Object.keys(carbonFactors).map(f => <SelectItem key={f} value={f}>{f} (Cf: {carbonFactors[f as keyof typeof carbonFactors]})</SelectItem>)}
+                          <SelectItem value="HFO">HFO (Cf: 3.114)</SelectItem>
+                          <SelectItem value="LFO">LFO (Cf: 3.151)</SelectItem>
+                          <SelectItem value="MDO">MDO (Cf: 3.206)</SelectItem>
+                          <SelectItem value="LNG">LNG (Cf: 2.750)</SelectItem>
+                          <SelectItem value="LPG">LPG (Cf: 3.000)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -201,7 +190,6 @@ const CIIDashboard = () => {
                         type="number"
                         value={formData.distance_travelled}
                         onChange={(e) => setFormData({ ...formData, distance_travelled: e.target.value })}
-                        onBlur={calculateAttainedCII}
                         className="bg-slate-900 border-white/10"
                       />
                     </div>
@@ -211,7 +199,6 @@ const CIIDashboard = () => {
                         type="number"
                         value={formData.cargo_carried}
                         onChange={(e) => setFormData({ ...formData, cargo_carried: e.target.value })}
-                        onBlur={calculateAttainedCII}
                         className="bg-slate-900 border-white/10"
                       />
                     </div>
