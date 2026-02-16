@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
 import { auditorSchema, validate } from '@/lib/validations';
 
@@ -22,10 +23,11 @@ export const useAuditors = () => {
   const [auditors, setAuditors] = useState<Auditor[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
 
   const fetchAuditors = async () => {
-    if (!user) {
+    if (!user || !orgId) {
       setAuditors([]);
       setLoading(false);
       return;
@@ -35,6 +37,7 @@ export const useAuditors = () => {
       const { data, error } = await supabase
         .from('auditors')
         .select('*')
+        .eq('org_id', orgId)
         .order('name', { ascending: true });
 
       if (error) throw error;
@@ -47,14 +50,14 @@ export const useAuditors = () => {
   };
 
   const addAuditor = async (auditor: Omit<Auditor, 'id' | 'created_at' | 'updated_at'>) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user || !orgId) return { error: new Error('Not authenticated or no active organization') };
 
     try {
       const { error: validationError } = validate(auditorSchema, auditor);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('auditors')
-        .insert([{ ...auditor, user_id: user.id }])
+        .insert([{ ...auditor, user_id: user.id, org_id: orgId }])
         .select()
         .single();
 
@@ -106,7 +109,7 @@ export const useAuditors = () => {
 
   useEffect(() => {
     fetchAuditors();
-  }, [user]);
+  }, [user, orgId]);
 
   return { auditors, loading, addAuditor, updateAuditor, deleteAuditor, refetch: fetchAuditors };
 };

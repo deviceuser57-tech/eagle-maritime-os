@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
 import { insuranceClaimSchema, validate } from '@/lib/validations';
 
@@ -26,10 +27,11 @@ export const useInsuranceClaims = () => {
   const [claims, setClaims] = useState<InsuranceClaim[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
 
   const fetchClaims = async () => {
-    if (!user) {
+    if (!user || !orgId) {
       setClaims([]);
       setLoading(false);
       return;
@@ -39,6 +41,7 @@ export const useInsuranceClaims = () => {
       const { data, error } = await supabase
         .from('insurance_claims')
         .select('*')
+        .eq('org_id', orgId)
         .order('submitted_date', { ascending: false });
 
       if (error) throw error;
@@ -51,14 +54,14 @@ export const useInsuranceClaims = () => {
   };
 
   const addClaim = async (claim: Omit<InsuranceClaim, 'id' | 'created_at' | 'updated_at'>) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user || !orgId) return { error: new Error('Not authenticated or no active organization') };
 
     try {
       const { error: validationError } = validate(insuranceClaimSchema, claim);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('insurance_claims')
-        .insert([{ ...claim, user_id: user.id }])
+        .insert([{ ...claim, user_id: user.id, org_id: orgId }])
         .select()
         .single();
 

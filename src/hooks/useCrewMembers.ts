@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
 import { toast } from 'sonner';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { crewMemberSchema, validate } from '@/lib/validations';
@@ -11,33 +12,37 @@ type CrewMemberUpdate = TablesUpdate<'crew_members'>;
 
 export const useCrewMembers = () => {
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const queryClient = useQueryClient();
 
   const { data: crewMembers = [], isLoading, error } = useQuery({
-    queryKey: ['crew_members', user?.id],
+    queryKey: ['crew_members', orgId],
     queryFn: async () => {
+      if (!orgId) return [];
       const { data, error } = await supabase
         .from('crew_members')
         .select('*, vessels(name)')
+        .eq('org_id', orgId)
         .order('last_name', { ascending: true });
-      
+
       if (error) throw error;
       return data as (CrewMember & { vessels: { name: string } | null })[];
     },
-    enabled: !!user,
+    enabled: !!user && !!orgId,
   });
 
   const createCrewMember = useMutation({
-    mutationFn: async (newMember: Omit<CrewMemberInsert, 'user_id'>) => {
+    mutationFn: async (newMember: Omit<CrewMemberInsert, 'user_id' | 'org_id'>) => {
+      if (!orgId) throw new Error('No active organization');
       const { error: validationError } = validate(crewMemberSchema, newMember);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
 
       const { data, error } = await supabase
         .from('crew_members')
-        .insert({ ...newMember, user_id: user?.id })
+        .insert({ ...newMember, user_id: user?.id, org_id: orgId })
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -58,7 +63,7 @@ export const useCrewMembers = () => {
         .eq('id', id)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -77,7 +82,7 @@ export const useCrewMembers = () => {
         .from('crew_members')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {

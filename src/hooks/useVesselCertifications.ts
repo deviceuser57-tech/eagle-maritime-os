@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
 import { vesselCertificationSchema, validate } from '@/lib/validations';
 
@@ -23,10 +24,11 @@ export const useVesselCertifications = () => {
   const [certifications, setCertifications] = useState<VesselCertification[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
 
   const fetchCertifications = async () => {
-    if (!user) {
+    if (!user || !orgId) {
       setCertifications([]);
       setLoading(false);
       return;
@@ -36,6 +38,7 @@ export const useVesselCertifications = () => {
       const { data, error } = await supabase
         .from('vessel_certifications')
         .select('*')
+        .eq('org_id', orgId)
         .order('expiry_date', { ascending: true });
 
       if (error) throw error;
@@ -48,14 +51,14 @@ export const useVesselCertifications = () => {
   };
 
   const addCertification = async (certification: Omit<VesselCertification, 'id' | 'created_at' | 'updated_at'>) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user || !orgId) return { error: new Error('Not authenticated or no active organization') };
 
     try {
       const { error: validationError } = validate(vesselCertificationSchema, certification);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('vessel_certifications')
-        .insert([{ ...certification, user_id: user.id }])
+        .insert([{ ...certification, user_id: user.id, org_id: orgId }])
         .select()
         .single();
 
@@ -107,7 +110,7 @@ export const useVesselCertifications = () => {
 
   useEffect(() => {
     fetchCertifications();
-  }, [user]);
+  }, [user, orgId]);
 
   return { certifications, loading, addCertification, updateCertification, deleteCertification, refetch: fetchCertifications };
 };
