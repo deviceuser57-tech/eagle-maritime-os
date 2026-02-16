@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
 import { auditTypeSchema, findingTypeSchema, findingStatusSchema, rootCauseSchema, validate } from '@/lib/validations';
 
@@ -50,32 +51,33 @@ export interface RootCause {
 // Hook for Audit Types
 export const useAuditTypes = () => {
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: auditTypes = [], isLoading, error } = useQuery({
-    queryKey: ['setup_audit_types', user?.id],
+    queryKey: ['setup_audit_types', orgId],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!orgId) return [];
       const { data, error } = await supabase
         .from('setup_audit_types')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('org_id', orgId)
         .order('audit_type_name', { ascending: true });
       if (error) throw error;
       return data as AuditType[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!orgId,
   });
 
   const addAuditType = useMutation({
-    mutationFn: async (auditType: Omit<AuditType, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      if (!user?.id) throw new Error('User not authenticated');
+    mutationFn: async (auditType: Omit<AuditType, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
+      if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(auditTypeSchema, auditType);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_audit_types')
-        .insert({ ...auditType, user_id: user.id })
+        .insert({ ...auditType, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -130,32 +132,33 @@ export const useAuditTypes = () => {
 // Hook for Finding Types
 export const useFindingTypes = () => {
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: findingTypes = [], isLoading, error } = useQuery({
-    queryKey: ['setup_finding_types', user?.id],
+    queryKey: ['setup_finding_types', orgId],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!orgId) return [];
       const { data, error } = await supabase
         .from('setup_finding_types')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('org_id', orgId)
         .order('finding_type_name', { ascending: true });
       if (error) throw error;
       return data as FindingType[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!orgId,
   });
 
   const addFindingType = useMutation({
-    mutationFn: async (findingType: Omit<FindingType, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      if (!user?.id) throw new Error('User not authenticated');
+    mutationFn: async (findingType: Omit<FindingType, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
+      if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(findingTypeSchema, findingType);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_finding_types')
-        .insert({ ...findingType, user_id: user.id })
+        .insert({ ...findingType, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -210,32 +213,33 @@ export const useFindingTypes = () => {
 // Hook for Finding Statuses
 export const useFindingStatuses = () => {
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: findingStatuses = [], isLoading, error } = useQuery({
-    queryKey: ['setup_finding_statuses', user?.id],
+    queryKey: ['setup_finding_statuses', orgId],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!orgId) return [];
       const { data, error } = await supabase
         .from('setup_finding_statuses')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('org_id', orgId)
         .order('status_order', { ascending: true });
       if (error) throw error;
       return data as FindingStatus[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!orgId,
   });
 
   const addFindingStatus = useMutation({
-    mutationFn: async (status: Omit<FindingStatus, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      if (!user?.id) throw new Error('User not authenticated');
+    mutationFn: async (status: Omit<FindingStatus, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
+      if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(findingStatusSchema, status);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_finding_statuses')
-        .insert({ ...status, user_id: user.id })
+        .insert({ ...status, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -290,32 +294,33 @@ export const useFindingStatuses = () => {
 // Hook for Root Causes
 export const useRootCauses = () => {
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: rootCauses = [], isLoading, error } = useQuery({
-    queryKey: ['setup_root_causes', user?.id],
+    queryKey: ['setup_root_causes', orgId],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!orgId) return [];
       const { data, error } = await supabase
         .from('setup_root_causes')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('org_id', orgId)
         .order('cause_name', { ascending: true });
       if (error) throw error;
       return data as RootCause[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!orgId,
   });
 
   const addRootCause = useMutation({
-    mutationFn: async (cause: Omit<RootCause, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      if (!user?.id) throw new Error('User not authenticated');
+    mutationFn: async (cause: Omit<RootCause, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
+      if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(rootCauseSchema, cause);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_root_causes')
-        .insert({ ...cause, user_id: user.id })
+        .insert({ ...cause, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;

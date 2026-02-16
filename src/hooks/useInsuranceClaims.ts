@@ -113,7 +113,7 @@ export const useInsuranceClaims = () => {
 
   useEffect(() => {
     fetchClaims();
-  }, [user]);
+  }, [user, orgId]);
 
   return { claims, loading, addClaim, updateClaim, deleteClaim, refetch: fetchClaims };
 };

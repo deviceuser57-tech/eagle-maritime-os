@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
 import { classificationSocietySchema, flagStateSchema, validate } from '@/lib/validations';
 
@@ -28,32 +29,33 @@ export interface FlagState {
 // Hook for Classification Societies
 export const useClassificationSocieties = () => {
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: societies = [], isLoading, error } = useQuery({
-    queryKey: ['setup_classification_societies', user?.id],
+    queryKey: ['setup_classification_societies', orgId],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!orgId) return [];
       const { data, error } = await supabase
         .from('setup_classification_societies')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('org_id', orgId)
         .order('society_name', { ascending: true });
       if (error) throw error;
       return data as ClassificationSociety[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!orgId,
   });
 
   const addSociety = useMutation({
-    mutationFn: async (society: Omit<ClassificationSociety, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      if (!user?.id) throw new Error('User not authenticated');
+    mutationFn: async (society: Omit<ClassificationSociety, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
+      if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(classificationSocietySchema, society);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_classification_societies')
-        .insert({ ...society, user_id: user.id })
+        .insert({ ...society, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -108,32 +110,33 @@ export const useClassificationSocieties = () => {
 // Hook for Flag States
 export const useFlagStates = () => {
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: flagStates = [], isLoading, error } = useQuery({
-    queryKey: ['setup_flag_states', user?.id],
+    queryKey: ['setup_flag_states', orgId],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!orgId) return [];
       const { data, error } = await supabase
         .from('setup_flag_states')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('org_id', orgId)
         .order('flag_name', { ascending: true });
       if (error) throw error;
       return data as FlagState[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!orgId,
   });
 
   const addFlagState = useMutation({
-    mutationFn: async (flagState: Omit<FlagState, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      if (!user?.id) throw new Error('User not authenticated');
+    mutationFn: async (flagState: Omit<FlagState, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
+      if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(flagStateSchema, flagState);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_flag_states')
-        .insert({ ...flagState, user_id: user.id })
+        .insert({ ...flagState, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;

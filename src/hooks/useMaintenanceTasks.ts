@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
 import { maintenanceTaskSchema, validate } from '@/lib/validations';
 
@@ -29,10 +30,11 @@ export const useMaintenanceTasks = () => {
   const [tasks, setTasks] = useState<MaintenanceTask[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
 
   const fetchTasks = async () => {
-    if (!user) {
+    if (!user || !orgId) {
       setTasks([]);
       setLoading(false);
       return;
@@ -42,6 +44,7 @@ export const useMaintenanceTasks = () => {
       const { data, error } = await supabase
         .from('maintenance_tasks')
         .select('*, vessels(name)')
+        .eq('org_id', orgId)
         .order('due_date', { ascending: true });
 
       if (error) throw error;
@@ -57,8 +60,8 @@ export const useMaintenanceTasks = () => {
     }
   };
 
-  const addTask = async (task: Omit<MaintenanceTask, 'id' | 'created_at' | 'updated_at' | 'vessels'> & { user_id?: string }) => {
-    if (!user) return { error: new Error('Not authenticated') };
+  const addTask = async (task: Omit<MaintenanceTask, 'id' | 'created_at' | 'updated_at' | 'vessels'> & { user_id?: string, org_id?: string }) => {
+    if (!user || !orgId) return { error: new Error('Not authenticated or no active organization') };
 
     const { error: validationError } = validate(maintenanceTaskSchema, task);
     if (validationError) {
@@ -69,7 +72,7 @@ export const useMaintenanceTasks = () => {
     try {
       const { data, error } = await supabase
         .from('maintenance_tasks')
-        .insert([{ ...task, user_id: user.id }])
+        .insert([{ ...task, user_id: user.id, org_id: orgId }])
         .select('*, vessels(name)')
         .single();
 
@@ -122,7 +125,7 @@ export const useMaintenanceTasks = () => {
 
   useEffect(() => {
     fetchTasks();
-  }, [user]);
+  }, [user, orgId]);
 
   return { tasks, loading, addTask, updateTask, deleteTask, refetch: fetchTasks };
 };
