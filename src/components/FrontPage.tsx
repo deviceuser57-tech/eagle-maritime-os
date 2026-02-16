@@ -10,6 +10,7 @@ import {
   ChevronRight } from
 "lucide-react";
 import { Button } from "@/components/ui/button";
+import heroBg from "@/assets/hero-bg.png";
 
 interface FrontPageProps {
   onEnterDashboard: () => void;
@@ -225,8 +226,10 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen w-full overflow-hidden bg-[radial-gradient(circle_at_center,_hsl(210,90%,18%)_0%,_hsl(210,90%,8%)_100%)] text-white relative flex flex-col items-center justify-center"
-      style={{ perspective: "1500px" }}>
+      className="min-h-screen w-full overflow-hidden text-white relative flex flex-col items-center justify-center"
+      style={{ perspective: "1500px", backgroundImage: `url(${heroBg})`, backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }}>
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-black/50 z-0" />
 
       {/* 3D Floating Elements in Background */}
       <div
