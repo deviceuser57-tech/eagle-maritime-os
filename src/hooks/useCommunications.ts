@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
 import { communicationSchema, validate } from '@/lib/validations';
 
@@ -22,10 +23,11 @@ export const useCommunications = () => {
   const [communications, setCommunications] = useState<Communication[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
 
   const fetchCommunications = async () => {
-    if (!user) {
+    if (!user || !orgId) {
       setCommunications([]);
       setLoading(false);
       return;
@@ -35,6 +37,7 @@ export const useCommunications = () => {
       const { data, error } = await supabase
         .from('communications')
         .select('*')
+        .eq('org_id', orgId)
         .order('sent_at', { ascending: false });
 
       if (error) throw error;
@@ -47,14 +50,14 @@ export const useCommunications = () => {
   };
 
   const addCommunication = async (communication: Omit<Communication, 'id' | 'created_at' | 'sent_at'>) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user || !orgId) return { error: new Error('Not authenticated or no active organization') };
 
     try {
       const { error: validationError } = validate(communicationSchema, communication);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('communications')
-        .insert([{ ...communication, user_id: user.id }])
+        .insert([{ ...communication, user_id: user.id, org_id: orgId }])
         .select()
         .single();
 
@@ -110,7 +113,7 @@ export const useCommunications = () => {
 
   useEffect(() => {
     fetchCommunications();
-  }, [user]);
+  }, [user, orgId]);
 
   return { communications, loading, addCommunication, updateCommunication, deleteCommunication, markAsRead, refetch: fetchCommunications };
 };

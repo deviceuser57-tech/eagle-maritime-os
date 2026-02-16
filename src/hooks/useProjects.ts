@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
 import { projectSchema, validate } from '@/lib/validations';
 
@@ -23,10 +24,11 @@ export const useProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
 
   const fetchProjects = async () => {
-    if (!user) {
+    if (!user || !orgId) {
       setProjects([]);
       setLoading(false);
       return;
@@ -36,6 +38,7 @@ export const useProjects = () => {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
+        .eq('org_id', orgId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -48,14 +51,14 @@ export const useProjects = () => {
   };
 
   const addProject = async (project: Omit<Project, 'id' | 'created_at' | 'updated_at'>) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user || !orgId) return { error: new Error('Not authenticated or no active organization') };
 
     try {
       const { error: validationError } = validate(projectSchema, project);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('projects')
-        .insert([{ ...project, user_id: user.id }])
+        .insert([{ ...project, user_id: user.id, org_id: orgId }])
         .select()
         .single();
 

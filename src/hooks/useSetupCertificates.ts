@@ -1,12 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
 import { certificateTypeSchema, validate } from '@/lib/validations';
 
 export interface CertificateType {
   id: string;
   user_id: string;
+  org_id?: string;
   certificate_category: 'statutory' | 'class' | 'crew' | 'other';
   certificate_name: string;
   issuing_authority: string | null;
@@ -18,18 +20,19 @@ export interface CertificateType {
 
 export const useCertificateTypes = (category?: CertificateType['certificate_category']) => {
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: certificateTypes = [], isLoading, error } = useQuery({
-    queryKey: ['setup_certificate_types', user?.id, category],
+    queryKey: ['setup_certificate_types', orgId, category],
     queryFn: async () => {
-      if (!user?.id) return [];
-      
+      if (!orgId) return [];
+
       let query = supabase
         .from('setup_certificate_types')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('org_id', orgId)
         .order('certificate_name', { ascending: true });
 
       if (category) {
@@ -40,17 +43,17 @@ export const useCertificateTypes = (category?: CertificateType['certificate_cate
       if (error) throw error;
       return data as CertificateType[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!orgId,
   });
 
   const addCertificateType = useMutation({
-    mutationFn: async (cert: Omit<CertificateType, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      if (!user?.id) throw new Error('User not authenticated');
+    mutationFn: async (cert: Omit<CertificateType, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
+      if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(certificateTypeSchema, cert);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_certificate_types')
-        .insert({ ...cert, user_id: user.id })
+        .insert({ ...cert, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;

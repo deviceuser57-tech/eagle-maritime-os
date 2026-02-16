@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
 import { voyageSchema, validate } from '@/lib/validations';
 
@@ -25,10 +26,11 @@ export const useVoyages = () => {
   const [voyages, setVoyages] = useState<Voyage[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { orgId } = useOrganization();
   const { toast } = useToast();
 
   const fetchVoyages = async () => {
-    if (!user) {
+    if (!user || !orgId) {
       setVoyages([]);
       setLoading(false);
       return;
@@ -38,6 +40,7 @@ export const useVoyages = () => {
       const { data, error } = await supabase
         .from('voyages')
         .select('*')
+        .eq('org_id', orgId)
         .order('departure_date', { ascending: false });
 
       if (error) throw error;
@@ -50,14 +53,14 @@ export const useVoyages = () => {
   };
 
   const addVoyage = async (voyage: Omit<Voyage, 'id' | 'created_at' | 'updated_at'>) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user || !orgId) return { error: new Error('Not authenticated or no active organization') };
 
     try {
       const { error: validationError } = validate(voyageSchema, voyage);
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('voyages')
-        .insert([{ ...voyage, user_id: user.id }])
+        .insert([{ ...voyage, user_id: user.id, org_id: orgId }])
         .select()
         .single();
 
