@@ -380,8 +380,8 @@ const VesselManagement = () => {
         hull_coating: vessel.hull_coating || '',
         last_drydock_date: vessel.last_drydock_date || '',
         next_drydock_date: vessel.next_drydock_date || '',
-        previous_dd_yard: vessel.previous_dd_yard || '',
-        dd_remaining_tasks: vessel.dd_remaining_tasks || '',
+        previous_dd_yard: (vessel as any).previous_dd_yard || '',
+        dd_remaining_tasks: (vessel as any).dd_remaining_tasks || '',
         painting_details: vessel.painting_details || '',
         navigation_equipment: vessel.navigation_equipment || '',
         accommodations_pax: vessel.accommodations_pax || '',
@@ -992,10 +992,10 @@ const VesselManagement = () => {
                           <Clock className="h-3 w-3 text-amber-500/60" />
                           <span className="text-[10px] font-bold text-amber-600">{vessel.next_drydock_date || 'TBD'}</span>
                         </div>
-                        {vessel.previous_dd_yard && (
+                        {(vessel as any).previous_dd_yard && (
                           <div className="flex items-center gap-1.5 mt-0.5">
                             <Anchor className="h-2.5 w-2.5 text-muted-foreground/60" />
-                            <span className="text-[9px] font-medium text-muted-foreground truncate max-w-[100px]">{vessel.previous_dd_yard}</span>
+                            <span className="text-[9px] font-medium text-muted-foreground truncate max-w-[100px]">{(vessel as any).previous_dd_yard}</span>
                           </div>
                         )}
                       </div>

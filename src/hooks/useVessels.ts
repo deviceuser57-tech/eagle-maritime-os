@@ -85,7 +85,7 @@ export const useVessels = () => {
       const { data, error } = await supabase
         .from('vessels')
         .select('*')
-        .eq('org_id', orgId)
+        .eq('user_id', orgId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -113,7 +113,7 @@ export const useVessels = () => {
     try {
       const { data, error } = await supabase
         .from('vessels')
-        .insert([{ ...validated, user_id: user.id, org_id: orgId }] as any)
+        .insert([{ ...validated, user_id: user.id }] as any)
         .select()
         .single();
 
@@ -135,7 +135,7 @@ export const useVessels = () => {
         .from('vessels')
         .update(updates as any)
         .eq('id', id)
-        .eq('org_id', orgId)
+        .eq('user_id', orgId)
         .select()
         .single();
 
@@ -157,7 +157,7 @@ export const useVessels = () => {
         .from('vessels')
         .delete()
         .eq('id', id)
-        .eq('org_id', orgId);
+        .eq('user_id', orgId);
 
       if (error) throw error;
       setVessels(prev => prev.filter(v => v.id !== id));

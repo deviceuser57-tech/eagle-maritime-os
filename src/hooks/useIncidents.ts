@@ -22,7 +22,7 @@ export const useIncidents = () => {
       const { data, error } = await supabase
         .from('incidents')
         .select('*, vessels(name)')
-        .eq('org_id', orgId)
+        .eq('user_id', orgId)
         .order('incident_date', { ascending: false });
 
       if (error) throw error;
@@ -39,7 +39,7 @@ export const useIncidents = () => {
 
       const { data, error } = await supabase
         .from('incidents')
-        .insert({ ...newIncident, user_id: user?.id, org_id: orgId })
+        .insert({ ...newIncident, user_id: user?.id })
         .select()
         .single();
 

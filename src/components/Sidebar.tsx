@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Moon, Sun, LogOut, User, ChevronDown, Building2 } from 'lucide-react';
-import { useOrganization } from '@/hooks/useOrganization';
+import { Moon, Sun, LogOut, User } from 'lucide-react';
 
 interface SidebarProps {
   activeSection: string;
@@ -12,8 +11,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEmail, onSignOut }: SidebarProps) => {
-  const { organizations, activeOrganization, setActiveOrganization } = useOrganization();
-  const [showOrgSwitcher, setShowOrgSwitcher] = useState(false);
+  const [_] = useState(false);
 
   const navigationSections = [
     {
@@ -123,49 +121,7 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
           </button>
         </div>
 
-        {/* Organization Switcher */}
-        {activeOrganization && (
-          <div className="relative pt-2">
-            <button
-              onClick={() => setShowOrgSwitcher(!showOrgSwitcher)}
-              className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-500/10 hover:bg-slate-500/20 transition-all duration-300 group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <Building2 className="h-4 w-4 text-primary" />
-                </div>
-                <div className="text-left overflow-hidden">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Fleet</p>
-                  <p className="text-sm font-bold text-foreground truncate max-w-[120px]">{activeOrganization.name}</p>
-                </div>
-              </div>
-              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${showOrgSwitcher ? 'rotate-180' : ''}`} />
-            </button>
-
-            {showOrgSwitcher && (
-              <div className="absolute top-full left-0 w-full mt-2 p-2 rounded-2xl bg-card border border-border shadow-2xl animate-in fade-in slide-in-from-top-2 z-50">
-                <p className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b border-border mb-1">Switch Fleet</p>
-                <div className="space-y-1 max-h-[200px] overflow-y-auto scrollbar-hide">
-                  {organizations.map((org) => (
-                    <button
-                      key={org.id}
-                      onClick={() => {
-                        setActiveOrganization(org.id);
-                        setShowOrgSwitcher(false);
-                      }}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${activeOrganization.id === org.id
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                        : 'hover:bg-primary/10 text-muted-foreground hover:text-foreground'
-                        }`}
-                    >
-                      {org.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {/* App Title Only */}
       </div>
 
       {/* User Info */}

@@ -41,7 +41,7 @@ export const useInsuranceClaims = () => {
       const { data, error } = await supabase
         .from('insurance_claims')
         .select('*')
-        .eq('org_id', orgId)
+        .eq('user_id', orgId)
         .order('submitted_date', { ascending: false });
 
       if (error) throw error;
@@ -61,7 +61,7 @@ export const useInsuranceClaims = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('insurance_claims')
-        .insert([{ ...claim, user_id: user.id, org_id: orgId }])
+        .insert([{ ...claim, user_id: user.id }])
         .select()
         .single();
 

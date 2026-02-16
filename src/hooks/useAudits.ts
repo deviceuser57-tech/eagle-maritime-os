@@ -22,7 +22,7 @@ export const useAudits = () => {
       const { data, error } = await supabase
         .from('audits')
         .select('*, vessels(name)')
-        .eq('org_id', orgId)
+        .eq('user_id', orgId)
         .order('scheduled_date', { ascending: false });
 
       if (error) throw error;
@@ -39,7 +39,7 @@ export const useAudits = () => {
 
       const { data, error } = await supabase
         .from('audits')
-        .insert({ ...newAudit, user_id: user?.id, org_id: orgId })
+        .insert({ ...newAudit, user_id: user?.id })
         .select()
         .single();
 
