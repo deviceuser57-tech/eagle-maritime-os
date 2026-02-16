@@ -14,7 +14,7 @@ DECLARE
         'setup_companies', 'setup_contract_types', 'setup_crew_ranks', 
         'setup_currencies', 'setup_finding_statuses', 'setup_finding_types', 
         'setup_flag_states', 'setup_nationalities', 'setup_root_causes', 
-        'vessel_certifications', 'voyages', 'regulation_vessels'
+        'vessel_certifications', 'voyages', 'regulation_vessels', 'cii_records'
     ];
 BEGIN
     FOR table_name_var IN SELECT UNNEST(target_tables) LOOP
