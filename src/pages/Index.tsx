@@ -147,7 +147,7 @@ const IndexContent = () => {
         onSignOut={handleSignOut} />
 
 
-      <main className="flex-1 overflow-y-auto relative scrollbar-hide bg-[#1a2132]">
+      <main className="flex-1 overflow-y-auto relative scrollbar-hide bg-background">
         {/* Background Decorative Element */}
         <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
 

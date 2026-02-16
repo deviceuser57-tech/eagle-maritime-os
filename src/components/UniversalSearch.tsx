@@ -21,7 +21,7 @@ const UniversalSearch = ({ onSearch }: UniversalSearchProps) => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Command Search: Fleet, Crew, Audits or Compliance..."
-          className="w-full pl-14 pr-6 py-4 rounded-[2rem] border border-border bg-white/60 dark:bg-slate-900/60 backdrop-blur-3xl text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all duration-500 shadow-soft group-hover:shadow-lg font-medium"
+          className="w-full pl-14 pr-6 py-4 rounded-[2rem] border border-border bg-card/80 backdrop-blur-3xl text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all duration-500 shadow-soft group-hover:shadow-lg font-medium"
         />
         <div className="absolute left-5 top-1/2 transform -translate-y-1/2 p-2 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
           <Search className="h-5 w-5" />
