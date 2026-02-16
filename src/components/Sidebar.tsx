@@ -94,9 +94,9 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
   return (
     <aside className="w-72 flex-shrink-0 maritime-sidebar flex flex-col h-screen shadow-2xl z-40">
       {/* Header */}
-      <div className="p-8 border-b border-border flex justify-between items-center bg-white/10 dark:bg-white/5 backdrop-blur-md">
+      <div className="p-8 border-b border-border flex justify-between items-center bg-card/50 backdrop-blur-md">
         <div>
-          <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-br from-primary to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-br from-primary to-primary/60 bg-clip-text text-transparent">
             EAGLE PLATFORM
           </h1>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
@@ -113,15 +113,15 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
 
       {/* User Info */}
       {userEmail && (
-        <div className="px-6 py-4 border-b border-border bg-slate-500/5">
+        <div className="px-6 py-4 border-b border-border bg-muted/10">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center shadow-lg shadow-primary/20">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
               <User className="h-5 w-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground truncate">{userEmail.split('@')[0]}</p>
               <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Online</p>
               </div>
             </div>
@@ -159,10 +159,10 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
 
       {/* Sign Out Button */}
       {onSignOut && (
-        <div className="p-6 border-t border-border bg-slate-500/5 mt-auto">
+        <div className="p-6 border-t border-border bg-muted/10 mt-auto">
           <button
             onClick={onSignOut}
-            className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-rose-500 hover:bg-rose-500/10 transition-all duration-300 font-bold text-sm shadow-sm hover:shadow-rose-500/5 group"
+            className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-destructive hover:bg-destructive/10 transition-all duration-300 font-bold text-sm shadow-sm group"
           >
             <LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
             <span>Terminate Session</span>
