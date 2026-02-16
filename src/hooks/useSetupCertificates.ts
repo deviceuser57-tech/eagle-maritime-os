@@ -32,7 +32,7 @@ export const useCertificateTypes = (category?: CertificateType['certificate_cate
       let query = supabase
         .from('setup_certificate_types')
         .select('*')
-        .eq('org_id', orgId)
+        .eq('user_id', orgId)
         .order('certificate_name', { ascending: true });
 
       if (category) {
@@ -53,7 +53,7 @@ export const useCertificateTypes = (category?: CertificateType['certificate_cate
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_certificate_types')
-        .insert({ ...cert, user_id: user.id, org_id: orgId })
+        .insert({ ...cert, user_id: user.id })
         .select()
         .single();
       if (error) throw error;

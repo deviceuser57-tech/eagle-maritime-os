@@ -38,7 +38,7 @@ export const useSetupCompanies = (companyType?: SetupCompany['company_type']) =>
       let query = supabase
         .from('setup_companies')
         .select('*')
-        .eq('org_id', orgId)
+        .eq('user_id', orgId)
         .order('created_at', { ascending: false });
 
       if (companyType) {
@@ -60,7 +60,7 @@ export const useSetupCompanies = (companyType?: SetupCompany['company_type']) =>
 
       const { data, error } = await supabase
         .from('setup_companies')
-        .insert({ ...company, user_id: user.id, org_id: orgId })
+        .insert({ ...company, user_id: user.id })
         .select()
         .single();
 

@@ -7,7 +7,7 @@ export const invokeService = async <T>(
     params: any
 ): Promise<ServiceResponse<T>> => {
     try {
-        const { data, error } = await supabase.rpc(rpcName, params);
+        const { data, error } = await (supabase.rpc as any)(rpcName, params);
 
         if (error) {
             logger.error(`Service Error [${rpcName}]: ${error.message}`, { params, error });

@@ -37,7 +37,7 @@ export const useAuditors = () => {
       const { data, error } = await supabase
         .from('auditors')
         .select('*')
-        .eq('org_id', orgId)
+        .eq('user_id', orgId)
         .order('name', { ascending: true });
 
       if (error) throw error;
@@ -57,7 +57,7 @@ export const useAuditors = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('auditors')
-        .insert([{ ...auditor, user_id: user.id, org_id: orgId }])
+        .insert([{ ...auditor, user_id: user.id }])
         .select()
         .single();
 

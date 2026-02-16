@@ -39,7 +39,7 @@ export const useCIIRecords = () => {
       const { data, error } = await supabase
         .from('cii_records')
         .select('*, vessels(name)')
-        .eq('org_id', orgId)
+        .eq('user_id', orgId)
         .order('year', { ascending: false });
 
       if (error) throw error;
@@ -100,7 +100,7 @@ export const useCIIRecords = () => {
         .from('cii_records')
         .update(updates)
         .eq('id', id)
-        .eq('org_id', orgId)
+        .eq('user_id', orgId)
         .select()
         .single();
 
@@ -122,7 +122,7 @@ export const useCIIRecords = () => {
         .from('cii_records')
         .delete()
         .eq('id', id)
-        .eq('org_id', orgId);
+        .eq('user_id', orgId);
 
       if (error) throw error;
       setCIIRecords(prev => prev.filter(r => r.id !== id));
