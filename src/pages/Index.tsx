@@ -65,35 +65,35 @@ const IndexContent = () => {
 
   const renderContent = () => {
     switch (activeSection) {
-      case 'dashboard': return <Dashboard />;
-      case 'ai-assistant': return <AIAssistant />;
-      case 'user-auth': return <AuthPage />;
-      case 'setup': return <SetupPage />;
-      case 'vessel-management': return <VesselManagement />;
-      case 'vessels-certification': return <VesselsCertification />;
-      case 'crew-management': return <CrewManagement />;
-      case 'auditor-management': return <AuditorManagement />;
-      case 'rules-regulations': return <RulesRegulations />;
-      case 'cii-dashboard': return <CIIDashboard />;
-      case 'operations': return <Operations />;
-      case 'maintenance': return <Maintenance />;
-      case 'projects': return <Projects />;
-      case 'audit-plan': return <AuditPlan />;
-      case 'audit-execution': return <AuditExecution />;
-      case 'audit-findings': return <AuditFindings />;
-      case 'corrective-action': return <CorrectiveAction />;
-      case 'interactive-closure': return <InteractiveClosure />;
-      case 'incidents': return <Incidents />;
-      case 'communications': return <Communications />;
-      case 'sms': return <SafetyManagement />;
-      case 'digital-compliance': return <DigitalCompliance />;
-      case 'insurance-claims': return <InsuranceClaims />;
-      case 'reports': return <Reports />;
-      case 'sim-dashboard': return <SIMDashboard />;
-      case 'layout-mapper': return <LayoutMapper />;
-      case 'predictive-compliance': return <PredictiveCompliance />;
-      case 'motion-risk-analyzer': return <MotionRiskAnalyzer />;
-      case 'digital-twin': return <DigitalTwin />;
+      case 'dashboard':return <Dashboard />;
+      case 'ai-assistant':return <AIAssistant />;
+      case 'user-auth':return <AuthPage />;
+      case 'setup':return <SetupPage />;
+      case 'vessel-management':return <VesselManagement />;
+      case 'vessels-certification':return <VesselsCertification />;
+      case 'crew-management':return <CrewManagement />;
+      case 'auditor-management':return <AuditorManagement />;
+      case 'rules-regulations':return <RulesRegulations />;
+      case 'cii-dashboard':return <CIIDashboard />;
+      case 'operations':return <Operations />;
+      case 'maintenance':return <Maintenance />;
+      case 'projects':return <Projects />;
+      case 'audit-plan':return <AuditPlan />;
+      case 'audit-execution':return <AuditExecution />;
+      case 'audit-findings':return <AuditFindings />;
+      case 'corrective-action':return <CorrectiveAction />;
+      case 'interactive-closure':return <InteractiveClosure />;
+      case 'incidents':return <Incidents />;
+      case 'communications':return <Communications />;
+      case 'sms':return <SafetyManagement />;
+      case 'digital-compliance':return <DigitalCompliance />;
+      case 'insurance-claims':return <InsuranceClaims />;
+      case 'reports':return <Reports />;
+      case 'sim-dashboard':return <SIMDashboard />;
+      case 'layout-mapper':return <LayoutMapper />;
+      case 'predictive-compliance':return <PredictiveCompliance />;
+      case 'motion-risk-analyzer':return <MotionRiskAnalyzer />;
+      case 'digital-twin':return <DigitalTwin />;
       default:
         return (
           <div className="space-y-6">
@@ -101,8 +101,8 @@ const IndexContent = () => {
               {activeSection.charAt(0).toUpperCase() + activeSection.slice(1).replace(/-/g, ' ')}
             </h2>
             <p className="text-muted-foreground font-medium">This section is currently being integrated into the maritime node.</p>
-          </div>
-        );
+          </div>);
+
     }
   };
 
@@ -114,8 +114,8 @@ const IndexContent = () => {
           <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-6 shadow-glow"></div>
           <p className="text-foreground text-sm font-black uppercase tracking-[0.3em] animate-pulse">Syncing Vessel Core...</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   // Show front page if user hasn't clicked "Enter Dashboard"
@@ -130,9 +130,9 @@ const IndexContent = () => {
         onAuthSuccess={() => {
           // User successfully authenticated, they'll now see the dashboard
           console.log("Authentication secure. Access granted.");
-        }}
-      />
-    );
+        }} />);
+
+
   }
 
   // User is authenticated, show the main app
@@ -144,10 +144,10 @@ const IndexContent = () => {
         theme={theme}
         onThemeToggle={() => setTheme(theme === 'light' ? 'dark' : 'light')}
         userEmail={user.email}
-        onSignOut={handleSignOut}
-      />
+        onSignOut={handleSignOut} />
 
-      <main className="flex-1 overflow-y-auto relative scrollbar-hide">
+
+      <main className="flex-1 overflow-y-auto relative scrollbar-hide bg-[#1a2132]">
         {/* Background Decorative Element */}
         <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
 
@@ -160,16 +160,16 @@ const IndexContent = () => {
           </div>
         </div>
       </main>
-    </div>
-  );
+    </div>);
+
 };
 
 const Index = () => {
   return (
     <AuthProvider>
       <IndexContent />
-    </AuthProvider>
-  );
+    </AuthProvider>);
+
 };
 
 export default Index;
