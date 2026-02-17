@@ -789,18 +789,18 @@ const VesselManagement = () => {
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="ai" className="h-full mt-0">
-                    <div className="flex flex-col h-[450px] bg-slate-900 rounded-2xl border border-border overflow-hidden">
-                      <div className="p-4 border-b border-white/10 flex items-center justify-between bg-slate-950/50">
+                   <TabsContent value="ai" className="h-full mt-0">
+                    <div className="flex flex-col h-[450px] dark:bg-slate-900 bg-muted rounded-2xl border border-border overflow-hidden">
+                      <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
                         <div className="flex items-center gap-2">
                           <Sparkles className="h-4 w-4 text-primary" />
-                          <h4 className="text-xs font-black uppercase text-white tracking-widest">AI Vessel Intelligence</h4>
+                          <h4 className="text-xs font-black uppercase text-foreground tracking-widest">AI Vessel Intelligence</h4>
                         </div>
                         <div className="flex gap-2">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-white/60"
+                            className="h-7 w-7 text-muted-foreground"
                             onClick={() => {
                               const content = aiMessages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
                               const blob = new Blob([content], { type: 'text/plain' });
@@ -818,10 +818,10 @@ const VesselManagement = () => {
                       <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
                         {aiMessages.map((msg, idx) => (
                           <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                            <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'assistant' ? 'bg-primary/20' : 'bg-slate-700'}`}>
-                              {msg.role === 'assistant' ? <Sparkles className="h-4 w-4 text-primary" /> : <User className="h-4 w-4 text-slate-400" />}
-                            </div>
-                            <div className={`rounded-2xl p-4 text-xs leading-relaxed max-w-[80%] border ${msg.role === 'assistant' ? 'bg-white/5 text-slate-200 border-white/5' : 'bg-primary/10 text-white border-primary/20'}`}>
+                             <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'assistant' ? 'bg-primary/20' : 'bg-muted/40'}`}>
+                               {msg.role === 'assistant' ? <Sparkles className="h-4 w-4 text-primary" /> : <User className="h-4 w-4 text-muted-foreground" />}
+                             </div>
+                             <div className={`rounded-2xl p-4 text-xs leading-relaxed max-w-[80%] border ${msg.role === 'assistant' ? 'bg-muted/10 text-foreground/80 border-border' : 'bg-primary/10 text-foreground border-primary/20'}`}>
                               {msg.content}
                             </div>
                           </div>
@@ -831,18 +831,18 @@ const VesselManagement = () => {
                             <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
                               <Sparkles className="h-4 w-4 text-primary" />
                             </div>
-                            <div className="flex-1 bg-white/5 rounded-2xl p-4 text-xs text-slate-400 italic">
+                            <div className="flex-1 bg-muted/10 rounded-2xl p-4 text-xs text-muted-foreground italic">
                               Analyzing vessel telemetry and registry data...
                             </div>
                           </div>
                         )}
                       </div>
-                      <div className="p-4 bg-slate-950/50 border-t border-white/10">
+                       <div className="p-4 bg-muted/20 border-t border-border">
                         <form onSubmit={handleSendAiMessage} className="relative">
                           <Input
                             value={aiInput}
                             onChange={(e) => setAiInput(e.target.value)}
-                            className="bg-white/5 border-white/10 rounded-xl pl-4 pr-12 text-xs text-white h-11 focus:ring-primary/40"
+                            className="bg-muted/10 border-border rounded-xl pl-4 pr-12 text-xs h-11 focus:ring-primary/40"
                             placeholder="Ask about technical specs, DD history, or request a PDF report..."
                           />
                           <Button
@@ -857,7 +857,7 @@ const VesselManagement = () => {
                         <div className="mt-3 flex gap-2">
                           <Button
                             variant="ghost"
-                            className="h-7 px-3 text-[10px] font-bold text-white/40 hover:text-white hover:bg-white/5 rounded-full border border-white/10 uppercase"
+                            className="h-7 px-3 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/10 rounded-full border border-border uppercase"
                             onClick={handleGenerateAiReport}
                             disabled={isAiGenerating}
                           >
@@ -865,7 +865,7 @@ const VesselManagement = () => {
                           </Button>
                           <Button
                             variant="ghost"
-                            className="h-7 px-3 text-[10px] font-bold text-white/40 hover:text-white hover:bg-white/5 rounded-full border border-white/10 uppercase"
+                            className="h-7 px-3 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/10 rounded-full border border-border uppercase"
                             onClick={() => handleSendAiMessage(undefined, "Analyze drydocking specifications and remaining tasks.")}
                             disabled={isAiGenerating}
                           >

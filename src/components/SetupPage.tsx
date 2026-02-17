@@ -289,10 +289,10 @@ const SetupPage = () => {
 
     return (
       <div className="maritime-card group overflow-hidden">
-        <div className="flex justify-between items-center p-5 bg-slate-900 border-b border-white/5">
+        <div className="flex justify-between items-center p-5 bg-muted/10 border-b border-border">
           <div>
-            <h4 className="font-bold text-base tracking-tight uppercase group-hover:text-primary transition-colors text-slate-100">{config.title} Registry</h4>
-            <p className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">System Core Configuration</p>
+            <h4 className="font-bold text-base tracking-tight uppercase group-hover:text-primary transition-colors text-foreground">{config.title} Registry</h4>
+            <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">System Core Configuration</p>
           </div>
           <Button
             size="sm"
