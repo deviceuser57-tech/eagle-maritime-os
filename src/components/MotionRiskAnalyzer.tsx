@@ -23,7 +23,6 @@ const MotionRiskAnalyzer = () => {
     const handleCalculate = () => {
         if (!selectedVesselId) return;
         setIsCalculating(true);
-        // Simulate complex hydrodynamic calculation
         setTimeout(() => {
             setRiskMetrics({
                 pitch: (Math.random() * 3 + 1).toFixed(1) + '°',
@@ -41,16 +40,7 @@ const MotionRiskAnalyzer = () => {
 
     function Activity({ className }: { className?: string }) {
         return (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={className}
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
             </svg>
         );
@@ -118,15 +108,15 @@ const MotionRiskAnalyzer = () => {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-10">
-                        <div className="h-80 w-full bg-slate-900 rounded-3xl relative overflow-hidden flex items-center justify-center">
+                        <div className="h-80 w-full dark:bg-slate-900 bg-muted rounded-3xl relative overflow-hidden flex items-center justify-center">
                             {/* Simulation of a vessel top view */}
-                            <div className="w-16 h-64 bg-slate-800 rounded-full border border-white/10 relative shadow-2xl">
+                            <div className="w-16 h-64 dark:bg-slate-800 bg-muted-foreground/10 rounded-full border border-border relative shadow-2xl">
                                 <div className="absolute top-0 inset-x-0 h-4 bg-primary/20 blur-xl" />
                                 <div className="absolute bottom-4 inset-x-2 h-1 bg-rose-500 animate-pulse" />
                             </div>
                             <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 opacity-10 pointer-events-none">
                                 {Array.from({ length: 36 }).map((_, i) => (
-                                    <div key={i} className="border border-white/20" />
+                                    <div key={i} className="border border-foreground/20" />
                                 ))}
                             </div>
                             <div className="absolute top-8 left-8">
@@ -152,7 +142,7 @@ const MotionRiskAnalyzer = () => {
                                     {riskMetrics?.cargoShift || 0}%
                                 </span>
                             </div>
-                            <div className="h-1.5 w-full bg-slate-500/10 rounded-full overflow-hidden">
+                            <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
                                 <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${riskMetrics?.cargoShift || 0}%` }} />
                             </div>
                         </div>
@@ -163,7 +153,7 @@ const MotionRiskAnalyzer = () => {
                                     {riskMetrics?.greenWater || 0}%
                                 </span>
                             </div>
-                            <div className="h-1.5 w-full bg-slate-500/10 rounded-full overflow-hidden">
+                            <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
                                 <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: `${riskMetrics?.greenWater || 0}%` }} />
                             </div>
                         </div>
@@ -174,7 +164,7 @@ const MotionRiskAnalyzer = () => {
                                     {riskMetrics?.parametric || 0}%
                                 </span>
                             </div>
-                            <div className="h-1.5 w-full bg-slate-500/10 rounded-full overflow-hidden">
+                            <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
                                 <div className="h-full bg-rose-500 shadow-glow shadow-rose-500/50 transition-all duration-1000" style={{ width: `${riskMetrics?.parametric || 0}%` }} />
                             </div>
                         </div>

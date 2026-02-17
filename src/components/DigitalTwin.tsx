@@ -70,7 +70,7 @@ const DigitalTwin = () => {
                     <Card key={idx} className="maritime-card group">
                         <CardContent className="p-6">
                             <div className="flex items-center gap-4">
-                                <div className={`p-3 rounded-xl bg-slate-500/5 ${stat.color}`}>
+                                <div className={`p-3 rounded-xl bg-muted/10 ${stat.color}`}>
                                     <stat.icon className="h-6 w-6" />
                                 </div>
                                 <div>
@@ -85,7 +85,7 @@ const DigitalTwin = () => {
 
             <div className="grid gap-8 md:grid-cols-2">
                 <Card className="maritime-card group">
-                    <CardHeader className="bg-slate-500/5 border-b border-border/50">
+                    <CardHeader className="bg-muted/10 border-b border-border/50">
                         <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
                             <Box className="h-4 w-4 text-primary" />
                             Structural Mirroring
@@ -93,7 +93,7 @@ const DigitalTwin = () => {
                     </CardHeader>
                     <CardContent className="p-10">
                         <div
-                            className="h-96 w-full rounded-[2rem] bg-slate-950 flex items-center justify-center relative overflow-hidden group/viz cursor-grab active:cursor-grabbing select-none"
+                            className="h-96 w-full rounded-[2rem] dark:bg-slate-950 bg-muted flex items-center justify-center relative overflow-hidden group/viz cursor-grab active:cursor-grabbing select-none"
                             onMouseDown={handleMouseDown}
                             onMouseMove={handleMouseMove}
                             onMouseUp={handleMouseUp}
@@ -101,9 +101,9 @@ const DigitalTwin = () => {
                             style={{ perspective: '1200px' }}
                         >
                             {/* Visual Feedback Overlay */}
-                            <div className="absolute top-6 right-6 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md z-20">
+                            <div className="absolute top-6 right-6 flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/10 border border-border backdrop-blur-md z-20">
                                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                                <span className="text-[8px] font-black text-white/60 uppercase tracking-widest">360° Tactical View Active</span>
+                                <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">360° Tactical View Active</span>
                             </div>
 
                             {/* 3D ROTATABLE CONTAINER */}
@@ -121,10 +121,10 @@ const DigitalTwin = () => {
 
                                     {/* Deck Plane */}
                                     <div
-                                        className="absolute inset-0 bg-slate-800/80 border border-primary/30 rounded-[20%_80%_80%_20%]"
+                                        className="absolute inset-0 dark:bg-slate-800/80 bg-muted-foreground/10 border border-primary/30 rounded-[20%_80%_80%_20%]"
                                         style={{ transform: 'translateZ(30px)' }}
                                     >
-                                        <div className="absolute top-1/2 left-1/4 w-12 h-16 bg-slate-700 border border-primary/20 rounded-lg -translate-y-1/2" style={{ transform: 'translateZ(20px)' }}>
+                                        <div className="absolute top-1/2 left-1/4 w-12 h-16 dark:bg-slate-700 bg-muted-foreground/20 border border-primary/20 rounded-lg -translate-y-1/2" style={{ transform: 'translateZ(20px)' }}>
                                             {/* Bridge */}
                                             <div className="absolute inset-2 bg-blue-500/20 border border-blue-400/30 rounded" />
                                         </div>
@@ -156,9 +156,9 @@ const DigitalTwin = () => {
                                     <p className="text-[10px] font-mono text-emerald-400 tracking-tighter">ROT_Y: {rotation.y.toFixed(1)}°</p>
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10"
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-muted/10 border border-border hover:bg-muted/20"
                                         onClick={() => setRotation({ x: 0, y: 0 })}>
-                                        <ArrowUpRight className="h-3 w-3 text-white/40" />
+                                        <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
                                     </Button>
                                     <div className="px-4 py-2 bg-primary/10 border border-primary/30 rounded-xl backdrop-blur-md">
                                         <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Manual Override Engaged</p>
@@ -170,7 +170,7 @@ const DigitalTwin = () => {
                 </Card>
 
                 <Card className="maritime-card">
-                    <CardHeader className="bg-slate-500/5 border-b border-border/50">
+                    <CardHeader className="bg-muted/10 border-b border-border/50">
                         <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
                             <Network className="h-4 w-4 text-primary" />
                             Telemetric Node Network
@@ -183,7 +183,7 @@ const DigitalTwin = () => {
                             { id: 'NODE_03', tag: 'Fuel Distribution', integrity: '95%', load: 'Idle' },
                             { id: 'NODE_04', tag: 'Navigation Core', integrity: '100%', load: 'Normal' },
                         ].map((node, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-4 bg-slate-500/5 rounded-2xl border border-border/50 hover:border-primary/30 transition-all">
+                            <div key={idx} className="flex items-center justify-between p-4 bg-muted/10 rounded-2xl border border-border/50 hover:border-primary/30 transition-all">
                                 <div className="flex items-center gap-4">
                                     <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-glow" />
                                     <div>

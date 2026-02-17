@@ -74,22 +74,22 @@ const LayoutMapper = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* 3D SHIP VISUALIZATION */}
-                <Card className="lg:col-span-2 maritime-card overflow-hidden bg-slate-950 border-primary/20 min-h-[500px] flex flex-col">
-                    <CardHeader className="border-b border-white/5 bg-white/5 flex flex-row items-center justify-between py-4">
+                <Card className="lg:col-span-2 maritime-card overflow-hidden dark:bg-slate-950 bg-muted border-primary/20 min-h-[500px] flex flex-col">
+                    <CardHeader className="border-b border-border bg-muted/10 flex flex-row items-center justify-between py-4">
                         <div className="flex items-center gap-2">
                             <Box className="h-4 w-4 text-primary" />
-                            <CardTitle className="text-xs font-black uppercase tracking-widest text-white mt-1">
+                            <CardTitle className="text-xs font-black uppercase tracking-widest text-foreground mt-1">
                                 Visual Spatial Audit (3D Isometric)
                             </CardTitle>
                         </div>
                         <div className="flex gap-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
-                                <span className="text-[10px] font-bold text-white/60">High Priority</span>
+                                <span className="text-[10px] font-bold text-muted-foreground">High Priority</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
-                                <span className="text-[10px] font-bold text-white/60">Corrective</span>
+                                <span className="text-[10px] font-bold text-muted-foreground">Corrective</span>
                             </div>
                         </div>
                     </CardHeader>
@@ -136,13 +136,13 @@ const LayoutMapper = () => {
                                         <div className={`absolute -inset-4 rounded-full animate-ping opacity-20 ${area.color}`} />
 
                                         {/* Main Node */}
-                                        <div className={`relative h-10 w-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 scale-100 group-hover:scale-110 shadow-lg ${isSelected ? 'ring-4 ring-white/20 scale-125 z-20' : ''
-                                            } ${area.color} border-white/20`}>
-                                            <span className="text-white font-black text-xs">{count}</span>
+                        <div className={`relative h-10 w-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 scale-100 group-hover:scale-110 shadow-lg ${isSelected ? 'ring-4 ring-foreground/20 scale-125 z-20' : ''
+                                            } ${area.color} border-foreground/20`}>
+                                            <span className="text-foreground font-black text-xs">{count}</span>
                                         </div>
 
                                         {/* Tooltip Labels */}
-                                        <div className={`absolute left-1/2 -bottom-10 -translate-x-1/2 whitespace-nowrap px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-xl border border-white/10 text-[10px] font-bold text-white uppercase tracking-widest pointer-events-none transition-all duration-300 ${isHovered || isSelected ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+                                        <div className={`absolute left-1/2 -bottom-10 -translate-x-1/2 whitespace-nowrap px-3 py-1.5 rounded-lg bg-popover/90 backdrop-blur-xl border border-border text-[10px] font-bold text-popover-foreground uppercase tracking-widest pointer-events-none transition-all duration-300 ${isHovered || isSelected ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
                                             }`}>
                                             {area.label}
                                         </div>
@@ -152,7 +152,7 @@ const LayoutMapper = () => {
                         </div>
 
                         {/* Vessel Info Overlay */}
-                        <div className="absolute bottom-6 left-6 text-white/40 font-bold text-[8px] uppercase tracking-[0.4em]">
+                        <div className="absolute bottom-6 left-6 text-muted-foreground font-bold text-[8px] uppercase tracking-[0.4em]">
                             Vessel: Eagle Pioneer-26 | Sector: Digital Compliance Twin
                         </div>
                     </CardContent>
