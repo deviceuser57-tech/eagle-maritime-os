@@ -125,19 +125,17 @@ const IndexContent = () => {
     return <FrontPage onEnterDashboard={handleEnterDashboard} />;
   }
 
-  // If user is not authenticated, show auth page
-  if (!user) {
-    return (
-      <AuthPage
-        onAuthSuccess={() => {
-          // User successfully authenticated, they'll now see the dashboard
-          console.log("Authentication secure. Access granted.");
-        }} />);
+  // TRIAL MODE: Skip authentication - direct access to dashboard
+  // TODO: Re-enable authentication after trial period
+  // if (!user) {
+  //   return (
+  //     <AuthPage
+  //       onAuthSuccess={() => {
+  //         console.log("Authentication secure. Access granted.");
+  //       }} />);
+  // }
 
-
-  }
-
-  // User is authenticated, show the main app
+  // Main app - accessible without authentication during trial
   return (
     <div className="flex h-screen bg-background overflow-hidden preserve-3d">
       <Sidebar
@@ -145,7 +143,7 @@ const IndexContent = () => {
         onSectionChange={setActiveSection}
         theme={theme}
         onThemeToggle={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-        userEmail={user.email}
+        userEmail={user?.email || 'trial@eagle-platform.com'}
         onSignOut={handleSignOut} />
 
 

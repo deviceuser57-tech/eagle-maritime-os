@@ -170,8 +170,8 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
         ))}
       </nav>
 
-      {/* Sign Out Button */}
-      {onSignOut && (
+      {/* Sign Out Button - Hidden during trial mode */}
+      {/* {onSignOut && (
         <div className="p-6 border-t border-border bg-muted/10 mt-auto">
           <button
             onClick={onSignOut}
@@ -181,7 +181,7 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
             <span>Terminate Session</span>
           </button>
         </div>
-      )}
+      )} */}
     </aside>
   );
 };
