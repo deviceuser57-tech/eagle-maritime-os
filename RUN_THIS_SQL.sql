@@ -20,10 +20,11 @@ INSERT INTO public.vessels (org_id, name, imo_number, vessel_type, gross_tonnage
 
 -- ADD 9 CERTIFICATES (using user_id instead of org_id for now)
 -- We'll use a dummy UUID for user_id since we're in trial mode
-INSERT INTO public.vessel_certifications (vessel_id, user_id, certificate_name, certificate_type, status, issue_date, expiry_date)
+INSERT INTO public.vessel_certifications (vessel_id, user_id, org_id, certificate_name, certificate_type, status, issue_date, expiry_date)
 SELECT 
   v.id, 
   '00000000-0000-0000-0000-000000000000'::uuid, -- Dummy user_id
+  v.org_id,
   cert.name, 
   cert.type, 
   'valid', 

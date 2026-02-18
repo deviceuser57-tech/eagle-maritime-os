@@ -31,14 +31,14 @@ BEGIN
         (v_vessel_2, v_org_id, 'MV COMPLIANT BETA', 'IMO9999002', 'Container', 75000, 'Liberia', 'International');
 
     -- Add all mandatory certificates (valid status)
-    INSERT INTO public.vessel_certifications (vessel_id, org_id, certificate_name, certificate_type, status, issue_date, expiry_date)
+    INSERT INTO public.vessel_certifications (vessel_id, org_id, user_id, certificate_name, certificate_type, status, issue_date, expiry_date)
     VALUES
-        (v_vessel_1, v_org_id, 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
-        (v_vessel_1, v_org_id, 'Document of Compliance', 'DOC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
-        (v_vessel_1, v_org_id, 'ISPS Certificate', 'ISPS', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
-        (v_vessel_2, v_org_id, 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
-        (v_vessel_2, v_org_id, 'Document of Compliance', 'DOC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
-        (v_vessel_2, v_org_id, 'ISPS Certificate', 'ISPS', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months');
+        (v_vessel_1, v_org_id, '00000000-0000-0000-0000-000000000000', 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
+        (v_vessel_1, v_org_id, '00000000-0000-0000-0000-000000000000', 'Document of Compliance', 'DOC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
+        (v_vessel_1, v_org_id, '00000000-0000-0000-0000-000000000000', 'ISPS Certificate', 'ISPS', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
+        (v_vessel_2, v_org_id, '00000000-0000-0000-0000-000000000000', 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
+        (v_vessel_2, v_org_id, '00000000-0000-0000-0000-000000000000', 'Document of Compliance', 'DOC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
+        (v_vessel_2, v_org_id, '00000000-0000-0000-0000-000000000000', 'ISPS Certificate', 'ISPS', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months');
 
     -- Add excellent CII ratings
     INSERT INTO public.cii_records (vessel_id, org_id, year, cii_value, cii_rating)
@@ -121,10 +121,10 @@ BEGIN
     VALUES (v_vessel_id, v_org_id, 'MV MISSING CERT', 'IMO9999003', 'Tanker', 60000, 'Marshall Islands', 'International');
 
     -- Add ONLY 2 out of 3 mandatory certificates (missing ISPS)
-    INSERT INTO public.vessel_certifications (vessel_id, org_id, certificate_name, certificate_type, status, issue_date, expiry_date)
+    INSERT INTO public.vessel_certifications (vessel_id, org_id, user_id, certificate_name, certificate_type, status, issue_date, expiry_date)
     VALUES
-        (v_vessel_id, v_org_id, 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
-        (v_vessel_id, v_org_id, 'Document of Compliance', 'DOC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months');
+        (v_vessel_id, v_org_id, '00000000-0000-0000-0000-000000000000', 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
+        (v_vessel_id, v_org_id, '00000000-0000-0000-0000-000000000000', 'Document of Compliance', 'DOC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months');
         -- ISPS is MISSING
 
     -- Calculate compliance
@@ -195,10 +195,10 @@ BEGIN
     VALUES (v_vessel_id, v_org_id, 'MV STATUTORY BREACH', 'IMO9999004', 'General Cargo', 45000);
 
     -- Add valid certificates
-    INSERT INTO public.vessel_certifications (vessel_id, org_id, certificate_name, certificate_type, status, issue_date, expiry_date)
+    INSERT INTO public.vessel_certifications (vessel_id, org_id, user_id, certificate_name, certificate_type, status, issue_date, expiry_date)
     VALUES
-        (v_vessel_id, v_org_id, 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
-        (v_vessel_id, v_org_id, 'Document of Compliance', 'DOC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months');
+        (v_vessel_id, v_org_id, '00000000-0000-0000-0000-000000000000', 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
+        (v_vessel_id, v_org_id, '00000000-0000-0000-0000-000000000000', 'Document of Compliance', 'DOC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months');
 
     -- Create audit with MAJOR finding
     INSERT INTO public.audits (id, org_id, vessel_id, audit_type, status, audit_date)
@@ -275,11 +275,11 @@ BEGIN
     VALUES (v_vessel_id, v_org_id, 'MV NEAR EXPIRY', 'IMO9999005', 'Ro-Ro', 35000);
 
     -- Add certificates with one expiring soon
-    INSERT INTO public.vessel_certifications (vessel_id, org_id, certificate_name, certificate_type, status, issue_date, expiry_date)
+    INSERT INTO public.vessel_certifications (vessel_id, org_id, user_id, certificate_name, certificate_type, status, issue_date, expiry_date)
     VALUES
-        (v_vessel_id, v_org_id, 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '4 years', CURRENT_DATE + INTERVAL '15 days'), -- EXPIRING SOON
-        (v_vessel_id, v_org_id, 'Document of Compliance', 'DOC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
-        (v_vessel_id, v_org_id, 'ISPS Certificate', 'ISPS', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months');
+        (v_vessel_id, v_org_id, '00000000-0000-0000-0000-000000000000', 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '4 years', CURRENT_DATE + INTERVAL '15 days'), -- EXPIRING SOON
+        (v_vessel_id, v_org_id, '00000000-0000-0000-0000-000000000000', 'Document of Compliance', 'DOC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
+        (v_vessel_id, v_org_id, '00000000-0000-0000-0000-000000000000', 'ISPS Certificate', 'ISPS', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months');
 
     -- Calculate compliance
     v_result := public.rpc_calculate_vessel_compliance(v_vessel_id);
@@ -347,16 +347,16 @@ BEGIN
     VALUES (v_small_vessel, v_org_id, 'MV SMALL HIGH SCORE', 'IMO9999007', 'Tug', 500);
 
     -- Large vessel: minimal certs, poor compliance
-    INSERT INTO public.vessel_certifications (vessel_id, org_id, certificate_name, certificate_type, status, issue_date, expiry_date)
+    INSERT INTO public.vessel_certifications (vessel_id, org_id, user_id, certificate_name, certificate_type, status, issue_date, expiry_date)
     VALUES
-        (v_large_vessel, v_org_id, 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months');
+        (v_large_vessel, v_org_id, '00000000-0000-0000-0000-000000000000', 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months');
 
     -- Small vessel: all certs, excellent compliance
-    INSERT INTO public.vessel_certifications (vessel_id, org_id, certificate_name, certificate_type, status, issue_date, expiry_date)
+    INSERT INTO public.vessel_certifications (vessel_id, org_id, user_id, certificate_name, certificate_type, status, issue_date, expiry_date)
     VALUES
-        (v_small_vessel, v_org_id, 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
-        (v_small_vessel, v_org_id, 'Document of Compliance', 'DOC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
-        (v_small_vessel, v_org_id, 'ISPS Certificate', 'ISPS', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months');
+        (v_small_vessel, v_org_id, '00000000-0000-0000-0000-000000000000', 'Safety Management Certificate', 'SMC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
+        (v_small_vessel, v_org_id, '00000000-0000-0000-0000-000000000000', 'Document of Compliance', 'DOC', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months'),
+        (v_small_vessel, v_org_id, '00000000-0000-0000-0000-000000000000', 'ISPS Certificate', 'ISPS', 'valid', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '18 months');
 
     -- Calculate individual scores
     PERFORM public.rpc_calculate_vessel_compliance(v_large_vessel);
