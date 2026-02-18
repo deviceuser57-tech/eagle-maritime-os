@@ -8,13 +8,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Plus, Users, Building, Settings, ShieldCheck } from 'lucide-react';
+import { Loader2, Plus, Users, Building, Settings, ShieldCheck, Trash2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 const Organization = () => {
-    const { organization, members, loading, createOrganization } = useOrganization();
+    const { organization, members, invitations, loading, createOrganization, inviteMember, revokeInvitation } = useOrganization();
     const [newOrgName, setNewOrgName] = useState('');
     const [isCreating, setIsCreating] = useState(false);
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [isInviting, setIsInviting] = useState(false);
+    const [isInviteOpen, setIsInviteOpen] = useState(false);
+
+    const handleInvite = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!inviteEmail.trim()) return;
+
+        setIsInviting(true);
+        try {
+            await inviteMember(inviteEmail);
+            setInviteEmail('');
+            setIsInviteOpen(false);
+        } catch (error) {
+            // Error handled in hook
+        } finally {
+            setIsInviting(false);
+        }
+    };
 
     const handleCreateOrg = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -151,10 +179,41 @@ const Organization = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="mb-4 flex justify-end">
-                                <Button onClick={() => toast.info('Invitation feature coming soon!')}>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Invite Member
-                                </Button>
+                                <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Invite Member
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                            <DialogTitle>Invite Team Member</DialogTitle>
+                                            <DialogDescription>
+                                                Send an invitation to a new member to join your organization.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <form onSubmit={handleInvite} className="grid gap-4 py-4">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="email">Email address</Label>
+                                                <Input
+                                                    id="email"
+                                                    type="email"
+                                                    placeholder="colleague@company.com"
+                                                    value={inviteEmail}
+                                                    onChange={(e) => setInviteEmail(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                            <DialogFooter>
+                                                <Button type="submit" disabled={isInviting}>
+                                                    {isInviting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                    Send Invitation
+                                                </Button>
+                                            </DialogFooter>
+                                        </form>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
 
                             <div className="rounded-md border">
@@ -208,6 +267,54 @@ const Organization = () => {
                                     </TableBody>
                                 </Table>
                             </div>
+
+                            {invitations && invitations.length > 0 && (
+                                <div className="mt-8">
+                                    <h3 className="text-lg font-medium mb-4">Pending Invitations</h3>
+                                    <div className="rounded-md border">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Email</TableHead>
+                                                    <TableHead>Status</TableHead>
+                                                    <TableHead>Sent At</TableHead>
+                                                    <TableHead className="text-right">Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {invitations.map((invite) => (
+                                                    <TableRow key={invite.id}>
+                                                        <TableCell className="font-medium">
+                                                            <div className="flex items-center gap-2">
+                                                                <Mail className="h-4 w-4 text-muted-foreground" />
+                                                                {invite.email}
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge variant="secondary">
+                                                                {invite.status}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {new Date(invite.created_at).toLocaleDateString()}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => revokeInvitation(invite.id)}
+                                                                className="text-destructive hover:text-destructive/90"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </TabsContent>
