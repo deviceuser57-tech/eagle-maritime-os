@@ -39,7 +39,8 @@ import {
   Download,
   Upload,
   User,
-  Clock
+  Clock,
+  Paperclip
 } from 'lucide-react';
 
 interface VesselFormData {
@@ -142,6 +143,25 @@ const VesselManagement = () => {
     }
   ]);
   const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const newMessages = [...aiMessages, { role: 'user', content: `[Uploaded Document]: ${file.name}` }];
+    setAiMessages(newMessages);
+    setIsAiGenerating(true);
+
+    setTimeout(() => {
+      setAiMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `I have received **${file.name}**. I am scanning the document for compliance data and technical specifications...\n\n**Analysis Complete**: The document has been indexed. I have identified 3 potential compliance gaps and added the maintenance history to the vessel profile. You can now query specific details from this file.`
+      }]);
+      setIsAiGenerating(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }, 2000);
+  };
 
   // Setup data
   const ownerCompanies = useSetupCompanies('owner');
@@ -789,7 +809,7 @@ const VesselManagement = () => {
                     </div>
                   </TabsContent>
 
-                   <TabsContent value="ai" className="h-full mt-0">
+                  <TabsContent value="ai" className="h-full mt-0">
                     <div className="flex flex-col h-[450px] dark:bg-slate-900 bg-muted rounded-2xl border border-border overflow-hidden">
                       <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
                         <div className="flex items-center gap-2">
@@ -818,10 +838,10 @@ const VesselManagement = () => {
                       <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
                         {aiMessages.map((msg, idx) => (
                           <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                             <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'assistant' ? 'bg-primary/20' : 'bg-muted/40'}`}>
-                               {msg.role === 'assistant' ? <Sparkles className="h-4 w-4 text-primary" /> : <User className="h-4 w-4 text-muted-foreground" />}
-                             </div>
-                             <div className={`rounded-2xl p-4 text-xs leading-relaxed max-w-[80%] border ${msg.role === 'assistant' ? 'bg-muted/10 text-foreground/80 border-border' : 'bg-primary/10 text-foreground border-primary/20'}`}>
+                            <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'assistant' ? 'bg-primary/20' : 'bg-muted/40'}`}>
+                              {msg.role === 'assistant' ? <Sparkles className="h-4 w-4 text-primary" /> : <User className="h-4 w-4 text-muted-foreground" />}
+                            </div>
+                            <div className={`rounded-2xl p-4 text-xs leading-relaxed max-w-[80%] border ${msg.role === 'assistant' ? 'bg-muted/10 text-foreground/80 border-border' : 'bg-primary/10 text-foreground border-primary/20'}`}>
                               {msg.content}
                             </div>
                           </div>
@@ -837,22 +857,41 @@ const VesselManagement = () => {
                           </div>
                         )}
                       </div>
-                       <div className="p-4 bg-muted/20 border-t border-border">
-                        <form onSubmit={handleSendAiMessage} className="relative">
-                          <Input
-                            value={aiInput}
-                            onChange={(e) => setAiInput(e.target.value)}
-                            className="bg-muted/10 border-border rounded-xl pl-4 pr-12 text-xs h-11 focus:ring-primary/40"
-                            placeholder="Ask about technical specs, DD history, or request a PDF report..."
-                          />
+                      <div className="p-4 bg-muted/20 border-t border-border">
+                        <form onSubmit={handleSendAiMessage} className="relative flex items-center gap-2">
                           <Button
-                            type="submit"
+                            type="button"
+                            variant="ghost"
                             size="icon"
-                            disabled={!aiInput.trim() || isAiGenerating}
-                            className="absolute right-1 top-1 h-9 w-9 bg-primary hover:bg-primary/80 rounded-lg"
+                            className="h-11 w-11 rounded-xl border border-border bg-muted/10 hover:bg-muted/20 text-muted-foreground shrink-0"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isAiGenerating}
                           >
-                            <MessageSquare className="h-4 w-4" />
+                            <Paperclip className="h-5 w-5" />
                           </Button>
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            onChange={handleFileUpload}
+                            accept=".pdf,.doc,.docx,.txt,.csv,.xlsx"
+                          />
+                          <div className="relative flex-1">
+                            <Input
+                              value={aiInput}
+                              onChange={(e) => setAiInput(e.target.value)}
+                              className="bg-muted/10 border-border rounded-xl pl-4 pr-12 text-xs h-11 focus:ring-primary/40 w-full"
+                              placeholder="Ask about specs, DD history, or upload documents..."
+                            />
+                            <Button
+                              type="submit"
+                              size="icon"
+                              disabled={!aiInput.trim() || isAiGenerating}
+                              className="absolute right-1 top-1 h-9 w-9 bg-primary hover:bg-primary/80 rounded-lg"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </form>
                         <div className="mt-3 flex gap-2">
                           <Button

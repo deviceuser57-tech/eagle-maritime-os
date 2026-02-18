@@ -99,25 +99,32 @@ export const useOrganization = () => {
   const createOrganization = async (name: string, slug: string) => {
     if (!user) return;
     try {
-      const { data, error } = await supabase
-        .from('organizations')
-        .insert([{ name, slug }])
-        .select()
-        .single();
+      // Use RPC function for atomic creation (defined in ENABLE_ORG_CREATION.sql)
+      const { data, error } = await supabase.rpc('create_new_organization', {
+        org_name: name,
+        org_slug: slug
+      });
 
       if (error) throw error;
 
-      // Add creator as admin member
-      const { error: memberError } = await supabase
-        .from('organization_members')
-        .insert([{ org_id: data.id, user_id: user.id }]);
+      // Fetch the new org details
+      const { data: newOrg, error: fetchError } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', data)
+        .single();
 
-      if (memberError) throw memberError;
+      if (fetchError) throw fetchError;
 
-      setOrganization(data);
+      setOrganization(newOrg);
+
+      // Refresh to ensure all data contexts are updated
+      window.location.reload();
+
       toast({ title: 'Organization created successfully' });
-      return data;
+      return newOrg;
     } catch (e: any) {
+      console.error('Create Org Error:', e);
       toast({ title: 'Failed to create organization', description: e.message, variant: 'destructive' });
       throw e;
     }
