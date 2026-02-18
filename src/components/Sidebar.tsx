@@ -19,6 +19,7 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
       items: [
         { id: "dashboard", label: "📊 Dashboard", badge: null },
         { id: "ai-assistant", label: "✨ AI Assistant", badge: null },
+        { id: "organization", label: "🏢 Organization", badge: null },
       ]
     },
     {
