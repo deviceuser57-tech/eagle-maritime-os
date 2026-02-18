@@ -125,17 +125,16 @@ const IndexContent = () => {
     return <FrontPage onEnterDashboard={handleEnterDashboard} />;
   }
 
-  // TRIAL MODE: Skip authentication - direct access to dashboard
-  // TODO: Re-enable authentication after trial period
-  // if (!user) {
-  //   return (
-  //     <AuthPage
-  //       onAuthSuccess={() => {
-  //         console.log("Authentication secure. Access granted.");
-  //       }} />);
-  // }
+  // Require authentication - users must login/signup
+  if (!user) {
+    return (
+      <AuthPage
+        onAuthSuccess={() => {
+          console.log("Authentication secure. Access granted.");
+        }} />);
+  }
 
-  // Main app - accessible without authentication during trial
+  // Main app - user is authenticated
   return (
     <div className="flex h-screen bg-background overflow-hidden preserve-3d">
       <Sidebar
