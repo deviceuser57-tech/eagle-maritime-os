@@ -170,5 +170,11 @@ ORDER BY v.name;
 -- MV COMPLIANCE GAMMA   | IMO9999003 | Tanker       | 60000  | 3 certs | 87.50
 -- =====================================================
 
-RAISE NOTICE '✅ RLS policies updated for trial mode access';
-RAISE NOTICE '🔄 Refresh your frontend (Ctrl+Shift+R) to see vessels';
+-- =====================================================
+-- SUCCESS MESSAGE
+-- =====================================================
+DO $$
+BEGIN
+  RAISE NOTICE '✅ RLS policies updated for trial mode access';
+  RAISE NOTICE '🔄 Refresh your frontend (Ctrl+Shift+R) to see vessels';
+END $$;
