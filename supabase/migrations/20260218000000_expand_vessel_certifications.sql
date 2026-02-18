@@ -33,7 +33,7 @@ CREATE POLICY "Users can view org certifications" ON public.vessel_certification
   FOR SELECT 
   USING (
     org_id IN (
-      SELECT organization_id 
+      SELECT org_id 
       FROM public.organization_members 
       WHERE user_id = auth.uid()
     )
@@ -43,7 +43,7 @@ CREATE POLICY "Users can create org certifications" ON public.vessel_certificati
   FOR INSERT 
   WITH CHECK (
     org_id IN (
-      SELECT organization_id 
+      SELECT org_id 
       FROM public.organization_members 
       WHERE user_id = auth.uid()
     )
@@ -53,7 +53,7 @@ CREATE POLICY "Users can update org certifications" ON public.vessel_certificati
   FOR UPDATE 
   USING (
     org_id IN (
-      SELECT organization_id 
+      SELECT org_id 
       FROM public.organization_members 
       WHERE user_id = auth.uid()
     )
@@ -63,7 +63,7 @@ CREATE POLICY "Users can delete org certifications" ON public.vessel_certificati
   FOR DELETE 
   USING (
     org_id IN (
-      SELECT organization_id 
+      SELECT org_id 
       FROM public.organization_members 
       WHERE user_id = auth.uid()
     )

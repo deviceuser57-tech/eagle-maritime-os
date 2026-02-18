@@ -22,7 +22,7 @@ BEGIN
     RAISE NOTICE '========================================';
 
     -- Create test organization
-    INSERT INTO public.organizations (id, name) VALUES (v_org_id, 'TEST_ORG_BASELINE');
+    INSERT INTO public.organizations (id, name, slug) VALUES (v_org_id, 'TEST_ORG_BASELINE', 'test-org-baseline');
 
     -- Create two fully compliant vessels
     INSERT INTO public.vessels (id, org_id, name, imo_number, vessel_type, gross_tonnage, flag_state, trading_area)
@@ -115,7 +115,7 @@ BEGIN
     RAISE NOTICE 'SCENARIO 2: REGULATORY GAP VALIDATION';
     RAISE NOTICE '========================================';
 
-    INSERT INTO public.organizations (id, name) VALUES (v_org_id, 'TEST_ORG_GAP');
+    INSERT INTO public.organizations (id, name, slug) VALUES (v_org_id, 'TEST_ORG_GAP', 'test-org-gap');
 
     INSERT INTO public.vessels (id, org_id, name, imo_number, vessel_type, gross_tonnage, flag_state, trading_area)
     VALUES (v_vessel_id, v_org_id, 'MV MISSING CERT', 'IMO9999003', 'Tanker', 60000, 'Marshall Islands', 'International');
@@ -189,7 +189,7 @@ BEGIN
     RAISE NOTICE 'SCENARIO 3: MAJOR NC KILL-SWITCH';
     RAISE NOTICE '========================================';
 
-    INSERT INTO public.organizations (id, name) VALUES (v_org_id, 'TEST_ORG_BREACH');
+    INSERT INTO public.organizations (id, name, slug) VALUES (v_org_id, 'TEST_ORG_BREACH', 'test-org-breach');
 
     INSERT INTO public.vessels (id, org_id, name, imo_number, vessel_type, gross_tonnage)
     VALUES (v_vessel_id, v_org_id, 'MV STATUTORY BREACH', 'IMO9999004', 'General Cargo', 45000);
@@ -269,7 +269,7 @@ BEGIN
     RAISE NOTICE 'SCENARIO 4: EXPIRY PROXIMITY';
     RAISE NOTICE '========================================';
 
-    INSERT INTO public.organizations (id, name) VALUES (v_org_id, 'TEST_ORG_EXPIRY');
+    INSERT INTO public.organizations (id, name, slug) VALUES (v_org_id, 'TEST_ORG_EXPIRY', 'test-org-expiry');
 
     INSERT INTO public.vessels (id, org_id, name, imo_number, vessel_type, gross_tonnage)
     VALUES (v_vessel_id, v_org_id, 'MV NEAR EXPIRY', 'IMO9999005', 'Ro-Ro', 35000);
@@ -336,7 +336,7 @@ BEGIN
     RAISE NOTICE 'SCENARIO 5: FLEET TONNAGE WEIGHTING';
     RAISE NOTICE '========================================';
 
-    INSERT INTO public.organizations (id, name) VALUES (v_org_id, 'TEST_ORG_WEIGHTING');
+    INSERT INTO public.organizations (id, name, slug) VALUES (v_org_id, 'TEST_ORG_WEIGHTING', 'test-org-weighting');
 
     -- Large vessel with LOW score
     INSERT INTO public.vessels (id, org_id, name, imo_number, vessel_type, gross_tonnage)
