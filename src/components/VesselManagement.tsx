@@ -227,6 +227,48 @@ const VesselManagement = () => {
   const statusOptions = ['active', 'inactive', 'maintenance', 'drydock', 'laid_up'];
   const currencies = ['USD', 'EUR', 'GBP', 'SGD', 'NOK', 'JPY'];
 
+  const handleSmartFill = () => {
+    if (!formData.vessel_brochure) {
+      toast({ title: 'Brochure Required', description: 'Please upload a brochure in the Media tab first.', variant: 'destructive' });
+      return;
+    }
+
+    setIsAiGenerating(true);
+    setAiMessages(prev => [...prev, { role: 'assistant', content: "System: Initiating Deep Scan of Approved Vessel Brochure... Extraction in progress. Looking for GT, IMO, Engine Power, and Dimensions..." }]);
+
+    setTimeout(() => {
+      // Mock data extraction
+      const extractedData = {
+        imo_number: '9845321',
+        vessel_type: 'Bulk Carrier',
+        gross_tonnage: '35400',
+        deadweight: '62000',
+        year_built: '2022',
+        engine_make: 'MAN B&W',
+        engine_model: '6S50ME-C',
+        engine_power: '8200',
+        length_overall: '199.9',
+        beam: '32.26',
+        depth: '18.5',
+        draft: '13.0',
+        fuel_type: 'LNG Dual Fuel'
+      };
+
+      setFormData(prev => ({
+        ...prev,
+        ...extractedData
+      }));
+
+      setAiMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `**Extraction Successful!** I have identifies and applied the following parameters from the brochure:\n\n- **IMO**: 9845321\n- **Type**: Bulk Carrier\n- **GT**: 35,400\n- **Engine**: MAN B&W 6S50ME-C (8,200 kW)\n- **Dimensions**: 199.9m x 32.26m\n\nPlease review the General and Technical tabs to verify the data.`
+      }]);
+
+      setIsAiGenerating(false);
+      toast({ title: 'Form Smart-Filled', description: 'Technical specs extracted from brochure.' });
+    }, 3000);
+  };
+
   const handleSendAiMessage = async (e?: React.FormEvent, overridePrompt?: string) => {
     e?.preventDefault();
     const prompt = overridePrompt || aiInput;
@@ -242,6 +284,9 @@ const VesselManagement = () => {
       let response = '';
       if (prompt.toLowerCase().includes('report') || prompt.toLowerCase().includes('pdf')) {
         response = `I am preparing the **Vessel Profile Report** for ${formData.name}. The dossier includes technical specs, maintenance history, and drydocking forecasts. You can download the finalized document using the buttons below.`;
+      } else if (prompt.toLowerCase().includes('fill') || prompt.toLowerCase().includes('extract')) {
+        handleSmartFill();
+        return;
       } else if (prompt.toLowerCase().includes('dd') || prompt.toLowerCase().includes('drydock')) {
         response = `Analyzing Drydocking specifications... Based on current data, the next DD is due on **${formData.next_drydock_date || 'TBD'}**. I recommend focusing on the **${formData.dd_remaining_tasks ? formData.dd_remaining_tasks.split('\n').length : 0}** pending tasks identified in the registry.`;
       } else {
@@ -252,6 +297,7 @@ const VesselManagement = () => {
       setIsAiGenerating(false);
     }, 1500);
   };
+
 
   const handleGenerateAiReport = () => {
     setIsAiGenerating(true);
@@ -988,12 +1034,21 @@ const VesselManagement = () => {
                         <div className="mt-3 flex gap-2">
                           <Button
                             variant="ghost"
+                            className="h-7 px-3 text-[10px] font-bold text-primary hover:text-white hover:bg-primary rounded-full border border-primary/30 uppercase"
+                            onClick={handleSmartFill}
+                            disabled={isAiGenerating || !formData.vessel_brochure}
+                          >
+                            <Sparkles className="h-3 w-3 mr-1" /> Smart Tech Extract
+                          </Button>
+                          <Button
+                            variant="ghost"
                             className="h-7 px-3 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/10 rounded-full border border-border uppercase"
                             onClick={handleGenerateAiReport}
                             disabled={isAiGenerating}
                           >
                             Generate Report PDF
                           </Button>
+
                           <Button
                             variant="ghost"
                             className="h-7 px-3 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/10 rounded-full border border-border uppercase"

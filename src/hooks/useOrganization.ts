@@ -130,8 +130,10 @@ export const useOrganization = () => {
       // Use RPC function for atomic creation (defined in ENABLE_ORG_CREATION.sql)
       const { data, error } = await supabase.rpc('create_new_organization', {
         org_name: name,
-        org_slug: slug
+        org_slug: slug,
+        p_user_id: user.id
       });
+
 
       if (error) throw error;
 
