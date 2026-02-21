@@ -128,7 +128,7 @@ const initialFormData: VesselFormData = {
 };
 
 const VesselManagement = () => {
-  const { vessels, loading, addVessel, updateVessel, deleteVessel } = useVessels();
+  const { vessels, loading, addVessel, updateVessel, deleteVessel, uploadVesselAsset, getVesselAssetUrl } = useVessels();
   const { addTask } = useMaintenanceTasks();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState(false);
@@ -143,7 +143,49 @@ const VesselManagement = () => {
     }
   ]);
   const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [isUploading, setIsUploading] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const photoInputRef = React.useRef<HTMLInputElement>(null);
+  const brochureInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(`photo-${index}`);
+    try {
+      const path = await uploadVesselAsset(file, editingVessel?.id);
+      if (path) {
+        const url = getVesselAssetUrl(path);
+        const newPhotos = [...formData.vessel_photos];
+        newPhotos[index] = url;
+        setFormData({ ...formData, vessel_photos: newPhotos });
+        toast({ title: 'Photo Uploaded', description: `Vessel photo ${index + 1} updated.` });
+      }
+    } finally {
+      setIsUploading(null);
+      if (photoInputRef.current) photoInputRef.current.value = '';
+    }
+  };
+
+  const handleBrochureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading('brochure');
+    try {
+      const path = await uploadVesselAsset(file, editingVessel?.id);
+      if (path) {
+        const url = getVesselAssetUrl(path);
+        setFormData({ ...formData, vessel_brochure: url });
+        toast({ title: 'Brochure Uploaded', description: 'Technical specification PDF updated.' });
+      }
+    } finally {
+      setIsUploading(null);
+      if (brochureInputRef.current) brochureInputRef.current.value = '';
+    }
+  };
+
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -753,15 +795,38 @@ const VesselManagement = () => {
                   <TabsContent value="media" className="space-y-5 mt-0">
                     <div className="space-y-4">
                       <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Vessel Gallery (5 Photos Required)</Label>
+
+                      {/* Hidden Photo Input */}
+                      <input
+                        type="file"
+                        ref={photoInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const index = parseInt(photoInputRef.current?.getAttribute('data-index') || '0');
+                          handlePhotoUpload(e, index);
+                        }}
+                      />
+
                       <div className="grid grid-cols-5 gap-3">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                          <div key={i} className="aspect-square rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 bg-slate-500/5 hover:bg-slate-500/10 transition-colors cursor-pointer group">
-                            {formData.vessel_photos[i - 1] ? (
-                              <img src={formData.vessel_photos[i - 1]} className="w-full h-full object-cover rounded-2xl" alt={`Vessel ${i}`} />
+                        {[0, 1, 2, 3, 4].map((i) => (
+                          <div
+                            key={i}
+                            onClick={() => {
+                              if (viewMode) return;
+                              photoInputRef.current?.setAttribute('data-index', i.toString());
+                              photoInputRef.current?.click();
+                            }}
+                            className="aspect-square rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 bg-slate-500/5 hover:bg-slate-500/10 transition-colors cursor-pointer group relative overflow-hidden"
+                          >
+                            {isUploading === `photo-${i}` ? (
+                              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                            ) : formData.vessel_photos[i] ? (
+                              <img src={formData.vessel_photos[i]} className="w-full h-full object-cover rounded-2xl" alt={`Vessel ${i + 1}`} />
                             ) : (
                               <>
                                 <Camera className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                                <span className="text-[10px] font-bold text-muted-foreground/60">PHOTO {i}</span>
+                                <span className="text-[10px] font-bold text-muted-foreground/60">PHOTO {i + 1}</span>
                               </>
                             )}
                           </div>
@@ -770,21 +835,48 @@ const VesselManagement = () => {
 
                       <div className="pt-4 space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Approved Vessel Brochure (PDF)</Label>
+
+                        <input
+                          type="file"
+                          ref={brochureInputRef}
+                          className="hidden"
+                          accept=".pdf"
+                          onChange={handleBrochureUpload}
+                        />
+
                         <div className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-background/50">
                           <div className="p-3 rounded-xl bg-orange-500/10 text-orange-600">
-                            <FileText className="h-6 w-6" />
+                            {isUploading === 'brochure' ? (
+                              <Loader2 className="h-6 w-6 animate-spin" />
+                            ) : (
+                              <FileText className="h-6 w-6" />
+                            )}
                           </div>
                           <div className="flex-1">
-                            <p className="text-sm font-bold">{formData.vessel_brochure ? 'brochure_v1.pdf' : 'No brochure uploaded'}</p>
-                            <p className="text-xs text-muted-foreground uppercase font-medium">Technical Specification PDF</p>
+                            <p className="text-sm font-bold truncate max-w-[200px]">
+                              {formData.vessel_brochure
+                                ? formData.vessel_brochure.split('/').pop()?.split('?')[0] || 'Technical Brochure'
+                                : 'No brochure uploaded'}
+                            </p>
+                            <p className="text-xs text-muted-foreground uppercase font-medium font-mono">
+                              {formData.vessel_brochure ? 'INDEXED ON CLOUD' : 'Technical Specification PDF'}
+                            </p>
                           </div>
-                          <Button type="button" variant="outline" size="sm" className="rounded-xl h-9">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={viewMode || isUploading === 'brochure'}
+                            className="rounded-xl h-9 hover:bg-primary hover:text-white transition-all"
+                            onClick={() => brochureInputRef.current?.click()}
+                          >
                             <Upload className="h-3.5 w-3.5 mr-2" /> Upload
                           </Button>
                         </div>
                       </div>
                     </div>
                   </TabsContent>
+
 
                   <TabsContent value="management" className="space-y-5 mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

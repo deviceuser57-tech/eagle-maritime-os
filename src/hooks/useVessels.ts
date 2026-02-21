@@ -85,7 +85,7 @@ export const useVessels = () => {
       const { data, error } = await supabase
         .from('vessels')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -101,7 +101,7 @@ export const useVessels = () => {
     }
   };
 
-  const addVessel = async (vessel: Omit<Vessel, 'id' | 'created_at' | 'updated_at' | 'org_id'> & { user_id?: string; org_id?: string }) => {
+  const addVessel = async (vessel: Omit<Vessel, 'id' | 'created_at' | 'updated_at' | 'org_id'>) => {
     if (!user || !orgId) return { error: new Error('Not authenticated or no active organization') };
 
     const { data: validated, error: validationError } = validate(vesselSchema, vessel);
@@ -113,7 +113,7 @@ export const useVessels = () => {
     try {
       const { data, error } = await supabase
         .from('vessels')
-        .insert([{ ...validated, user_id: user.id }] as any)
+        .insert([{ ...validated, org_id: orgId }] as any)
         .select()
         .single();
 
@@ -135,7 +135,7 @@ export const useVessels = () => {
         .from('vessels')
         .update(updates as any)
         .eq('id', id)
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .select()
         .single();
 
@@ -157,7 +157,7 @@ export const useVessels = () => {
         .from('vessels')
         .delete()
         .eq('id', id)
-        .eq('user_id', orgId);
+        .eq('org_id', orgId);
 
       if (error) throw error;
       setVessels(prev => prev.filter(v => v.id !== id));
@@ -169,9 +169,49 @@ export const useVessels = () => {
     }
   };
 
+  const uploadVesselAsset = async (file: File, vesselId?: string): Promise<string | null> => {
+    if (!user || !orgId) return null;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${vesselId || 'new'}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${orgId}/${fileName}`;
+
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('vessel-assets')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+      return filePath;
+    } catch (error: any) {
+      toast({
+        title: 'Upload Failed',
+        description: error.message,
+        variant: 'destructive'
+      });
+      return null;
+    }
+  };
+
+  const getVesselAssetUrl = (path: string) => {
+    if (!path) return '';
+    const { data } = supabase.storage.from('vessel-assets').getPublicUrl(path);
+    return data.publicUrl;
+  };
+
   useEffect(() => {
     fetchVessels();
   }, [user, orgId]);
 
-  return { vessels, loading, addVessel, updateVessel, deleteVessel, refetch: fetchVessels };
+  return {
+    vessels,
+    loading,
+    addVessel,
+    updateVessel,
+    deleteVessel,
+    uploadVesselAsset,
+    getVesselAssetUrl,
+    refetch: fetchVessels
+  };
+
 };

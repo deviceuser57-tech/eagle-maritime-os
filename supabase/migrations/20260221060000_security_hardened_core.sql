@@ -246,6 +246,11 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('crew-photos', 'crew-photos', false)
 ON CONFLICT (id) DO NOTHING;
 
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('vessel-assets', 'vessel-assets', true)
+ON CONFLICT (id) DO NOTHING;
+
+
 -- Policies for crew-photos
 DO $$
 BEGIN
@@ -258,7 +263,24 @@ BEGIN
     CREATE POLICY "Org members can view crew photos" ON storage.objects
       FOR SELECT TO authenticated
       USING (bucket_id = 'crew-photos');
+
+    -- Policies for vessel-assets
+    DROP POLICY IF EXISTS "Anyone can view vessel assets" ON storage.objects;
+    CREATE POLICY "Anyone can view vessel assets" ON storage.objects
+      FOR SELECT TO authenticated
+      USING (bucket_id = 'vessel-assets');
+
+    DROP POLICY IF EXISTS "Org members can upload vessel assets" ON storage.objects;
+    CREATE POLICY "Org members can upload vessel assets" ON storage.objects
+      FOR INSERT TO authenticated
+      WITH CHECK (bucket_id = 'vessel-assets');
+
+    DROP POLICY IF EXISTS "Org members can update vessel assets" ON storage.objects;
+    CREATE POLICY "Org members can update vessel assets" ON storage.objects
+      FOR UPDATE TO authenticated
+      USING (bucket_id = 'vessel-assets');
 END $$;
+
 
 -- 6. CORRECTIVE ACTION FOR "SEARCH PATH MUTABLE" (Issue 10)
 -- Update existing functions to have a fixed search path
