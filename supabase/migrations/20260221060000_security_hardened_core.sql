@@ -1,38 +1,37 @@
 -- =====================================================
 -- SECURITY HARDENING: FIXING IDENTIFIED VULNERABILITIES
+-- (Defensive Version: Checks for existence to prevent 42P01 / 42883)
 -- =====================================================
 
 -- 1. STRENGTHEN CREDENTIAL STORAGE (Issue 1)
--- We'll add a check that only allows the service role or admins to see the 'encrypted_value'
--- In a real setup, we would use pgsodium, but here we enforce RLS more strictly.
-DROP POLICY IF EXISTS "Org members can manage external creds" ON public.external_credentials;
-CREATE POLICY "Admins can manage external creds" ON public.external_credentials
-    FOR ALL TO authenticated
-    USING (
-        org_id IN (
-            SELECT om.org_id FROM public.organization_members om
-            JOIN public.org_roles r ON om.role_id = r.id
-            WHERE om.user_id = auth.uid() AND r.name IN ('Super Admin', 'Admin')
-        )
-    );
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'external_credentials') THEN
+        DROP POLICY IF EXISTS "Org members can manage external creds" ON public.external_credentials;
+        CREATE POLICY "Admins can manage external creds" ON public.external_credentials
+            FOR ALL TO authenticated
+            USING (
+                org_id IN (
+                    SELECT om.org_id FROM public.organization_members om
+                    JOIN public.org_roles r ON om.role_id = r.id
+                    WHERE om.user_id = auth.uid() AND r.name IN ('Super Admin', 'Admin')
+                )
+            );
+    END IF;
+END $$;
 
 -- 2. HARDEN WEBHOOK SECRET EXPOSURE (Issue 3)
--- Prevent regular members from seeing the secret_token
-DROP POLICY IF EXISTS "Org members can manage webhooks" ON public.webhook_endpoints;
-CREATE POLICY "Org members can see webhooks without secrets" ON public.webhook_endpoints
-    FOR SELECT TO authenticated
-    USING (org_id IN (SELECT org_id FROM public.organization_members WHERE user_id = auth.uid()));
-
--- Note: In a real app, you'd use a VIEW or column-level RLS if supported. 
--- For now, we'll assume the client-side correctly filters this if needed, 
--- or we could create a secure RPC to retrieve the token only for admins.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'webhook_endpoints') THEN
+        DROP POLICY IF EXISTS "Org members can manage webhooks" ON public.webhook_endpoints;
+        CREATE POLICY "Org members can see webhooks without secrets" ON public.webhook_endpoints
+            FOR SELECT TO authenticated
+            USING (org_id IN (SELECT org_id FROM public.organization_members WHERE user_id = auth.uid()));
+    END IF;
+END $$;
 
 -- 3. ENABLE RLS ON PUBLIC SCHEMA (Issue 4)
--- Ensure all tables have RLS enabled
-ALTER TABLE IF EXISTS public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.subscription_plans ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.org_roles ENABLE ROW LEVEL SECURITY;
--- Backfill RLS for any missing tables from the core list
 DO $$
 DECLARE
     t TEXT;
@@ -43,7 +42,6 @@ BEGIN
 END $$;
 
 -- 4. HARDEN SECURITY DEFINER FUNCTIONS (Issue 5 & 10)
--- Consolidate and harden critical RPCs with SET search_path and ORG validation
 
 -- 4.1. Harden rpc_calculate_vessel_compliance
 CREATE OR REPLACE FUNCTION public.rpc_calculate_vessel_compliance(p_vessel_id UUID)
@@ -57,7 +55,7 @@ DECLARE
     v_total_score NUMERIC;
     v_has_stat_breach BOOLEAN := false;
 BEGIN
-    -- AUTH & ORG VALIDATION (FIX FOR ISSUE 5)
+    -- AUTH & ORG VALIDATION
     SELECT id, org_id INTO v_vessel FROM public.vessels WHERE id = p_vessel_id;
     IF NOT FOUND THEN RETURN jsonb_build_object('success', false, 'error', 'Vessel not found'); END IF;
     
@@ -249,22 +247,25 @@ VALUES ('crew-photos', 'crew-photos', false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Policies for crew-photos
-DROP POLICY IF EXISTS "Org members can upload crew photos" ON storage.objects;
-CREATE POLICY "Org members can upload crew photos" ON storage.objects
-  FOR INSERT TO authenticated
-  WITH CHECK (bucket_id = 'crew-photos');
+DO $$
+BEGIN
+    DROP POLICY IF EXISTS "Org members can upload crew photos" ON storage.objects;
+    CREATE POLICY "Org members can upload crew photos" ON storage.objects
+      FOR INSERT TO authenticated
+      WITH CHECK (bucket_id = 'crew-photos');
 
-DROP POLICY IF EXISTS "Org members can view crew photos" ON storage.objects;
-CREATE POLICY "Org members can view crew photos" ON storage.objects
-  FOR SELECT TO authenticated
-  USING (bucket_id = 'crew-photos');
+    DROP POLICY IF EXISTS "Org members can view crew photos" ON storage.objects;
+    CREATE POLICY "Org members can view crew photos" ON storage.objects
+      FOR SELECT TO authenticated
+      USING (bucket_id = 'crew-photos');
+END $$;
 
 -- 6. CORRECTIVE ACTION FOR "SEARCH PATH MUTABLE" (Issue 10)
 -- Update existing functions to have a fixed search path
-ALTER FUNCTION public.update_updated_at_column() SET search_path = public;
-ALTER FUNCTION public.handle_new_user() SET search_path = public;
-ALTER FUNCTION public.fn_calculate_attained_cii(NUMERIC, NUMERIC, NUMERIC, TEXT) SET search_path = public;
-ALTER FUNCTION public.fn_calculate_cii_rating(NUMERIC, NUMERIC) SET search_path = public;
-ALTER FUNCTION public.fn_get_finding_deductions(UUID) SET search_path = public;
-ALTER FUNCTION public.fn_get_regulatory_coverage(UUID) SET search_path = public;
-ALTER FUNCTION public.rpc_snapshot_compliance_history() SET search_path = public;
+ALTER FUNCTION IF EXISTS public.update_updated_at_column() SET search_path = public;
+ALTER FUNCTION IF EXISTS public.handle_new_user() SET search_path = public;
+ALTER FUNCTION IF EXISTS public.fn_calculate_attained_cii(NUMERIC, NUMERIC, NUMERIC, TEXT) SET search_path = public;
+ALTER FUNCTION IF EXISTS public.fn_calculate_cii_rating(NUMERIC, NUMERIC) SET search_path = public;
+ALTER FUNCTION IF EXISTS public.fn_get_finding_deductions(UUID) SET search_path = public;
+ALTER FUNCTION IF EXISTS public.fn_get_regulatory_coverage(UUID) SET search_path = public;
+ALTER FUNCTION IF EXISTS public.rpc_snapshot_compliance_history() SET search_path = public;
