@@ -262,10 +262,42 @@ END $$;
 
 -- 6. CORRECTIVE ACTION FOR "SEARCH PATH MUTABLE" (Issue 10)
 -- Update existing functions to have a fixed search path
-ALTER FUNCTION IF EXISTS public.update_updated_at_column() SET search_path = public;
-ALTER FUNCTION IF EXISTS public.handle_new_user() SET search_path = public;
-ALTER FUNCTION IF EXISTS public.fn_calculate_attained_cii(NUMERIC, NUMERIC, NUMERIC, TEXT) SET search_path = public;
-ALTER FUNCTION IF EXISTS public.fn_calculate_cii_rating(NUMERIC, NUMERIC) SET search_path = public;
-ALTER FUNCTION IF EXISTS public.fn_get_finding_deductions(UUID) SET search_path = public;
-ALTER FUNCTION IF EXISTS public.fn_get_regulatory_coverage(UUID) SET search_path = public;
-ALTER FUNCTION IF EXISTS public.rpc_snapshot_compliance_history() SET search_path = public;
+-- Note: ALTER FUNCTION does not support IF EXISTS in many Postgres versions, 
+-- so we use a DO block for maximum compatibility.
+DO $$
+BEGIN
+    -- update_updated_at_column
+    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_updated_at_column' AND pronamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')) THEN
+        ALTER FUNCTION public.update_updated_at_column() SET search_path = public;
+    END IF;
+    
+    -- handle_new_user
+    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'handle_new_user' AND pronamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')) THEN
+        ALTER FUNCTION public.handle_new_user() SET search_path = public;
+    END IF;
+    
+    -- fn_calculate_attained_cii (specific signature check)
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE n.nspname = 'public' AND p.proname = 'fn_calculate_attained_cii') THEN
+        ALTER FUNCTION public.fn_calculate_attained_cii(NUMERIC, NUMERIC, NUMERIC, TEXT) SET search_path = public;
+    END IF;
+
+    -- fn_calculate_cii_rating
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE n.nspname = 'public' AND p.proname = 'fn_calculate_cii_rating') THEN
+        ALTER FUNCTION public.fn_calculate_cii_rating(NUMERIC, NUMERIC) SET search_path = public;
+    END IF;
+
+    -- fn_get_finding_deductions
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE n.nspname = 'public' AND p.proname = 'fn_get_finding_deductions') THEN
+        ALTER FUNCTION public.fn_get_finding_deductions(UUID) SET search_path = public;
+    END IF;
+
+    -- fn_get_regulatory_coverage
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE n.nspname = 'public' AND p.proname = 'fn_get_regulatory_coverage') THEN
+        ALTER FUNCTION public.fn_get_regulatory_coverage(UUID) SET search_path = public;
+    END IF;
+
+    -- rpc_snapshot_compliance_history
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE n.nspname = 'public' AND p.proname = 'rpc_snapshot_compliance_history') THEN
+        ALTER FUNCTION public.rpc_snapshot_compliance_history() SET search_path = public;
+    END IF;
+END $$;
