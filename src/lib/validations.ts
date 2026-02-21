@@ -30,7 +30,7 @@ export const vesselSchema = z.object({
   painting_details: optionalSafeString(1000),
   navigation_equipment: optionalSafeString(2000),
   accommodations_pax: optionalSafeString(500),
-}).passthrough();
+});
 
 // ── Audit ──
 export const auditSchema = z.object({
@@ -39,7 +39,7 @@ export const auditSchema = z.object({
   auditor_name: optionalSafeString(150),
   location: optionalSafeString(200),
   notes: optionalSafeString(2000),
-}).passthrough();
+});
 
 // ── Incident ──
 export const incidentSchema = z.object({
@@ -50,7 +50,7 @@ export const incidentSchema = z.object({
   description: optionalSafeString(5000),
   location: optionalSafeString(200),
   reported_by: optionalSafeString(150),
-}).passthrough();
+});
 
 // ── Crew Member ──
 export const crewMemberSchema = z.object({
@@ -60,7 +60,7 @@ export const crewMemberSchema = z.object({
   email: z.string().email('Invalid email').max(255).optional().nullable().or(z.literal('')),
   phone: optionalSafeString(30),
   nationality: optionalSafeString(100),
-}).passthrough();
+});
 
 // ── Maintenance Task ──
 export const maintenanceTaskSchema = z.object({
@@ -72,7 +72,7 @@ export const maintenanceTaskSchema = z.object({
   description: optionalSafeString(5000),
   assigned_to: optionalSafeString(150),
   notes: optionalSafeString(2000),
-}).passthrough();
+});
 
 // ── Custom Regulation ──
 export const regulationSchema = z.object({
@@ -83,7 +83,7 @@ export const regulationSchema = z.object({
   version: optionalSafeString(50),
   link: z.string().url('Invalid URL').max(2000).optional().nullable().or(z.literal('')).or(z.literal(null)),
   notes: optionalSafeString(2000),
-}).passthrough();
+});
 
 // ── Setup Company ──
 export const companySchema = z.object({
@@ -95,7 +95,7 @@ export const companySchema = z.object({
   email: z.string().email('Invalid email').max(255).optional().nullable().or(z.literal('')),
   address: optionalSafeString(500),
   remarks: optionalSafeString(2000),
-}).passthrough();
+});
 
 // ── Setup Audit Type ──
 export const auditTypeSchema = z.object({
@@ -103,14 +103,14 @@ export const auditTypeSchema = z.object({
   description: optionalSafeString(2000),
   frequency_months: z.number().int().min(1).max(120).optional().nullable(),
   is_external: z.boolean().default(false),
-}).passthrough();
+});
 
 // ── Setup Finding Type ──
 export const findingTypeSchema = z.object({
   finding_type_name: safeString(150).pipe(z.string().min(1, 'Finding type name is required')),
   severity: z.enum(['minor', 'major', 'critical']).default('minor'),
   description: optionalSafeString(2000),
-}).passthrough();
+});
 
 // ── Setup Finding Status ──
 export const findingStatusSchema = z.object({
@@ -118,14 +118,14 @@ export const findingStatusSchema = z.object({
   status_order: z.number().int().min(0).max(1000).default(0),
   is_closed: z.boolean().default(false),
   color: optionalSafeString(20),
-}).passthrough();
+});
 
 // ── Setup Root Cause ──
 export const rootCauseSchema = z.object({
   cause_name: safeString(200).pipe(z.string().min(1, 'Cause name is required')),
   category: optionalSafeString(100),
   description: optionalSafeString(2000),
-}).passthrough();
+});
 
 // ── Setup Crew Rank ──
 export const crewRankSchema = z.object({
@@ -133,41 +133,41 @@ export const crewRankSchema = z.object({
   department: optionalSafeString(100),
   rank_order: z.number().int().min(0).max(1000).default(0),
   is_officer: z.boolean().default(false),
-}).passthrough();
+});
 
 // ── Setup Nationality ──
 export const nationalitySchema = z.object({
   country_name: safeString(100).pipe(z.string().min(1, 'Country name is required')),
   country_code: optionalSafeString(10),
-}).passthrough();
+});
 
 // ── Setup Contract Type ──
 export const contractTypeSchema = z.object({
   contract_name: safeString(150).pipe(z.string().min(1, 'Contract name is required')),
   duration_months: z.number().int().min(1).max(120).optional().nullable(),
   description: optionalSafeString(2000),
-}).passthrough();
+});
 
 // ── Setup Currency ──
 export const currencySchema = z.object({
   currency_code: safeString(10).pipe(z.string().min(1, 'Currency code is required')),
   currency_name: safeString(100).pipe(z.string().min(1, 'Currency name is required')),
   symbol: optionalSafeString(10),
-}).passthrough();
+});
 
 // ── Setup Classification Society ──
 export const classificationSocietySchema = z.object({
   society_name: safeString(200).pipe(z.string().min(1, 'Society name is required')),
   abbreviation: optionalSafeString(20),
   website: z.string().url('Invalid URL').max(500).optional().nullable().or(z.literal('')).or(z.literal(null)),
-}).passthrough();
+});
 
 // ── Setup Flag State ──
 export const flagStateSchema = z.object({
   flag_name: safeString(100).pipe(z.string().min(1, 'Flag name is required')),
   flag_code: optionalSafeString(10),
   risk_level: z.enum(['low', 'standard', 'high']).default('standard'),
-}).passthrough();
+});
 
 // ── Setup Certificate Type ──
 export const certificateTypeSchema = z.object({
@@ -176,7 +176,7 @@ export const certificateTypeSchema = z.object({
   issuing_authority: optionalSafeString(200),
   validity_months: z.number().int().min(1).max(600).optional().nullable(),
   is_mandatory: z.boolean().default(false),
-}).passthrough();
+});
 
 // ── Auditor ──
 export const auditorSchema = z.object({
@@ -188,7 +188,7 @@ export const auditorSchema = z.object({
   status: safeString(50).default('available'),
   rating: z.number().min(0).max(5).optional().nullable(),
   audits_completed: z.number().int().min(0).max(100000).optional().nullable(),
-}).passthrough();
+});
 
 // ── CII Record ──
 export const ciiRecordSchema = z.object({
@@ -200,7 +200,7 @@ export const ciiRecordSchema = z.object({
   distance_travelled: z.number().min(0).max(10_000_000).optional().nullable(),
   cargo_carried: z.number().min(0).max(10_000_000).optional().nullable(),
   notes: optionalSafeString(2000),
-}).passthrough();
+});
 
 // ── Corrective Action ──
 export const correctiveActionSchema = z.object({
@@ -210,7 +210,7 @@ export const correctiveActionSchema = z.object({
   status: safeString(50).default('pending'),
   evidence_url: z.string().url('Invalid URL').max(2000).optional().nullable().or(z.literal('')).or(z.literal(null)),
   notes: optionalSafeString(2000),
-}).passthrough();
+});
 
 // ── Communication ──
 export const communicationSchema = z.object({
@@ -220,7 +220,7 @@ export const communicationSchema = z.object({
   recipient_name: optionalSafeString(150),
   priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal').optional().nullable(),
   status: safeString(50).default('unread'),
-}).passthrough();
+});
 
 // ── Vessel Certification ──
 export const vesselCertificationSchema = z.object({
@@ -232,7 +232,7 @@ export const vesselCertificationSchema = z.object({
   status: safeString(50).default('active'),
   document_url: z.string().url('Invalid URL').max(2000).optional().nullable().or(z.literal('')).or(z.literal(null)),
   notes: optionalSafeString(2000),
-}).passthrough();
+});
 
 // ── Voyage ──
 export const voyageSchema = z.object({
@@ -246,7 +246,7 @@ export const voyageSchema = z.object({
   cargo_quantity: z.number().min(0).max(10_000_000).optional().nullable(),
   status: safeString(50).default('planned'),
   notes: optionalSafeString(2000),
-}).passthrough();
+});
 
 // ── Insurance Claim ──
 export const insuranceClaimSchema = z.object({
@@ -261,7 +261,7 @@ export const insuranceClaimSchema = z.object({
   approved_amount: z.number().min(0).max(1_000_000_000).optional().nullable(),
   status: safeString(50).default('pending'),
   description: optionalSafeString(5000),
-}).passthrough();
+});
 
 // ── Project ──
 export const projectSchema = z.object({
@@ -274,7 +274,7 @@ export const projectSchema = z.object({
   completed_date: z.string().optional().nullable(),
   progress: z.number().int().min(0).max(100).optional().nullable(),
   vessel_count: z.number().int().min(0).max(10000).optional().nullable(),
-}).passthrough();
+});
 
 // Helper to validate and return either { data } or { error }
 export function validate<T>(schema: z.ZodSchema<T>, input: unknown): { data: T; error: null } | { data: null; error: z.ZodError } {

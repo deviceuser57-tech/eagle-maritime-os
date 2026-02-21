@@ -5,6 +5,7 @@ import { useOrganization } from '@/hooks/useOrganization';
 import { toast } from 'sonner';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { crewMemberSchema, validate } from '@/lib/validations';
+import { sanitizeError } from '@/utils/errorHandling';
 
 type CrewMember = Tables<'crew_members'>;
 type CrewMemberInsert = TablesInsert<'crew_members'>;
@@ -22,7 +23,7 @@ export const useCrewMembers = () => {
       const { data, error } = await supabase
         .from('crew_members')
         .select('*, vessels(name)')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('last_name', { ascending: true });
 
       if (error) throw error;
@@ -39,7 +40,11 @@ export const useCrewMembers = () => {
 
       const { data, error } = await supabase
         .from('crew_members')
-        .insert({ ...newMember, user_id: user?.id })
+        .insert({
+          ...newMember,
+          user_id: user?.id,
+          org_id: orgId
+        })
         .select()
         .single();
 
@@ -51,7 +56,7 @@ export const useCrewMembers = () => {
       toast.success('Crew member added successfully');
     },
     onError: (error) => {
-      toast.error('Failed to add crew member: ' + error.message);
+      toast.error(sanitizeError(error, 'Adding crew member'));
     },
   });
 
@@ -72,7 +77,7 @@ export const useCrewMembers = () => {
       toast.success('Crew member updated successfully');
     },
     onError: (error) => {
-      toast.error('Failed to update crew member: ' + error.message);
+      toast.error(sanitizeError(error, 'Updating crew member'));
     },
   });
 
@@ -90,7 +95,7 @@ export const useCrewMembers = () => {
       toast.success('Crew member removed successfully');
     },
     onError: (error) => {
-      toast.error('Failed to remove crew member: ' + error.message);
+      toast.error(sanitizeError(error, 'Removing crew member'));
     },
   });
 
@@ -98,7 +103,10 @@ export const useCrewMembers = () => {
     if (!user) return null;
     const path = `${user.id}/${Date.now()}_${file.name}`;
     const { error } = await supabase.storage.from('crew-photos').upload(path, file);
-    if (error) { toast.error('Photo upload failed: ' + error.message); return null; }
+    if (error) {
+      toast.error(sanitizeError(error, 'Photo upload'));
+      return null;
+    }
     return path;
   };
 

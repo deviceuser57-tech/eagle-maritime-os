@@ -205,6 +205,7 @@ export const useOrganization = () => {
   };
 
   return {
+    orgId: organization?.id,
     organization,
     members,
     invitations,
@@ -215,4 +216,5 @@ export const useOrganization = () => {
     revokeInvitation,
     fetchOrganization
   };
+
 };

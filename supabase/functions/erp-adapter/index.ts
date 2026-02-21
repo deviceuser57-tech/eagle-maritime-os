@@ -12,16 +12,59 @@ serve(async (req) => {
     }
 
     try {
+        const authHeader = req.headers.get("Authorization");
+        if (!authHeader) {
+            return new Response(JSON.stringify({ error: "No authorization header" }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 401,
+            });
+        }
+
         const supabaseClient = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
             Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
         );
 
+        // 1. Verify Authentication
+        const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
+            authHeader.replace("Bearer ", "")
+        );
+
+        if (authError || !user) {
+            return new Response(JSON.stringify({ error: "Invalid token" }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 401,
+            });
+        }
+
         const { event, payload, org_id } = await req.json();
 
-        console.log(`[ERP-Adapter] Received event: ${event} for Org: ${org_id}`);
+        if (!org_id) {
+            return new Response(JSON.stringify({ error: "Missing org_id" }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 400,
+            });
+        }
 
-        // 1. Fetch ERP Configuration for this Org
+        // 2. Verify Organization Membership
+        const { data: membership, error: memberError } = await supabaseClient
+            .from("organization_members")
+            .select("id")
+            .eq("org_id", org_id)
+            .eq("user_id", user.id)
+            .single();
+
+        if (memberError || !membership) {
+            console.error(`[ERP-Adapter] Unauthorized access attempt by ${user.id} for Org: ${org_id}`);
+            return new Response(JSON.stringify({ error: "Unauthorized access to this organization" }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 403,
+            });
+        }
+
+        console.log(`[ERP-Adapter] Authorized event: ${event} for Org: ${org_id} by User: ${user.id}`);
+
+        // 3. Fetch ERP Configuration for this Org
         const { data: erpConfig, error: configError } = await supabaseClient
             .from("erp_configurations")
             .select("*")
@@ -36,20 +79,12 @@ serve(async (req) => {
             });
         }
 
-        // 2. Data Mapping (Transformation Layer)
-        // Here logic would be added to translate 'payload' to SAP/Oracle/Dynamics formats
+        // 4. Data Mapping (Transformation Layer)
         const translatedPayload = {
             external_system: erpConfig.erp_type,
             vessel_data: payload,
             timestamp: new Date().toISOString(),
         };
-
-        // 3. Outgoing Request (Stub)
-        // const response = await fetch(erpConfig.base_url, {
-        //   method: 'POST',
-        //   body: JSON.stringify(translatedPayload),
-        //   headers: { ... }
-        // });
 
         return new Response(JSON.stringify({
             success: true,
@@ -67,3 +102,4 @@ serve(async (req) => {
         });
     }
 });
+
