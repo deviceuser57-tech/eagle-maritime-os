@@ -17,6 +17,11 @@ WHERE NOT EXISTS (SELECT 1 FROM public.org_roles WHERE name = 'Member');
 
 -- 2. Create helper function to create Organization + Admin Membership atomically
 -- This bypasses RLS issues where a user cannot select the organization until they are a member
+
+-- DROP OLD VERSIONS TO PREVENT OVERLOADING CONFLICTS
+DROP FUNCTION IF EXISTS public.create_new_organization(TEXT, TEXT);
+DROP FUNCTION IF EXISTS public.create_new_organization(TEXT, TEXT, UUID);
+
 CREATE OR REPLACE FUNCTION public.create_new_organization(org_name TEXT, org_slug TEXT, p_user_id UUID DEFAULT NULL)
 RETURNS UUID
 LANGUAGE plpgsql

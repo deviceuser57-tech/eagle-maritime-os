@@ -40,8 +40,10 @@ import {
   Upload,
   User,
   Clock,
-  Paperclip
+  Paperclip,
+  ListChecks
 } from 'lucide-react';
+
 
 interface VesselFormData {
   name: string;
@@ -136,6 +138,7 @@ const VesselManagement = () => {
   const [formData, setFormData] = useState<VesselFormData>(initialFormData);
   const [activeTab, setActiveTab] = useState('general');
   const [aiInput, setAiInput] = useState('');
+  const [showAiFeatures, setShowAiFeatures] = useState(false);
   const [aiMessages, setAiMessages] = useState<any[]>([
     {
       role: 'assistant',
@@ -154,7 +157,7 @@ const VesselManagement = () => {
 
     setIsUploading(`photo-${index}`);
     try {
-      const path = await uploadVesselAsset(file, editingVessel?.id);
+      const path = await uploadVesselAsset(file, editingVessel?.id || 'new_vessel');
       if (path) {
         const url = getVesselAssetUrl(path);
         const newPhotos = [...formData.vessel_photos];
@@ -174,7 +177,7 @@ const VesselManagement = () => {
 
     setIsUploading('brochure');
     try {
-      const path = await uploadVesselAsset(file, editingVessel?.id);
+      const path = await uploadVesselAsset(file, editingVessel?.id || 'new_vessel');
       if (path) {
         const url = getVesselAssetUrl(path);
         setFormData({ ...formData, vessel_brochure: url });
@@ -1052,11 +1055,16 @@ const VesselManagement = () => {
                           <Button
                             variant="ghost"
                             className="h-7 px-3 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/10 rounded-full border border-border uppercase"
-                            onClick={() => handleSendAiMessage(undefined, "Analyze drydocking specifications and remaining tasks.")}
-                            disabled={isAiGenerating}
+                            onClick={() => {
+                              setAiMessages(prev => [...prev, {
+                                role: 'assistant',
+                                content: `### AI-Enabled Brochure Features:\n1. **Smart Technical Autofill**: Extracts GT, IMO, Engine Power, and dimensions directly into the form.\n2. **Compliance Gap Analysis**: Identifies missing regulatory references based on vessel type.\n3. **Maintenance Forecasting**: Suggests drydocking intervals based on painting and hull coating specs.\n4. **Performance Benchmarking**: Compares fuel consumption specs against fleet averages.`
+                              }]);
+                            }}
                           >
-                            Check DD Specs
+                            <ListChecks className="h-3 w-3 mr-1" /> Feature Catalog
                           </Button>
+
                         </div>
                       </div>
                     </div>
