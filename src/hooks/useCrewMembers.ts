@@ -100,8 +100,8 @@ export const useCrewMembers = () => {
   });
 
   const uploadPhoto = async (file: File): Promise<string | null> => {
-    if (!user) return null;
-    const path = `${user.id}/${Date.now()}_${file.name}`;
+    if (!user || !orgId) return null;
+    const path = `${orgId}/crew/${user.id}/${Date.now()}_${file.name}`;
     const { error } = await supabase.storage.from('crew-photos').upload(path, file);
     if (error) {
       toast.error(sanitizeError(error, 'Photo upload'));

@@ -34,10 +34,15 @@ DECLARE
   v_user_id UUID;
 BEGIN
   -- Determine which user to use (passed parameter or auth.uid())
+  -- SECURE: Only allow p_user_id to be different from auth.uid() if service_role is used
+  IF p_user_id IS NOT NULL AND p_user_id != auth.uid() AND auth.role() != 'service_role' THEN
+    RAISE EXCEPTION 'Unauthorized: Cannot create organization for another user.';
+  END IF;
+  
   v_user_id := COALESCE(p_user_id, auth.uid());
   
   IF v_user_id IS NULL THEN
-    RAISE EXCEPTION 'User ID not found. Must be authenticated or provide p_user_id.';
+    RAISE EXCEPTION 'User ID not found. Must be authenticated.';
   END IF;
 
   -- 1. Insert Org with Free Plan (Starter)

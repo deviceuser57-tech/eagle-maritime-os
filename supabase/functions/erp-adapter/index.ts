@@ -46,17 +46,26 @@ serve(async (req) => {
             });
         }
 
-        // 2. Verify Organization Membership
-        const { data: membership, error: memberError } = await supabaseClient
+        // 2. Verify Organization Membership & Admin Role
+        const { data: memberData, error: memberError } = await supabaseClient
             .from("organization_members")
-            .select("id")
+            .select("id, org_roles(name)")
             .eq("org_id", org_id)
             .eq("user_id", user.id)
             .single();
 
-        if (memberError || !membership) {
+        if (memberError || !memberData) {
             console.error(`[ERP-Adapter] Unauthorized access attempt by ${user.id} for Org: ${org_id}`);
             return new Response(JSON.stringify({ error: "Unauthorized access to this organization" }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 403,
+            });
+        }
+
+        const roleName = (memberData.org_roles as any)?.name;
+        if (roleName !== 'Super Admin' && roleName !== 'Admin') {
+            console.error(`[ERP-Adapter] User ${user.id} has insufficient role: ${roleName}`);
+            return new Response(JSON.stringify({ error: "Insufficient permissions. Admin role required." }), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
                 status: 403,
             });
