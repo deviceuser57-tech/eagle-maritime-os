@@ -122,44 +122,53 @@ const Organization = () => {
                 </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Organization Name</CardTitle>
-                        <Building className="h-4 w-4 text-muted-foreground" />
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                <Card className="maritime-card overflow-hidden group">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Organization Name</CardTitle>
+                        <div className="p-2 rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                            <Building className="h-4 w-4" />
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{organization.name}</div>
-                        <p className="text-xs text-muted-foreground">
-                            {organization.slug}
+                    <CardContent className="relative z-10">
+                        <div className="text-2xl font-black tracking-tight">{organization.name}</div>
+                        <p className="text-xs font-bold text-muted-foreground uppercase opacity-70 mt-1">
+                            Node: {organization.slug}
                         </p>
                     </CardContent>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-12 translate-x-12 blur-3xl" />
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Subscription Plan</CardTitle>
-                        <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                <Card className="maritime-card overflow-hidden group">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Subscription Plan</CardTitle>
+                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500 transition-colors group-hover:bg-blue-500 group-hover:text-white">
+                            <ShieldCheck className="h-4 w-4" />
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">Free Tier</div>
-                        <p className="text-xs text-muted-foreground">
-                            Upgrade to unlock more features
+                    <CardContent className="relative z-10">
+                        <div className="text-2xl font-black tracking-tight text-blue-600">Enterprise Core</div>
+                        <p className="text-xs font-bold text-muted-foreground uppercase opacity-70 mt-1">
+                            High Availability Protocol
                         </p>
                     </CardContent>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full -translate-y-12 translate-x-12 blur-3xl" />
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Members</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
+                <Card className="maritime-card overflow-hidden group sm:col-span-2 lg:col-span-1">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Fleet Personnel</CardTitle>
+                        <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 transition-colors group-hover:bg-emerald-500 group-hover:text-white">
+                            <Users className="h-4 w-4" />
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{members.length}</div>
-                        <p className="text-xs text-muted-foreground">
-                            Active users in your organization
+                    <CardContent className="relative z-10">
+                        <div className="text-2xl font-black tracking-tight">{members.length}</div>
+                        <p className="text-xs font-bold text-muted-foreground uppercase opacity-70 mt-1">
+                            Authorized Crew & Admins
                         </p>
                     </CardContent>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -translate-y-12 translate-x-12 blur-3xl" />
                 </Card>
             </div>
 
@@ -216,13 +225,13 @@ const Organization = () => {
                                 </Dialog>
                             </div>
 
-                            <div className="rounded-md border">
+                            <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm overflow-hidden">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>User</TableHead>
                                             <TableHead>Role</TableHead>
-                                            <TableHead>Joined</TableHead>
+                                            <TableHead className="hidden md:table-cell">Joined</TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -247,7 +256,7 @@ const Organization = () => {
                                                         Member
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="hidden md:table-cell">
                                                     {new Date(member.joined_at).toLocaleDateString()}
                                                 </TableCell>
                                                 <TableCell className="text-right">
@@ -270,14 +279,14 @@ const Organization = () => {
 
                             {invitations && invitations.length > 0 && (
                                 <div className="mt-8">
-                                    <h3 className="text-lg font-medium mb-4">Pending Invitations</h3>
-                                    <div className="rounded-md border">
+                                    <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-4">Pending Fleet Invitations</h3>
+                                    <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm overflow-hidden">
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
                                                     <TableHead>Email</TableHead>
                                                     <TableHead>Status</TableHead>
-                                                    <TableHead>Sent At</TableHead>
+                                                    <TableHead className="hidden md:table-cell">Sent At</TableHead>
                                                     <TableHead className="text-right">Actions</TableHead>
                                                 </TableRow>
                                             </TableHeader>
@@ -295,7 +304,7 @@ const Organization = () => {
                                                                 {invite.status}
                                                             </Badge>
                                                         </TableCell>
-                                                        <TableCell>
+                                                        <TableCell className="hidden md:table-cell">
                                                             {new Date(invite.created_at).toLocaleDateString()}
                                                         </TableCell>
                                                         <TableCell className="text-right">

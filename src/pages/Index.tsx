@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Menu } from 'lucide-react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import FrontPage from '@/components/FrontPage';
 import Sidebar from '@/components/Sidebar';
@@ -40,6 +41,7 @@ const IndexContent = () => {
   const [showFrontPage, setShowFrontPage] = useState(true);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -145,7 +147,9 @@ const IndexContent = () => {
         theme={theme}
         onThemeToggle={() => setTheme(theme === 'light' ? 'dark' : 'light')}
         userEmail={user?.email || 'trial@eagle-platform.com'}
-        onSignOut={handleSignOut} />
+        onSignOut={handleSignOut}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
 
       <main className="flex-1 overflow-y-auto relative scrollbar-hide bg-background">
@@ -154,6 +158,15 @@ const IndexContent = () => {
 
         <div className="relative z-10 p-6 sm:p-8 lg:p-10">
           <div className="max-w-[1600px] mx-auto">
+            <div className="flex items-center gap-4 mb-8 lg:hidden">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-3 rounded-2xl bg-white/50 dark:bg-black/20 backdrop-blur-md border border-border/50 text-foreground"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+              <h1 className="text-xl font-black tracking-tight text-primary">EAGLE</h1>
+            </div>
             <UniversalSearch onSearch={handleSearch} />
             <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
               {renderContent()}

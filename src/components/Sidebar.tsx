@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Moon, Sun, LogOut, User } from 'lucide-react';
+import { Moon, Sun, LogOut, User, Menu, X, Building2, LayoutDashboard, Sparkles, Settings as SettingsIcon } from 'lucide-react';
 
 interface SidebarProps {
   activeSection: string;
@@ -8,10 +8,11 @@ interface SidebarProps {
   onThemeToggle: () => void;
   userEmail?: string;
   onSignOut?: () => void;
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
-const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEmail, onSignOut }: SidebarProps) => {
-  const [_] = useState(false);
+const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEmail, onSignOut, isOpen, onToggle }: SidebarProps) => {
 
   const navigationSections = [
     {
@@ -102,77 +103,96 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
   ];
 
   return (
-    <aside className="w-72 flex-shrink-0 maritime-sidebar flex flex-col h-screen shadow-2xl z-40">
-      {/* Header */}
-      <div className="p-8 border-b border-border space-y-6 bg-white/10 dark:bg-white/5 backdrop-blur-md">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-br from-primary to-blue-600 bg-clip-text text-transparent">
-              EAGLE PLATFORM
-            </h1>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-              Vessel Governance System
-            </p>
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[45] lg:hidden transition-all duration-500"
+          onClick={onToggle}
+        />
+      )}
+
+      <aside className={`fixed lg:static inset-y-0 left-0 w-72 flex-shrink-0 maritime-sidebar flex flex-col h-screen shadow-2xl z-50 transition-all duration-500 ease-in-out transform ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}>
+        {/* Header */}
+        <div className="p-8 border-b border-border space-y-6 bg-white/10 dark:bg-white/5 backdrop-blur-md">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-br from-primary to-blue-600 bg-clip-text text-transparent">
+                EAGLE PLATFORM
+              </h1>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                Vessel Governance System
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onThemeToggle}
+                className="p-2.5 rounded-2xl bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 shadow-sm"
+              >
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+              <button
+                onClick={onToggle}
+                className="lg:hidden p-2.5 rounded-2xl bg-muted text-muted-foreground hover:bg-muted/80 transition-all duration-300"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
-          <button
-            onClick={onThemeToggle}
-            className="p-2.5 rounded-2xl bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 shadow-sm"
-          >
-            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </button>
         </div>
 
-        {/* App Title Only */}
-      </div>
-
-      {/* User Info */}
-      {userEmail && (
-        <div className="px-6 py-4 border-b border-border bg-muted/10">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
-              <User className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-foreground truncate">{userEmail.split('@')[0]}</p>
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active Node</p>
+        {/* User Info */}
+        {userEmail && (
+          <div className="px-6 py-4 border-b border-border bg-muted/10">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+                <User className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-foreground truncate">{userEmail.split('@')[0]}</p>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active Node</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-8 scrollbar-hide">
-        {navigationSections.map((section, sectionIndex) => (
-          <div key={sectionIndex} className="space-y-2">
-            <h3 className="px-4 text-[10px] font-black uppercase text-muted-foreground/60 tracking-[0.25em]">
-              {section.title}
-            </h3>
-            <div className="space-y-1">
-              {section.items.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => onSectionChange(item.id)}
-                  className={`maritime-nav-link w-full text-left group gap-3 ${activeSection === item.id ? 'active' : ''
-                    }`}
-                >
-                  <span className="flex-1 truncate group-hover:translate-x-1 transition-transform">{item.label}</span>
-                  {item.badge && (
-                    <span className="bg-primary text-primary-foreground text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm">
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              ))}
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-8 scrollbar-hide">
+          {navigationSections.map((section, sectionIndex) => (
+            <div key={sectionIndex} className="space-y-2">
+              <h3 className="px-4 text-[10px] font-black uppercase text-muted-foreground/60 tracking-[0.25em]">
+                {section.title}
+              </h3>
+              <div className="space-y-1">
+                {section.items.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      onSectionChange(item.id);
+                      if (window.innerWidth < 1024) onToggle();
+                    }}
+                    className={`maritime-nav-link w-full text-left group gap-3 ${activeSection === item.id ? 'active' : ''
+                      }`}
+                  >
+                    <span className="flex-1 truncate group-hover:translate-x-1 transition-transform">{item.label}</span>
+                    {item.badge && (
+                      <span className="bg-primary text-primary-foreground text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm">
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </nav>
+          ))}
+        </nav>
 
-      {/* Sign Out Button - Hidden during trial mode */}
-      {/* {onSignOut && (
+        {/* Sign Out Button - Hidden during trial mode */}
+        {/* {onSignOut && (
         <div className="p-6 border-t border-border bg-muted/10 mt-auto">
           <button
             onClick={onSignOut}
@@ -183,7 +203,8 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
           </button>
         </div>
       )} */}
-    </aside>
+      </aside>
+    </>
   );
 };
 
