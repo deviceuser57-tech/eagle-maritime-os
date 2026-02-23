@@ -9,6 +9,7 @@ import { useCrewRanks, useNationalities, useContractTypes, useCurrencies } from 
 import { useAuditTypes, useFindingTypes, useFindingStatuses, useRootCauses } from '@/hooks/useSetupAuditConfig';
 import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
 import { useCertificateTypes } from '@/hooks/useSetupCertificates';
+import RegulatoryManager from '@/components/RegulatoryManager';
 
 interface SetupCardConfig {
   type: string;
@@ -521,6 +522,14 @@ const SetupPage = () => {
             {renderDataTable('statutoryCertificates')}
             {renderDataTable('crewCertificates')}
           </div>
+        </div>
+
+        {/* Regulatory Manager */}
+        <div className="space-y-6 lg:col-span-3">
+          <div className="px-1 border-b border-border pb-3 mb-4">
+            <h3 className="text-base font-black uppercase tracking-tight">Regulatory Intelligence Layer</h3>
+          </div>
+          <RegulatoryManager />
         </div>
       </div>
 

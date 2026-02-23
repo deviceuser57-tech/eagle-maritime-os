@@ -13,6 +13,7 @@ import { useVessels, Vessel } from '@/hooks/useVessels';
 import { useSetupCompanies } from '@/hooks/useSetupCompanies';
 import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
 import { useMaintenanceTasks } from '@/hooks/useMaintenanceTasks';
+import { useVesselRegulatoryPortfolio } from '@/hooks/useRegulations';
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -41,7 +42,8 @@ import {
   User,
   Clock,
   Paperclip,
-  ListChecks
+  ListChecks,
+  Scale
 } from 'lucide-react';
 
 
@@ -88,8 +90,8 @@ interface VesselFormData {
   // Drydocking & Extended
   last_drydock_date: string;
   next_drydock_date: string;
-  previous_dd_yard: string;
-  dd_remaining_tasks: string;
+  previous_yard: string;
+  remaining_tasks: string;
   painting_details: string;
   navigation_equipment: string;
   accommodations_pax: string;
@@ -120,7 +122,7 @@ const initialFormData: VesselFormData = {
   max_speed: '', service_speed: '', fuel_consumption: '', fuel_type: '',
   lifeboats: '', liferafts: '', crew_capacity: '', passenger_capacity: '',
   cargo_capacity: '', trading_area: '', hull_material: '', hull_coating: '',
-  last_drydock_date: '', next_drydock_date: '', previous_dd_yard: '', dd_remaining_tasks: '',
+  last_drydock_date: '', next_drydock_date: '', previous_yard: '', remaining_tasks: '',
   painting_details: '', navigation_equipment: '', accommodations_pax: '',
   vessel_photos: [], vessel_brochure: '',
   purchase_price: '', insurance_value: '', currency: 'USD',
@@ -132,9 +134,11 @@ const initialFormData: VesselFormData = {
 const VesselManagement = () => {
   const { vessels, loading, addVessel, updateVessel, deleteVessel, uploadVesselAsset, getVesselAssetUrl } = useVessels();
   const { addTask } = useMaintenanceTasks();
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [viewMode, setViewMode] = useState(false);
   const [editingVessel, setEditingVessel] = useState<Vessel | null>(null);
+  const [viewMode, setViewMode] = useState(false);
+  const { data: regulatoryPortfolio = [], isLoading: isLoadingPortfolio } = useVesselRegulatoryPortfolio(editingVessel?.id);
   const [formData, setFormData] = useState<VesselFormData>(initialFormData);
   const [activeTab, setActiveTab] = useState('general');
   const [aiInput, setAiInput] = useState('');
@@ -375,30 +379,44 @@ const VesselManagement = () => {
           head: [['Event', 'Date / Location']],
           body: [
             ['Last Drydock Date', formData.last_drydock_date || 'N/A'],
-            ['Previous DD Yard', formData.previous_dd_yard || 'N/A'],
+            ['Previous DD Yard', formData.previous_yard || 'N/A'],
             ['Next Scheduled DD', formData.next_drydock_date || 'TBD'],
           ],
           theme: 'plain',
           bodyStyles: { fontStyle: 'bold' }
         });
 
-        if (formData.dd_remaining_tasks) {
+        if (formData.remaining_tasks) {
           doc.setFontSize(10);
           doc.text('Outstanding DD Items:', 20, (doc as any).lastAutoTable.finalY + 10);
           doc.setFontSize(8);
           doc.setTextColor(100);
-          const splitTasks = doc.splitTextToSize(formData.dd_remaining_tasks, 170);
+          const splitTasks = doc.splitTextToSize(formData.remaining_tasks, 170);
           doc.text(splitTasks, 20, (doc as any).lastAutoTable.finalY + 15);
         }
 
-        // 4. VESSEL IMAGERY SECTION
+        // Regulatory Section
+        if (regulatoryPortfolio.length > 0) {
+          doc.setFontSize(14);
+          doc.text('4. REGULATORY PORTFOLIO', 20, (doc as any).lastAutoTable.finalY + 15);
+          doc.line(20, (doc as any).lastAutoTable.finalY + 17, 190, (doc as any).lastAutoTable.finalY + 17);
+
+          autoTable(doc, {
+            startY: (doc as any).lastAutoTable.finalY + 20,
+            head: [['Convention', 'Code', 'Title']],
+            body: regulatoryPortfolio.map(reg => [reg.convention, reg.code, reg.title]),
+            theme: 'striped',
+          });
+        }
+
+        // 5. VESSEL IMAGERY SECTION
         if (formData.vessel_photos && formData.vessel_photos.length > 0) {
           doc.addPage();
           doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
           doc.rect(0, 0, 210, 20, 'F');
           doc.setTextColor(255, 255, 255);
           doc.setFontSize(12);
-          doc.text('4. VESSEL IMAGERY & DOCUMENTATION', 20, 13);
+          doc.text('5. VESSEL IMAGERY & DOCUMENTATION', 20, 13);
 
           doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
           doc.setFontSize(10);
@@ -439,7 +457,7 @@ const VesselManagement = () => {
 
         doc.save(`Vessel_Profile_${formData.name || 'Registry'}.pdf`);
 
-        setAiMessages(prev => [...prev, { role: 'assistant', content: `**Report Generated Successfully.**\nVessel: ${formData.name}\nExported to high-fidelity PDF format. The document includes structural, technical, and drydocking specifications.` }]);
+        setAiMessages(prev => [...prev, { role: 'assistant', content: `**Report Generated Successfully.**\nVessel: ${formData.name}\nExported to high-fidelity PDF format. The document includes structural, technical, drydocking specifications, and the full Regulatory Portfolio (${regulatoryPortfolio.length} references).` }]);
       } catch (err: any) {
         console.error('PDF Generation Error:', err);
         setAiMessages(prev => [...prev, { role: 'assistant', content: `Error generating PDF: ${err.message}` }]);
@@ -491,8 +509,8 @@ const VesselManagement = () => {
         hull_coating: vessel.hull_coating || '',
         last_drydock_date: vessel.last_drydock_date || '',
         next_drydock_date: vessel.next_drydock_date || '',
-        previous_dd_yard: (vessel as any).previous_dd_yard || '',
-        dd_remaining_tasks: (vessel as any).dd_remaining_tasks || '',
+        previous_yard: vessel.previous_yard || '',
+        remaining_tasks: vessel.remaining_tasks || '',
         painting_details: vessel.painting_details || '',
         navigation_equipment: vessel.navigation_equipment || '',
         accommodations_pax: vessel.accommodations_pax || '',
@@ -564,8 +582,8 @@ const VesselManagement = () => {
       delivery_date: formData.delivery_date || null,
       last_drydock_date: formData.last_drydock_date || null,
       next_drydock_date: formData.next_drydock_date || null,
-      previous_dd_yard: formData.previous_dd_yard || null,
-      dd_remaining_tasks: formData.dd_remaining_tasks || null,
+      previous_yard: formData.previous_yard || null,
+      remaining_tasks: formData.remaining_tasks || null,
       painting_details: formData.painting_details || null,
       navigation_equipment: formData.navigation_equipment || null,
       accommodations_pax: formData.accommodations_pax || null,
@@ -677,10 +695,11 @@ const VesselManagement = () => {
                   <TabsTrigger value="machinery" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Gauge className="h-3 w-3 mr-1" />Eng</TabsTrigger>
                   <TabsTrigger value="safety" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Shield className="h-3 w-3 mr-1" />Safe</TabsTrigger>
                   <TabsTrigger value="drydock" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Wrench className="h-3 w-3 mr-1" />DD</TabsTrigger>
+                  <TabsTrigger value="compliance" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1 font-bold"><Scale className="h-3 w-3 mr-1" />Legal</TabsTrigger>
                   <TabsTrigger value="equipment" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Anchor className="h-3 w-3 mr-1" />Equip</TabsTrigger>
                   <TabsTrigger value="media" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Camera className="h-3 w-3 mr-1" />Media</TabsTrigger>
                   <TabsTrigger value="management" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Building2 className="h-3 w-3 mr-1" />Mgt</TabsTrigger>
-                  <TabsTrigger value="ai" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1 font-bold text-primary"><Sparkles className="h-3 w-3 mr-1" />AI</TabsTrigger>
+                  <TabsTrigger value="ai" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1 font-bold text-primary"><Scale className="h-3 w-3 mr-1 opacity-0 absolute" /><Sparkles className="h-3 w-3 mr-1" />AI</TabsTrigger>
                 </TabsList>
 
                 <div className="mt-6 bg-slate-500/5 p-6 rounded-2xl border border-border/50 min-h-[400px]">
@@ -751,7 +770,7 @@ const VesselManagement = () => {
                   <TabsContent value="drydock" className="space-y-5 mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       {renderFormField('last_drydock_date', 'Previous DD Date', formData.last_drydock_date, (v) => setFormData({ ...formData, last_drydock_date: v }), 'date')}
-                      {renderFormField('previous_dd_yard', 'Previous DD Yard', formData.previous_dd_yard, (v) => setFormData({ ...formData, previous_dd_yard: v }), 'text', 'Yard name...')}
+                      {renderFormField('previous_yard', 'Previous DD Yard', formData.previous_yard, (v) => setFormData({ ...formData, previous_yard: v }), 'text', 'Yard name...')}
                       {renderFormField('next_drydock_date', 'Next DD Date', formData.next_drydock_date, (v) => setFormData({ ...formData, next_drydock_date: v }), 'date')}
                     </div>
                     <div className="space-y-2">
@@ -763,15 +782,15 @@ const VesselManagement = () => {
                           size="sm"
                           className="h-7 text-[10px] font-bold text-primary hover:bg-primary/5 uppercase"
                           onClick={async () => {
-                            if (!formData.dd_remaining_tasks || !editingVessel) {
+                            if (!formData.remaining_tasks || !editingVessel) {
                               alert('Please save the vessel first and ensure tasks are listed.');
                               return;
                             }
-                            const tasks = formData.dd_remaining_tasks.split('\n').filter(t => t.trim());
+                            const tasks = formData.remaining_tasks.split('\n').filter(t => t.trim());
                             for (const task of tasks) {
                               await addTask({
                                 title: task,
-                                description: `Carried forward from previous Drydocking at ${formData.previous_dd_yard || 'unknown yard'}.`,
+                                description: `Carried forward from previous Drydocking at ${formData.previous_yard || 'unknown yard'}.`,
                                 vessel_id: editingVessel.id,
                                 task_type: 'drydock',
                                 priority: 'medium',
@@ -793,14 +812,50 @@ const VesselManagement = () => {
                         </Button>
                       </div>
                       <Textarea
-                        value={formData.dd_remaining_tasks}
-                        onChange={(e) => setFormData({ ...formData, dd_remaining_tasks: e.target.value })}
+                        value={formData.remaining_tasks}
+                        onChange={(e) => setFormData({ ...formData, remaining_tasks: e.target.value })}
                         placeholder="List items to be carried forward (one per line)..."
                         rows={4}
                         className="rounded-xl border-border bg-background/50 text-sm"
                         disabled={viewMode}
                       />
                     </div>
+                  </TabsContent>
+
+                  <TabsContent value="compliance" className="space-y-4 mt-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                        <Scale className="h-4 w-4" />
+                        Regulatory Portfolio for {formData.name || 'this Asset'}
+                      </Label>
+                      <Badge className="bg-primary/10 text-primary border-primary/20">{regulatoryPortfolio.length} Rules Attached</Badge>
+                    </div>
+                    {isLoadingPortfolio ? (
+                      <div className="py-10 text-center animate-pulse text-xs font-bold uppercase tracking-widest text-muted-foreground">Accessing Regulatory Intelligence...</div>
+                    ) : regulatoryPortfolio.length === 0 ? (
+                      <div className="py-12 text-center border-2 border-dashed border-border rounded-2xl bg-slate-500/5">
+                        <p className="text-muted-foreground italic text-sm">No specific regulations currently linked to this asset.</p>
+                        <p className="text-[10px] text-muted-foreground mt-2 uppercase">Links are automatically established based on Certificate types and Audit scopes.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
+                        {regulatoryPortfolio.map((reg, idx) => (
+                          <div key={idx} className="p-4 rounded-xl border border-border bg-background/40 hover:bg-background/80 transition-all group">
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-[9px] font-black border-primary/30 text-primary uppercase px-1.5">{reg.convention}</Badge>
+                                  <span className="text-xs font-black text-foreground">{reg.code}</span>
+                                </div>
+                                <h5 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{reg.title}</h5>
+                                <p className="text-[10px] text-muted-foreground line-clamp-2">{reg.description || 'Global maritime standard applicable to this asset class.'}</p>
+                              </div>
+                              <Info className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="equipment" className="space-y-5 mt-0">
