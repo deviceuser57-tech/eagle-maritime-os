@@ -39,7 +39,7 @@ export const useCIIRecords = (vesselId?: string) => {
       let query = supabase
         .from('cii_records')
         .select('*, vessels(name)')
-        .eq('user_id', orgId);
+        .eq('org_id', orgId);
 
       if (vesselId) {
         query = query.eq('vessel_id', vesselId);

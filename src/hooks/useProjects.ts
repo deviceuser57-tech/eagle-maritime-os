@@ -38,7 +38,7 @@ export const useProjects = () => {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -58,7 +58,7 @@ export const useProjects = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('projects')
-        .insert([{ ...project, user_id: user.id }])
+        .insert([{ ...project, user_id: user.id, org_id: orgId }])
         .select()
         .single();
 

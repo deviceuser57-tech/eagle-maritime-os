@@ -44,7 +44,7 @@ export const useMaintenanceTasks = () => {
       const { data, error } = await supabase
         .from('maintenance_tasks')
         .select('*, vessels(name)')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('due_date', { ascending: true });
 
       if (error) throw error;
@@ -72,7 +72,7 @@ export const useMaintenanceTasks = () => {
     try {
       const { data, error } = await supabase
         .from('maintenance_tasks')
-        .insert([{ ...task, user_id: user.id }])
+        .insert([{ ...task, user_id: user.id, org_id: orgId }])
         .select('*, vessels(name)')
         .single();
 

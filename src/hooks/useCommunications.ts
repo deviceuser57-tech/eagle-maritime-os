@@ -37,7 +37,7 @@ export const useCommunications = () => {
       const { data, error } = await supabase
         .from('communications')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('sent_at', { ascending: false });
 
       if (error) throw error;
@@ -57,7 +57,7 @@ export const useCommunications = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('communications')
-        .insert([{ ...communication, user_id: user.id }])
+        .insert([{ ...communication, user_id: user.id, org_id: orgId }])
         .select()
         .single();
 
