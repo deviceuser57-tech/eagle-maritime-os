@@ -300,12 +300,18 @@ const VesselManagement = () => {
 
       toast({ title: 'AI Extraction Complete', description: 'Vessel form updated with technical data.' });
     } catch (err: any) {
-      console.error('AI Extraction Error:', err);
+      console.error('AI Extraction Error Detailed:', err);
+      let errorMessage = err.message;
+
+      if (err.message?.includes('Failed to fetch') || err.message?.includes('Failed to send')) {
+        errorMessage = "Connection refused by AI Registry. This usually means the extraction service is deploying or the browser is blocking cross-origin AI requests. Please try again in 30 seconds.";
+      }
+
       setAiMessages(prev => [...prev, {
         role: 'assistant',
-        content: `Error during AI extraction: ${err.message}. Please verify the document format or try again manually.`
+        content: `**Extraction Blocker Encountered:** ${errorMessage}`
       }]);
-      toast({ title: 'Extraction Failed', description: err.message, variant: 'destructive' });
+      toast({ title: 'Extraction Service Unreachable', description: errorMessage, variant: 'destructive' });
     } finally {
       setIsAiGenerating(false);
     }
