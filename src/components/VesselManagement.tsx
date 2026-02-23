@@ -14,6 +14,7 @@ import { useSetupCompanies } from '@/hooks/useSetupCompanies';
 import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
 import { useMaintenanceTasks } from '@/hooks/useMaintenanceTasks';
 import { useVesselRegulatoryPortfolio } from '@/hooks/useRegulations';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -185,7 +186,10 @@ const VesselManagement = () => {
       if (path) {
         const url = getVesselAssetUrl(path);
         setFormData({ ...formData, vessel_brochure: url });
-        toast({ title: 'Brochure Uploaded', description: 'Technical specification PDF updated.' });
+        toast({ title: 'Brochure Uploaded', description: 'Technical specification PDF updated. Starting AI extraction...' });
+
+        // Automatically start AI extraction
+        await handleSmartFill(url);
       }
     } finally {
       setIsUploading(null);
@@ -234,46 +238,63 @@ const VesselManagement = () => {
   const statusOptions = ['active', 'inactive', 'maintenance', 'drydock', 'laid_up'];
   const currencies = ['USD', 'EUR', 'GBP', 'SGD', 'NOK', 'JPY'];
 
-  const handleSmartFill = () => {
-    if (!formData.vessel_brochure) {
+  const handleSmartFill = async (overrideUrl?: string) => {
+    const url = overrideUrl || formData.vessel_brochure;
+    if (!url) {
       toast({ title: 'Brochure Required', description: 'Please upload a brochure in the Media tab first.', variant: 'destructive' });
       return;
     }
 
     setIsAiGenerating(true);
-    setAiMessages(prev => [...prev, { role: 'assistant', content: "System: Initiating Deep Scan of Approved Vessel Brochure... Extraction in progress. Looking for GT, IMO, Engine Power, and Dimensions..." }]);
+    setAiMessages(prev => [...prev, {
+      role: 'assistant',
+      content: "System: Initiating Deep Scan of Vessel Technical Dossier... Extracting IMO, Dimensions, and Machinery specs using Gemini Intelligence Registry."
+    }]);
 
-    setTimeout(() => {
-      // Mock data extraction
-      const extractedData = {
-        imo_number: '9845321',
-        vessel_type: 'Bulk Carrier',
-        gross_tonnage: '35400',
-        deadweight: '62000',
-        year_built: '2022',
-        engine_make: 'MAN B&W',
-        engine_model: '6S50ME-C',
-        engine_power: '8200',
-        length_overall: '199.9',
-        beam: '32.26',
-        depth: '18.5',
-        draft: '13.0',
-        fuel_type: 'LNG Dual Fuel'
-      };
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-image', {
+        body: {
+          fileUrl: url,
+          prompt: `Extract technical specs from this vessel brochure. Return JSON with keys like: name, imo_number, gross_tonnage, deadweight, length_overall, beam, engine_make, etc.`
+        }
+      });
 
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Extraction failed');
+
+      const extracted = data.data;
+
+      // Update form data with extracted fields, merging with existing
       setFormData(prev => ({
         ...prev,
-        ...extractedData
+        ...extracted,
+        // Ensure numbers are converted to strings for the form if necessary
+        gross_tonnage: extracted.gross_tonnage?.toString() || prev.gross_tonnage,
+        deadweight: extracted.deadweight?.toString() || prev.deadweight,
+        year_built: extracted.year_built?.toString() || prev.year_built,
+        length_overall: extracted.length_overall?.toString() || prev.length_overall,
+        beam: extracted.beam?.toString() || prev.beam,
+        depth: extracted.depth?.toString() || prev.depth,
+        draft: extracted.draft?.toString() || prev.draft,
+        engine_power: extracted.engine_power?.toString() || prev.engine_power,
       }));
 
       setAiMessages(prev => [...prev, {
         role: 'assistant',
-        content: `**Extraction Successful!** I have identifies and applied the following parameters from the brochure:\n\n- **IMO**: 9845321\n- **Type**: Bulk Carrier\n- **GT**: 35,400\n- **Engine**: MAN B&W 6S50ME-C (8,200 kW)\n- **Dimensions**: 199.9m x 32.26m\n\nPlease review the General and Technical tabs to verify the data.`
+        content: `**AI Extraction Successful!**\n\nI have identified and mapped the following technical parameters:\n- **IMO**: ${extracted.imo_number || 'N/A'}\n- **Vessel Type**: ${extracted.vessel_type || 'N/A'}\n- **GT**: ${extracted.gross_tonnage || 'N/A'}\n- **Engine**: ${extracted.engine_make || ''} ${extracted.engine_model || ''}\n- **Dimensions**: ${extracted.length_overall || 'N/A'}m x ${extracted.beam || 'N/A'}m\n\nPlease check the Technical and Machinery tabs for the full updated dossier.`
       }]);
 
+      toast({ title: 'AI Extraction Complete', description: 'Vessel form updated with technical data.' });
+    } catch (err: any) {
+      console.error('AI Extraction Error:', err);
+      setAiMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `Error during AI extraction: ${err.message}. Please verify the document format or try again manually.`
+      }]);
+      toast({ title: 'Extraction Failed', description: err.message, variant: 'destructive' });
+    } finally {
       setIsAiGenerating(false);
-      toast({ title: 'Form Smart-Filled', description: 'Technical specs extracted from brochure.' });
-    }, 3000);
+    }
   };
 
   const handleSendAiMessage = async (e?: React.FormEvent, overridePrompt?: string) => {
