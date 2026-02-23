@@ -21,7 +21,7 @@ export interface CIIRecord {
   vessels?: { name: string } | null;
 }
 
-export const useCIIRecords = () => {
+export const useCIIRecords = (vesselId?: string) => {
   const [ciiRecords, setCIIRecords] = useState<CIIRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -36,11 +36,16 @@ export const useCIIRecords = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('cii_records')
         .select('*, vessels(name)')
-        .eq('user_id', orgId)
-        .order('year', { ascending: false });
+        .eq('user_id', orgId);
+
+      if (vesselId) {
+        query = query.eq('vessel_id', vesselId);
+      }
+
+      const { data, error } = await query.order('year', { ascending: false });
 
       if (error) throw error;
       setCIIRecords(data || []);
@@ -136,7 +141,7 @@ export const useCIIRecords = () => {
 
   useEffect(() => {
     fetchCIIRecords();
-  }, [user, orgId]);
+  }, [user, orgId, vesselId]);
 
   return { ciiRecords, loading, addCIIRecord, updateCIIRecord, deleteCIIRecord, refetch: fetchCIIRecords };
 };

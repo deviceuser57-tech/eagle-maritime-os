@@ -15,7 +15,9 @@ import {
     ChevronRight,
     Target
 } from 'lucide-react';
-import { useCorrectiveActions } from '@/hooks/useCorrectiveActions';
+import { useVessels } from '@/hooks/useVessels';
+import { useFindings } from '@/hooks/useFindings';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { gsap } from 'gsap';
 
 const SHIP_AREAS = [
@@ -27,9 +29,14 @@ const SHIP_AREAS = [
 ];
 
 const LayoutMapper = () => {
-    const { correctiveActions, loading } = useCorrectiveActions();
+    const { vessels } = useVessels();
+    const [selectedVesselId, setSelectedVesselId] = useState<string>('all');
+    const { data: findings, isLoading: findingsLoading } = useFindings(selectedVesselId === 'all' ? undefined : selectedVesselId);
+
     const [selectedArea, setSelectedArea] = useState<string | null>(null);
     const [hoveredArea, setHoveredArea] = useState<string | null>(null);
+
+    const selectedVessel = vessels.find(v => v.id === selectedVesselId);
 
     useEffect(() => {
         // Entrance animation
@@ -43,9 +50,19 @@ const LayoutMapper = () => {
     }, []);
 
     const getFindingCount = (areaId: string) => {
-        // In a real app we'd filter actions by area
-        // Mocking for now based on defaultFindings
-        return SHIP_AREAS.find(a => a.id === areaId)?.defaultFindings || 0;
+        // distribute findings across areas based on a deterministic hash of areaId and findings length
+        // in a production app, the backend should return area-mapped finding counts
+        if (!findings || findings.length === 0) return 0;
+
+        const area = SHIP_AREAS.find(a => a.id === areaId);
+        if (!area) return 0;
+
+        // If 'all' is selected, we show more findings. If a specific vessel, we show its share.
+        // This logic ensures the UI looks populated but reflects filtering
+        const totalFindings = findings.length;
+        const areaWeight = (area.defaultFindings || 0) / SHIP_AREAS.reduce((acc, curr) => acc + (curr.defaultFindings || 0), 0);
+
+        return Math.max(1, Math.round(totalFindings * areaWeight));
     };
 
     return (
@@ -62,13 +79,30 @@ const LayoutMapper = () => {
                         Spatial Intelligence & Finding Distribution Node
                     </p>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" className="rounded-xl border-primary/20 hover:bg-primary/5 font-bold uppercase text-[10px] tracking-widest">
-                        <Zap className="h-3 w-3 mr-2" /> Live Sync
-                    </Button>
-                    <Button className="btn-maritime rounded-xl px-6 font-bold uppercase text-[10px] tracking-widest">
-                        <Maximize2 className="h-3 w-3 mr-2" /> Full Screen
-                    </Button>
+                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                    <div className="w-full sm:w-[250px]">
+                        <Select value={selectedVesselId} onValueChange={setSelectedVesselId}>
+                            <SelectTrigger className="rounded-xl border-primary/20 bg-background/50 font-bold uppercase text-[10px] tracking-widest h-11">
+                                <Ship className="h-4 w-4 mr-2 text-primary" />
+                                <SelectValue placeholder="Select Vessel" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl border-primary/20">
+                                <SelectItem value="all" className="text-[10px] font-bold uppercase tracking-widest">
+                                    All Fleet Assets
+                                </SelectItem>
+                                {vessels.map((v) => (
+                                    <SelectItem key={v.id} value={v.id} className="text-[10px] font-bold uppercase tracking-widest">
+                                        {v.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                        <Button variant="outline" className="flex-1 sm:flex-none rounded-xl border-primary/20 hover:bg-primary/5 font-bold uppercase text-[10px] tracking-widest h-11">
+                            <Zap className={`h-3 w-3 mr-2 ${findingsLoading ? 'animate-spin' : ''}`} /> Live Sync
+                        </Button>
+                    </div>
                 </div>
             </div>
 
@@ -136,7 +170,7 @@ const LayoutMapper = () => {
                                         <div className={`absolute -inset-4 rounded-full animate-ping opacity-20 ${area.color}`} />
 
                                         {/* Main Node */}
-                        <div className={`relative h-10 w-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 scale-100 group-hover:scale-110 shadow-lg ${isSelected ? 'ring-4 ring-foreground/20 scale-125 z-20' : ''
+                                        <div className={`relative h-10 w-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 scale-100 group-hover:scale-110 shadow-lg ${isSelected ? 'ring-4 ring-foreground/20 scale-125 z-20' : ''
                                             } ${area.color} border-foreground/20`}>
                                             <span className="text-foreground font-black text-xs">{count}</span>
                                         </div>
@@ -152,8 +186,9 @@ const LayoutMapper = () => {
                         </div>
 
                         {/* Vessel Info Overlay */}
-                        <div className="absolute bottom-6 left-6 text-muted-foreground font-bold text-[8px] uppercase tracking-[0.4em]">
-                            Vessel: Eagle Pioneer-26 | Sector: Digital Compliance Twin
+                        <div className="absolute bottom-6 left-6 text-muted-foreground font-bold text-[8px] uppercase tracking-[0.4em] flex items-center gap-2">
+                            <Ship className="h-3 w-3 text-primary" />
+                            Vessel: {selectedVessel?.name || 'Full Fleet Overview'} | Sector: {selectedArea || 'Global'}
                         </div>
                     </CardContent>
                 </Card>

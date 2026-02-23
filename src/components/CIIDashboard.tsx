@@ -15,7 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 
 const CIIDashboard = () => {
   const { toast } = useToast();
-  const { ciiRecords: records, loading, addCIIRecord: addRecord, deleteCIIRecord: deleteRecord, refetch } = useCIIRecords();
+  const [selectedVesselId, setSelectedVesselId] = useState<string>('all');
+  const { ciiRecords: records, loading, addCIIRecord: addRecord, deleteCIIRecord: deleteRecord, refetch } = useCIIRecords(selectedVesselId === 'all' ? undefined : selectedVesselId);
   const { vessels } = useVessels();
   const { orgId } = useOrganization();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -107,140 +108,161 @@ const CIIDashboard = () => {
             </Badge>
           </div>
         </div>
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="rounded-xl border-primary/20 hover:bg-primary/5 font-bold uppercase text-[10px] tracking-widest"
-            onClick={() => toast({ title: "Export Started", description: "Preparing MARPOL SEEMP Part III dataset for export..." })}
-          >
-            Export SEEMP Data
-          </Button>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="btn-maritime rounded-xl px-6 font-bold uppercase text-[10px] tracking-widest">
-                <Plus className="h-3 w-3 mr-2" /> Log Annual Emissions
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl bg-card border-border text-card-foreground">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-black uppercase tracking-widest text-primary">Log annual cii metrics</DialogTitle>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Data will be used for official SEEMP Part III reporting</p>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-6 pt-4">
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vessel</Label>
-                    <Select value={formData.vessel_id} onValueChange={(v) => setFormData({ ...formData, vessel_id: v })}>
-                      <SelectTrigger className="bg-muted/10 border-border rounded-xl">
-                        <SelectValue placeholder="Select target asset" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vessels.map((vessel) => (
-                          <SelectItem key={vessel.id} value={vessel.id}>{vessel.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Reporting Year</Label>
-                    <Input
-                      type="number"
-                      value={formData.year}
-                      onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                      className="bg-muted/10 border-border rounded-xl"
-                    />
-                  </div>
-                </div>
 
-                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">Technical Work Parameters</p>
-                  <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <div className="w-full sm:w-[200px]">
+            <Select value={selectedVesselId} onValueChange={setSelectedVesselId}>
+              <SelectTrigger className="rounded-xl border-primary/20 bg-background/50 font-bold uppercase text-[10px] tracking-widest h-11">
+                <Ship className="h-4 w-4 mr-2 text-primary" />
+                <SelectValue placeholder="Select Vessel" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-primary/20">
+                <SelectItem value="all" className="text-[10px] font-bold uppercase tracking-widest">
+                  All Assets
+                </SelectItem>
+                {vessels.map((v) => (
+                  <SelectItem key={v.id} value={v.id} className="text-[10px] font-bold uppercase tracking-widest">
+                    {v.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="rounded-xl border-primary/20 hover:bg-primary/5 font-bold uppercase text-[10px] tracking-widest h-11"
+              onClick={() => toast({ title: "Export Started", description: "Preparing MARPOL SEEMP Part III dataset for export..." })}
+            >
+              Export
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="btn-maritime rounded-xl px-6 font-bold uppercase text-[10px] tracking-widest h-11">
+                  <Plus className="h-3 w-3 mr-2" /> Log Annual
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl bg-card border-border text-card-foreground">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-black uppercase tracking-widest text-primary">Log annual cii metrics</DialogTitle>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Data will be used for official SEEMP Part III reporting</p>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+                  <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold text-muted-foreground">FUEL CONSUMPTION (TON/YR)</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vessel</Label>
+                      <Select value={formData.vessel_id} onValueChange={(v) => setFormData({ ...formData, vessel_id: v })}>
+                        <SelectTrigger className="bg-muted/10 border-border rounded-xl">
+                          <SelectValue placeholder="Select target asset" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {vessels.map((vessel) => (
+                            <SelectItem key={vessel.id} value={vessel.id}>{vessel.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Reporting Year</Label>
                       <Input
                         type="number"
-                        value={formData.fuel_consumption}
-                        onChange={(e) => setFormData({ ...formData, fuel_consumption: e.target.value })}
-                        className="bg-muted/10 border-border"
+                        value={formData.year}
+                        onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                        className="bg-muted/10 border-border rounded-xl"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary">Technical Work Parameters</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold text-muted-foreground">FUEL CONSUMPTION (TON/YR)</Label>
+                        <Input
+                          type="number"
+                          value={formData.fuel_consumption}
+                          onChange={(e) => setFormData({ ...formData, fuel_consumption: e.target.value })}
+                          className="bg-muted/10 border-border"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold text-muted-foreground">FUEL TYPE (IMO CF FACTOR)</Label>
+                        <Select value={formData.fuel_type} onValueChange={(v) => { setFormData({ ...formData, fuel_type: v }); }}>
+                          <SelectTrigger className="bg-muted/10 border-border">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="HFO">HFO (Cf: 3.114)</SelectItem>
+                            <SelectItem value="LFO">LFO (Cf: 3.151)</SelectItem>
+                            <SelectItem value="MDO">MDO (Cf: 3.206)</SelectItem>
+                            <SelectItem value="LNG">LNG (Cf: 2.750)</SelectItem>
+                            <SelectItem value="LPG">LPG (Cf: 3.000)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold text-muted-foreground">DISTANCE TRAVELLED (NM)</Label>
+                        <Input
+                          type="number"
+                          value={formData.distance_travelled}
+                          onChange={(e) => setFormData({ ...formData, distance_travelled: e.target.value })}
+                          className="bg-muted/10 border-border"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold text-muted-foreground">VESSEL CAPACITY (DWT/GT)</Label>
+                        <Input
+                          type="number"
+                          value={formData.cargo_carried}
+                          onChange={(e) => setFormData({ ...formData, cargo_carried: e.target.value })}
+                          className="bg-muted/10 border-border"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Attained CII Value</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.cii_value}
+                        readOnly
+                        className="bg-primary/20 border-primary font-black text-primary text-xl py-6 rounded-xl"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold text-muted-foreground">FUEL TYPE (IMO CF FACTOR)</Label>
-                      <Select value={formData.fuel_type} onValueChange={(v) => { setFormData({ ...formData, fuel_type: v }); }}>
-                        <SelectTrigger className="bg-muted/10 border-border">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">CII Rating (MARPOL Class)</Label>
+                      <Select value={formData.cii_rating} onValueChange={(v) => setFormData({ ...formData, cii_rating: v })}>
+                        <SelectTrigger className="h-12 bg-muted/10 border-border rounded-xl">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="HFO">HFO (Cf: 3.114)</SelectItem>
-                          <SelectItem value="LFO">LFO (Cf: 3.151)</SelectItem>
-                          <SelectItem value="MDO">MDO (Cf: 3.206)</SelectItem>
-                          <SelectItem value="LNG">LNG (Cf: 2.750)</SelectItem>
-                          <SelectItem value="LPG">LPG (Cf: 3.000)</SelectItem>
+                          <SelectItem value="A">A - Superior Performance</SelectItem>
+                          <SelectItem value="B">B - Good Performance</SelectItem>
+                          <SelectItem value="C">C - Moderate (Threshold)</SelectItem>
+                          <SelectItem value="D">D - Sub-optimal (Corrective Action Needed)</SelectItem>
+                          <SelectItem value="E">E - Critical (Immediate SEEMP Action)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold text-muted-foreground">DISTANCE TRAVELLED (NM)</Label>
-                      <Input
-                        type="number"
-                        value={formData.distance_travelled}
-                        onChange={(e) => setFormData({ ...formData, distance_travelled: e.target.value })}
-                        className="bg-muted/10 border-border"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold text-muted-foreground">VESSEL CAPACITY (DWT/GT)</Label>
-                      <Input
-                        type="number"
-                        value={formData.cargo_carried}
-                        onChange={(e) => setFormData({ ...formData, cargo_carried: e.target.value })}
-                        className="bg-muted/10 border-border"
-                      />
-                    </div>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Attained CII Value</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={formData.cii_value}
-                      readOnly
-                      className="bg-primary/20 border-primary font-black text-primary text-xl py-6 rounded-xl"
-                    />
+                  <div className="flex justify-end gap-3 mt-6">
+                    <Button type="button" variant="ghost" className="text-foreground hover:bg-muted/10" onClick={() => setIsDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" className="btn-maritime px-8">
+                      Commit Record to Registry
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">CII Rating (MARPOL Class)</Label>
-                    <Select value={formData.cii_rating} onValueChange={(v) => setFormData({ ...formData, cii_rating: v })}>
-                      <SelectTrigger className="h-12 bg-muted/10 border-border rounded-xl">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="A">A - Superior Performance</SelectItem>
-                        <SelectItem value="B">B - Good Performance</SelectItem>
-                        <SelectItem value="C">C - Moderate (Threshold)</SelectItem>
-                        <SelectItem value="D">D - Sub-optimal (Corrective Action Needed)</SelectItem>
-                        <SelectItem value="E">E - Critical (Immediate SEEMP Action)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-3 mt-6">
-                  <Button type="button" variant="ghost" className="text-foreground hover:bg-muted/10" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="btn-maritime px-8">
-                    Commit Record to Registry
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
 
@@ -331,7 +353,7 @@ const CIIDashboard = () => {
               </ResponsiveContainer>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No emission cycles recorded for this fleet node.
+                No emission cycles recorded for {selectedVesselId === 'all' ? 'this fleet node' : 'the selected vessel'}.
               </div>
             )}
           </CardContent>
