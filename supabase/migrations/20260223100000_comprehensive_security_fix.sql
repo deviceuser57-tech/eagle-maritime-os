@@ -94,9 +94,10 @@ BEGIN
         ON CONFLICT (id) DO UPDATE SET public = false;
 
         -- Apply standardized org-scoped isolation policy
-        EXECUTE format('DROP POLICY IF EXISTS "Org-scoped access for %I" ON storage.objects', bucket_name);
+        -- We use %s for the policy name part to avoid double-quoting hyphens implicitly
+        EXECUTE format('DROP POLICY IF EXISTS "Org-scoped access for %s" ON storage.objects', bucket_name);
         EXECUTE format('
-            CREATE POLICY "Org-scoped access for %I" ON storage.objects
+            CREATE POLICY "Org-scoped access for %s" ON storage.objects
             FOR ALL TO authenticated
             USING (
                 bucket_id = %L 
@@ -110,6 +111,7 @@ BEGIN
                     SELECT org_id::text FROM public.organization_members WHERE user_id = auth.uid()
                 )
             )', bucket_name, bucket_name, bucket_name);
+
     END LOOP;
 END $$;
 
