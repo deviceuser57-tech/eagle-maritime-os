@@ -8,7 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Plus, Users, Building, Settings, ShieldCheck, Trash2, Mail } from 'lucide-react';
+import { Loader2, Plus, Users, Building, Settings, ShieldCheck, Trash2, Mail, MoreVertical, Shield, UserMinus } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from 'sonner';
 import {
     Dialog,
@@ -21,12 +29,34 @@ import {
 } from "@/components/ui/dialog";
 
 const Organization = () => {
-    const { organization, members, invitations, loading, createOrganization, inviteMember, revokeInvitation } = useOrganization();
+    const {
+        organization,
+        members,
+        invitations,
+        loading,
+        createOrganization,
+        updateOrganization,
+        deleteOrganization,
+        inviteMember,
+        revokeInvitation,
+        removeMember,
+        updateMemberRole
+    } = useOrganization();
+
     const [newOrgName, setNewOrgName] = useState('');
     const [isCreating, setIsCreating] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [isInviting, setIsInviting] = useState(false);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [editOrgName, setEditOrgName] = useState(organization?.name || '');
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+    useEffect(() => {
+        if (organization?.name) {
+            setEditOrgName(organization.name);
+        }
+    }, [organization]);
 
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -58,6 +88,24 @@ const Organization = () => {
             console.error('Failed to create organization:', error);
         } finally {
             setIsCreating(false);
+        }
+    };
+
+    const handleUpdateOrg = async () => {
+        if (!editOrgName.trim()) return;
+        setIsUpdating(true);
+        try {
+            await updateOrganization({ name: editOrgName });
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleDeleteOrg = async () => {
+        try {
+            await deleteOrganization();
+        } catch (error) {
+            console.error('Failed to delete organization:', error);
         }
     };
 
@@ -260,9 +308,28 @@ const Organization = () => {
                                                     {new Date(member.joined_at).toLocaleDateString()}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button variant="ghost" size="sm" onClick={() => toast.info('Manage member coming soon')}>
-                                                        Manage
-                                                    </Button>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon">
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuLabel>Manage Member</DropdownMenuLabel>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem onClick={() => updateMemberRole(member.user_id, 'Admin')}>
+                                                                <Shield className="mr-2 h-4 w-4" />
+                                                                Promote to Admin
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                className="text-destructive focus:text-destructive"
+                                                                onClick={() => removeMember(member.user_id)}
+                                                            >
+                                                                <UserMinus className="mr-2 h-4 w-4" />
+                                                                Remove from Fleet
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -336,19 +403,51 @@ const Organization = () => {
                                 Manage your organization preferences.
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-6">
                             <div className="space-y-2">
-                                <Label htmlFor="org-name">Organization Name</Label>
-                                <Input id="org-name" defaultValue={organization.name} />
+                                <Label htmlFor="org-name" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Organization Display Name</Label>
+                                <Input
+                                    id="org-name"
+                                    value={editOrgName}
+                                    onChange={(e) => setEditOrgName(e.target.value)}
+                                    placeholder="Enter new name..."
+                                />
                             </div>
-                            <Button onClick={() => toast.success('Settings saved!')}>Save Changes</Button>
+                            <Button
+                                onClick={handleUpdateOrg}
+                                disabled={isUpdating || editOrgName === organization.name}
+                                className="w-full sm:w-auto"
+                            >
+                                {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Save Protocol Changes
+                            </Button>
 
-                            <div className="pt-6 border-t mt-6">
-                                <h3 className="text-lg font-medium text-destructive mb-2">Danger Zone</h3>
-                                <p className="text-sm text-muted-foreground mb-4">
-                                    Deleting your organization will remove all data associated with it. This action cannot be undone.
-                                </p>
-                                <Button variant="destructive">Delete Organization</Button>
+                            <div className="pt-8 border-t border-border/50 mt-8 space-y-4">
+                                <div className="space-y-1">
+                                    <h3 className="text-sm font-black text-destructive uppercase tracking-tighter">Terminal Deletion Protocol</h3>
+                                    <p className="text-xs text-muted-foreground font-medium">
+                                        Deleting this organization will permanently purge all vessels, certifications, and crew data. This action is irreversible.
+                                    </p>
+                                </div>
+                                <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="destructive" className="w-full sm:w-auto font-black italic">
+                                            Initiate Organization Purge
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Confirm Extreme Action</DialogTitle>
+                                            <DialogDescription>
+                                                Are you absolutely sure you want to delete <strong>{organization.name}</strong>? All data will be lost forever.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <DialogFooter>
+                                            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
+                                            <Button variant="destructive" onClick={handleDeleteOrg}>Purge Everything</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
                         </CardContent>
                     </Card>

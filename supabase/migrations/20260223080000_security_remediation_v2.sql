@@ -167,3 +167,62 @@ BEGIN
             USING (public.fn_is_org_admin(org_id));
     END IF;
 END $$;
+-- 8. COMPLETE RBAC POLICIES FOR ORG MANAGEMENT
+DO $$
+BEGIN
+    -- Organizations: Admins can update, everyone in org can view
+    -- Note: Selection policy already exists in enterprise_saas_core, but let's harden it.
+    ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS "Users can view organizations they belong to" ON public.organizations;
+    CREATE POLICY "Users can view organizations they belong to" 
+    ON public.organizations FOR SELECT 
+    USING (id IN (SELECT org_id FROM public.organization_members WHERE user_id = auth.uid()));
+
+    DROP POLICY IF EXISTS "Admins can update their organizations" ON public.organizations;
+    CREATE POLICY "Admins can update their organizations" 
+    ON public.organizations FOR UPDATE 
+    USING (public.fn_is_org_admin(id));
+
+    DROP POLICY IF EXISTS "Admins can delete their organizations" ON public.organizations;
+    CREATE POLICY "Admins can delete their organizations" 
+    ON public.organizations FOR DELETE 
+    USING (public.fn_is_org_admin(id));
+
+    -- Organization Members: Admins can manage, members can view
+    ALTER TABLE public.organization_members ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS "Users can view membership of their orgs" ON public.organization_members;
+    CREATE POLICY "Users can view membership of their orgs" 
+    ON public.organization_members FOR SELECT 
+    USING (org_id IN (SELECT org_id FROM public.organization_members WHERE user_id = auth.uid()));
+
+    DROP POLICY IF EXISTS "Admins can manage memberships" ON public.organization_members;
+    CREATE POLICY "Admins can manage memberships" 
+    ON public.organization_members FOR ALL 
+    USING (public.fn_is_org_admin(org_id));
+
+    -- Organization Invitations: Admins can manage, members can view
+    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'organization_invitations') THEN
+        ALTER TABLE public.organization_invitations ENABLE ROW LEVEL SECURITY;
+        
+        DROP POLICY IF EXISTS "Org members can view invitations" ON public.organization_invitations;
+        CREATE POLICY "Org members can view invitations" ON public.organization_invitations
+            FOR SELECT TO authenticated
+            USING (public.fn_is_org_member(org_id));
+
+        DROP POLICY IF EXISTS "Admins can manage invitations" ON public.organization_invitations;
+        CREATE POLICY "Admins can manage invitations" ON public.organization_invitations
+            FOR ALL TO authenticated
+            USING (public.fn_is_org_admin(org_id));
+            
+        -- Cleanup old permissive policies
+        DROP POLICY IF EXISTS "Org members can create invitations" ON public.organization_invitations;
+        DROP POLICY IF EXISTS "Org members can revoke invitations" ON public.organization_invitations;
+    END IF;
+
+    -- Roles: Everyone in org can view, Admins can manage (if needed, usually static)
+    ALTER TABLE public.org_roles ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS "Users can view roles in their org" ON public.org_roles;
+    CREATE POLICY "Users can view roles in their org" 
+    ON public.org_roles FOR SELECT 
+    USING (org_id IN (SELECT org_id FROM public.organization_members WHERE user_id = auth.uid()));
+END $$;

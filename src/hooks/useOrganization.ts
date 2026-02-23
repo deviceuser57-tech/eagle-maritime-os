@@ -206,6 +206,94 @@ export const useOrganization = () => {
     }
   };
 
+  const removeMember = async (memberUserId: string) => {
+    if (!organization) return;
+    try {
+      const { error } = await supabase
+        .from('organization_members')
+        .delete()
+        .eq('org_id', organization.id)
+        .eq('user_id', memberUserId);
+
+      if (error) throw error;
+      toast({ title: 'Member removed' });
+      fetchOrganization();
+    } catch (e: any) {
+      console.error('Remove Member Error:', e);
+      toast({ title: 'Failed to remove member', description: e.message, variant: 'destructive' });
+      throw e;
+    }
+  };
+
+  const updateMemberRole = async (memberUserId: string, roleName: string) => {
+    if (!organization) return;
+    try {
+      // Find role ID for the given name in this org
+      const { data: roleData, error: roleError } = await supabase
+        .from('org_roles')
+        .select('id')
+        .eq('org_id', organization.id)
+        .eq('name', roleName)
+        .single();
+
+      if (roleError) throw roleError;
+
+      const { error } = await supabase
+        .from('organization_members')
+        .update({ role_id: roleData.id })
+        .eq('org_id', organization.id)
+        .eq('user_id', memberUserId);
+
+      if (error) throw error;
+      toast({ title: 'Role updated' });
+      fetchOrganization();
+    } catch (e: any) {
+      console.error('Update Role Error:', e);
+      toast({ title: 'Failed to update role', description: e.message, variant: 'destructive' });
+      throw e;
+    }
+  };
+
+  const updateOrganization = async (updates: Partial<Organization>) => {
+    if (!organization) return;
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .update(updates)
+        .eq('id', organization.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      setOrganization(data);
+      toast({ title: 'Organization updated' });
+      return data;
+    } catch (e: any) {
+      console.error('Update Org Error:', e);
+      toast({ title: 'Failed to update organization', description: e.message, variant: 'destructive' });
+      throw e;
+    }
+  };
+
+  const deleteOrganization = async () => {
+    if (!organization) return;
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .delete()
+        .eq('id', organization.id);
+
+      if (error) throw error;
+      setOrganization(null);
+      toast({ title: 'Organization deleted' });
+      window.location.reload();
+    } catch (e: any) {
+      console.error('Delete Org Error:', e);
+      toast({ title: 'Failed to delete organization', description: e.message, variant: 'destructive' });
+      throw e;
+    }
+  };
+
   return {
     orgId: organization?.id,
     organization,
@@ -214,8 +302,12 @@ export const useOrganization = () => {
     loading,
     error,
     createOrganization,
+    updateOrganization,
+    deleteOrganization,
     inviteMember,
     revokeInvitation,
+    removeMember,
+    updateMemberRole,
     fetchOrganization
   };
 
