@@ -136,7 +136,9 @@ const initialFormData: VesselFormData = {
 
 const VesselManagement = () => {
   const { vessels, loading, addVessel, updateVessel, deleteVessel, uploadVesselAsset, getVesselAssetUrl } = useVessels();
+  const { organization } = useOrganization();
   const { addTask } = useMaintenanceTasks();
+
   const { toast } = useToast();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -161,10 +163,11 @@ const VesselManagement = () => {
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !organization) return;
 
     setIsUploading(`photo-${index}`);
     try {
+      // Security: File paths are prefixed with org_id for backend policy isolation
       const path = await uploadVesselAsset(file, editingVessel?.id || 'new_vessel');
       if (path) {
         const url = getVesselAssetUrl(path);
@@ -181,10 +184,11 @@ const VesselManagement = () => {
 
   const handleBrochureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !organization) return;
 
     setIsUploading('brochure');
     try {
+      // Security: File paths are prefixed with org_id for backend policy isolation
       const path = await uploadVesselAsset(file, editingVessel?.id || 'new_vessel');
       if (path) {
         const url = getVesselAssetUrl(path);
@@ -199,6 +203,7 @@ const VesselManagement = () => {
       if (brochureInputRef.current) brochureInputRef.current.value = '';
     }
   };
+
 
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
