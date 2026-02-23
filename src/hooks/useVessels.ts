@@ -193,11 +193,21 @@ export const useVessels = () => {
     }
   };
 
-  const getVesselAssetUrl = (path: string) => {
+  const getVesselAssetUrl = async (path: string) => {
     if (!path) return '';
-    const { data } = supabase.storage.from('vessel-assets').getPublicUrl(path);
-    return data.publicUrl;
+    try {
+      const { data, error } = await supabase.storage
+        .from('vessel-assets')
+        .createSignedUrl(path, 3600); // 1 hour expiry
+
+      if (error) throw error;
+      return data.signedUrl;
+    } catch (error: any) {
+      console.error('Error generating signed URL:', error);
+      return '';
+    }
   };
+
 
   useEffect(() => {
     fetchVessels();

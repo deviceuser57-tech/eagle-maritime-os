@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useOrganization } from './useOrganization';
+import { useOrganization } from '@/hooks/useOrganization';
+
 import { Regulation, CertificateRegulation, AuditRegulation, VesselRegulationTag } from '@/types';
 import { toast } from 'sonner';
 

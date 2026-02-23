@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -7,26 +7,27 @@ export interface Organization {
   id: string;
   name: string;
   slug: string;
-  plan_id?: string;
   created_at: string;
+  updated_at: string;
   userRole?: string;
 }
 
 export interface OrganizationMember {
   id: string;
+  organization_id: string;
   user_id: string;
-  role_id?: string;
-  role?: string;
-  email?: string;
+  role: string;
   joined_at: string;
+  email?: string;
 }
 
 export interface OrganizationInvitation {
   id: string;
-  org_id: string;
+  organization_id: string;
   email: string;
   role: string;
-  status: 'pending' | 'accepted' | 'expired';
+  status: string;
+  invited_by: string;
   created_at: string;
   expires_at: string;
 }
@@ -38,95 +39,65 @@ export const useOrganization = () => {
   const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [invitations, setInvitations] = useState<OrganizationInvitation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [orgId, setOrgId] = useState<string | null>(null);
 
-  const fetchOrganization = useCallback(async () => {
+  const fetchOrganizationData = useCallback(async () => {
     if (!user) {
+      setOrganization(null);
+      setMembers([]);
+      setInvitations([]);
+      setOrgId(null);
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      setError(null);
-
-      // 1. Get the user's organization(s) and role name
-      const { data: memberData, error: memberError } = await supabase
+      // 1. Get the organization the user belongs to
+      const { data: membership, error: memberError } = await supabase
         .from('organization_members')
-        .select(`
-          org_id,
-          role:org_roles(name)
-        `)
+        .select('organization_id, role, organizations(*)')
         .eq('user_id', user.id)
         .maybeSingle();
 
       if (memberError) throw memberError;
 
-      if (!memberData) {
-        setOrganization(null);
-        setLoading(false);
-        return;
-      }
+      if (membership && membership.organizations) {
+        const org = {
+          ...(membership.organizations as any),
+          userRole: membership.role
+        };
+        setOrganization(org);
+        setOrgId(org.id);
 
-      const orgId = memberData.org_id;
-      const userRole = (memberData.role as any)?.name;
+        // 2. Fetch all members of this org
+        const { data: allMembers, error: membersError } = await supabase
+          .from('organization_members')
+          .select('*')
+          .eq('organization_id', org.id);
 
-      // 2. Get Organization Details
-      const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('id', orgId)
-        .single();
+        if (membersError) throw membersError;
+        setMembers(allMembers || []);
 
-      if (orgError) throw orgError;
-      setOrganization({
-        ...orgData,
-        userRole: userRole
-      });
+        // 3. Fetch pending invitations
+        const { data: allInvites, error: invitesError } = await supabase
+          .from('organization_invitations')
+          .select('*')
+          .eq('organization_id', org.id)
+          .eq('status', 'pending');
 
-      // 3. Get Organization Members
-      // 3. Get Organization Members with Roles
-      const { data: membersData, error: membersError } = await supabase
-        .from('organization_members')
-        .select(`
-          *,
-          role:org_roles(name)
-        `)
-        .eq('org_id', orgId);
-
-      if (membersError) throw membersError;
-
-      // Transform members to include role name
-      setMembers(membersData.map((m: any) => ({
-        ...m,
-        role: m.role?.name || 'Member',
-        joined_at: m.created_at,
-      })));
-
-      // 4. Get Organization Invitations
-      // Check if table exists first (soft fail if migration not run)
-      const { data: invitationsData, error: invitationsError } = await supabase
-        .from('organization_invitations')
-        .select('*')
-        .eq('org_id', orgId);
-
-      // We don't throw heavily here because the table might not exist in older setups
-      if (invitationsError) {
-        if (invitationsError.code !== '42P01') { // undefined_table
-          console.error('Error fetching invitations:', invitationsError);
-        }
-        setInvitations([]);
+        if (invitesError) throw invitesError;
+        setInvitations(allInvites || []);
       } else {
-        setInvitations(invitationsData || []);
+        setOrganization(null);
+        setOrgId(null);
       }
-
-    } catch (err: any) {
-      console.error('Error fetching organization:', err);
-      setError(err);
+    } catch (error: any) {
+      console.error('Error fetching organization data:', error);
       toast({
-        title: 'Error loading organization',
-        description: err.message,
-        variant: 'destructive',
+        title: 'Organization Error',
+        description: error.message,
+        variant: 'destructive'
       });
     } finally {
       setLoading(false);
@@ -134,161 +105,52 @@ export const useOrganization = () => {
   }, [user, toast]);
 
   useEffect(() => {
-    fetchOrganization();
-  }, [fetchOrganization]);
+    fetchOrganizationData();
+  }, [fetchOrganizationData]);
 
   const createOrganization = async (name: string, slug: string) => {
     if (!user) return;
     try {
-      // Use RPC function for atomic creation (defined in ENABLE_ORG_CREATION.sql)
-      const { data, error } = await supabase.rpc('create_new_organization', {
-        org_name: name,
-        org_slug: slug,
-        p_user_id: user.id
-      });
-
-
-      if (error) throw error;
-
-      // Fetch the new org details
-      const { data: newOrg, error: fetchError } = await supabase
+      const { data: org, error: orgError } = await supabase
         .from('organizations')
-        .select('*')
-        .eq('id', data)
+        .insert([{ name, slug }])
+        .select()
         .single();
 
-      if (fetchError) throw fetchError;
+      if (orgError) throw orgError;
 
-      setOrganization(newOrg);
-
-      // Refresh to ensure all data contexts are updated
-      window.location.reload();
-
-      toast({ title: 'Organization created successfully' });
-      return newOrg;
-    } catch (e: any) {
-      console.error('Create Org Error:', e);
-      toast({ title: 'Failed to create organization', description: e.message, variant: 'destructive' });
-      throw e;
-    }
-  }
-
-  const inviteMember = async (email: string, role: string = 'member') => {
-    if (!user || !organization) return;
-
-    try {
-      const { error } = await supabase
-        .from('organization_invitations')
-        .insert({
-          org_id: organization.id,
-          email,
-          role,
-          invited_by: user.id
-        });
-
-      if (error) throw error;
-
-      toast({ title: 'Invitation sent', description: `Invited ${email}` });
-      fetchOrganization(); // Refresh list
-    } catch (e: any) {
-      console.error('Invite Error:', e);
-      if (e.code === '23505') { // Unique violation
-        toast({ title: 'Already invited', description: 'This user has already been invited.', variant: 'destructive' });
-      } else {
-        toast({ title: 'Failed to invite', description: e.message, variant: 'destructive' });
-      }
-      throw e;
-    }
-  };
-
-  const revokeInvitation = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('organization_invitations')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({ title: 'Invitation revoked' });
-      fetchOrganization(); // Refresh list
-    } catch (e: any) {
-      console.error('Revoke Error:', e);
-      toast({ title: 'Failed to revoke', description: e.message, variant: 'destructive' });
-      throw e;
-    }
-  };
-
-  const removeMember = async (memberUserId: string) => {
-    if (!organization) return;
-    try {
-      const { error } = await supabase
+      const { error: memberError } = await supabase
         .from('organization_members')
-        .delete()
-        .eq('org_id', organization.id)
-        .eq('user_id', memberUserId);
+        .insert([{
+          organization_id: org.id,
+          user_id: user.id,
+          role: 'Super Admin'
+        }]);
 
-      if (error) throw error;
-      toast({ title: 'Member removed' });
-      fetchOrganization();
-    } catch (e: any) {
-      console.error('Remove Member Error:', e);
-      toast({ title: 'Failed to remove member', description: e.message, variant: 'destructive' });
-      throw e;
-    }
-  };
+      if (memberError) throw memberError;
 
-  const updateMemberRole = async (memberUserId: string, roleName: string) => {
-    if (!organization) return;
-    try {
-      // Find role ID for the given name in this org
-      const { data: roleData, error: roleError } = await supabase
-        .from('org_roles')
-        .select('id')
-        .eq('org_id', organization.id)
-        .eq('name', roleName)
-        .single();
-
-      if (roleError) throw roleError;
-
-      const { error } = await supabase
-        .from('organization_members')
-        .update({ role_id: roleData.id })
-        .eq('org_id', organization.id)
-        .eq('user_id', memberUserId);
-
-      if (error) throw error;
-      toast({ title: 'Role updated' });
-      fetchOrganization();
-    } catch (e: any) {
-      console.error('Update Role Error:', e);
-      toast({ title: 'Failed to update role', description: e.message, variant: 'destructive' });
-      throw e;
+      toast({ title: 'Success', description: 'Organization created successfully' });
+      fetchOrganizationData();
+      return org;
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      throw error;
     }
   };
 
   const updateOrganization = async (updates: Partial<Organization>) => {
     if (!organization) return;
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('organizations')
         .update(updates)
-        .eq('id', organization.id)
-        .select();
+        .eq('id', organization.id);
 
       if (error) throw error;
-
-      if (!data || data.length === 0) {
-        throw new Error('Update failed or permission denied. Ensure you have Admin status.');
-      }
-
-      setOrganization({ ...organization, ...data[0] });
-      toast({ title: 'Organization updated' });
-      return data;
-    } catch (e: any) {
-      console.error('Update Org Error:', e);
-      toast({ title: 'Failed to update organization', description: e.message, variant: 'destructive' });
-      throw e;
+      toast({ title: 'Success', description: 'Organization updated' });
+      fetchOrganizationData();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
   };
 
@@ -301,23 +163,92 @@ export const useOrganization = () => {
         .eq('id', organization.id);
 
       if (error) throw error;
+      toast({ title: 'Success', description: 'Organization deleted' });
       setOrganization(null);
-      toast({ title: 'Organization deleted' });
-      window.location.reload();
-    } catch (e: any) {
-      console.error('Delete Org Error:', e);
-      toast({ title: 'Failed to delete organization', description: e.message, variant: 'destructive' });
-      throw e;
+      setOrgId(null);
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      throw error;
+    }
+  };
+
+  const inviteMember = async (email: string, role: string = 'Member') => {
+    if (!organization || !user) return;
+    try {
+      const { error } = await supabase
+        .from('organization_invitations')
+        .insert([{
+          organization_id: organization.id,
+          email,
+          role,
+          invited_by: user.id,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        }]);
+
+      if (error) throw error;
+      toast({ title: 'Success', description: `Invitation sent to ${email}` });
+      fetchOrganizationData();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      throw error;
+    }
+  };
+
+  const revokeInvitation = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('organization_invitations')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Invitation revoked' });
+      fetchOrganizationData();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const removeMember = async (userId: string) => {
+    if (!organization) return;
+    try {
+      const { error } = await supabase
+        .from('organization_members')
+        .delete()
+        .eq('organization_id', organization.id)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Member removed' });
+      fetchOrganizationData();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const updateMemberRole = async (userId: string, role: string) => {
+    if (!organization) return;
+    try {
+      const { error } = await supabase
+        .from('organization_members')
+        .update({ role })
+        .eq('organization_id', organization.id)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Role updated' });
+      fetchOrganizationData();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
   };
 
   return {
-    orgId: organization?.id,
     organization,
     members,
     invitations,
     loading,
-    error,
+    orgId,
     createOrganization,
     updateOrganization,
     deleteOrganization,
@@ -325,7 +256,6 @@ export const useOrganization = () => {
     revokeInvitation,
     removeMember,
     updateMemberRole,
-    fetchOrganization
+    refetch: fetchOrganizationData
   };
-
 };
