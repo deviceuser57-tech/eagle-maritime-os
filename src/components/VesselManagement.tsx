@@ -306,18 +306,18 @@ const VesselManagement = () => {
 
       toast({ title: 'AI Extraction Complete', description: 'Vessel form updated with technical data.' });
     } catch (err: any) {
-      console.error('AI Extraction Error Detailed:', err);
+      console.error('AI Extraction Cloud Error:', err);
       let errorMessage = err.message;
 
       if (err.message?.includes('Failed to fetch') || err.message?.includes('Failed to send')) {
-        errorMessage = "Connection refused by AI Registry. This usually means the extraction service is deploying or the browser is blocking cross-origin AI requests. Please try again in 30 seconds.";
+        errorMessage = `Connectivity Failure: The browser could not reach the extraction service at ${import.meta.env.VITE_SUPABASE_URL}. This usually means the Edge Function 'analyze-image' is not yet deployed or is being blocked by a security extension.`;
       }
 
       setAiMessages(prev => [...prev, {
         role: 'assistant',
-        content: `**Extraction Blocker Encountered:** ${errorMessage}`
+        content: `**Extraction Blocker:** ${errorMessage}`
       }]);
-      toast({ title: 'Extraction Service Unreachable', description: errorMessage, variant: 'destructive' });
+      toast({ title: 'Service Unreachable', description: 'Network connection to the AI Registry failed. Verify function deployment.', variant: 'destructive' });
     } finally {
       setIsAiGenerating(false);
     }

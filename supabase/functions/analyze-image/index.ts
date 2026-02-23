@@ -1,4 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+// Modern Supabase Edge Function using Deno.serve
+import "https://deno.land/x/xhr@0.1.0/mod.ts"
 import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.21.0"
 
 const corsHeaders = {
@@ -6,20 +7,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-console.log("Analyze-Image Function Initializing...");
+console.log("Analyze-Image (Deno.serve) Initializing...");
 
-serve(async (req) => {
+Deno.serve(async (req: Request) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { fileUrl, contentType, prompt: customPrompt } = await req.json()
-    console.log(`Processing file: ${fileUrl}`);
+    const body = await req.json();
+    const { fileUrl, contentType, prompt: customPrompt } = body;
+
+    console.log(`Analyzing Vessel Document: ${fileUrl}`);
 
     const apiKey = Deno.env.get('GEMINI_API_KEY') || Deno.env.get('LOVABLE_API_KEY');
     if (!apiKey) {
-      throw new Error('Missing API Key (GEMINI_API_KEY or LOVABLE_API_KEY)');
+      console.error("Missing Gemini API Key");
+      return new Response(
+        JSON.stringify({ success: false, error: "AI Registry Configuration Missing: GEMINI_API_KEY" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 } // Return 200 to show custom error in frontend
+      );
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -28,8 +36,11 @@ serve(async (req) => {
       generationConfig: { responseMimeType: "application/json" }
     });
 
+    // Fetch the file content
     const fileResponse = await fetch(fileUrl);
-    if (!fileResponse.ok) throw new Error(`Fetch failed: ${fileResponse.statusText}`);
+    if (!fileResponse.ok) {
+      throw new Error(`Failed to fetch document: ${fileResponse.statusText}`);
+    }
 
     const blob = await fileResponse.blob();
     const buffer = await blob.arrayBuffer();
@@ -37,10 +48,16 @@ serve(async (req) => {
 
     const systemPrompt = `
       Extract vessel technical specifications from the provided brochure/document.
-      Return a flat JSON object with standard maritime keys (imo_number, gross_tonnage, length_overall, beam, engine_model, etc.).
+      Return a FLAT JSON object with standard maritime keys: 
+      - name, imo_number, vessel_type, flag_state, port_of_registry, call_sign, mmsi_number, official_number,
+      - gross_tonnage, net_tonnage, deadweight, year_built, classification_society, class_number,
+      - length_overall, beam, depth, draft, engine_make, engine_model, engine_power,
+      - propulsion_type, max_speed, service_speed, fuel_consumption, fuel_type,
+      - cargo_capacity, passenger_capacity, crew_capacity, hull_material
       Values should be strings. Return ONLY pure JSON.
     `;
 
+    console.log("Invoking Gemini 1.5 Flash Technical Analysis...");
     const result = await model.generateContent([
       {
         inlineData: {
@@ -52,16 +69,16 @@ serve(async (req) => {
     ]);
 
     const responseText = result.response.text();
-    console.log("Gemini Output received");
+    console.log("Analysis Complete");
 
-    // Robust JSON parsing
+    // Robust JSON parsing fallback
     let data;
     try {
       data = JSON.parse(responseText.replace(/```json|```/g, "").trim());
     } catch (e) {
       const match = responseText.match(/\{[\s\S]*\}/);
       if (match) data = JSON.parse(match[0]);
-      else throw new Error("Invalid AI response format");
+      else throw new Error("Invalid intelligence format returned by Gemini");
     }
 
     return new Response(
@@ -70,7 +87,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error(`Error: ${error.message}`);
+    console.error(`Edge Function Runtime Error: ${error.message}`);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
