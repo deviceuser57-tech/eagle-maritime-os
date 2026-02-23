@@ -9,6 +9,7 @@ export interface Organization {
   slug: string;
   plan_id?: string;
   created_at: string;
+  userRole?: string;
 }
 
 export interface OrganizationMember {
@@ -49,22 +50,26 @@ export const useOrganization = () => {
       setLoading(true);
       setError(null);
 
-      // 1. Get the user's organization(s)
-      const { data: orgIds, error: memberError } = await supabase
+      // 1. Get the user's organization(s) and role name
+      const { data: memberData, error: memberError } = await supabase
         .from('organization_members')
-        .select('org_id')
+        .select(`
+          org_id,
+          role:org_roles(name)
+        `)
         .eq('user_id', user.id)
-        .limit(1);
+        .maybeSingle();
 
       if (memberError) throw memberError;
 
-      if (!orgIds || orgIds.length === 0) {
+      if (!memberData) {
         setOrganization(null);
         setLoading(false);
         return;
       }
 
-      const orgId = orgIds[0].org_id;
+      const orgId = memberData.org_id;
+      const userRole = (memberData.role as any)?.name;
 
       // 2. Get Organization Details
       const { data: orgData, error: orgError } = await supabase
@@ -74,19 +79,27 @@ export const useOrganization = () => {
         .single();
 
       if (orgError) throw orgError;
-      setOrganization(orgData);
+      setOrganization({
+        ...orgData,
+        userRole: userRole
+      });
 
       // 3. Get Organization Members
+      // 3. Get Organization Members with Roles
       const { data: membersData, error: membersError } = await supabase
         .from('organization_members')
-        .select('*')
+        .select(`
+          *,
+          role:org_roles(name)
+        `)
         .eq('org_id', orgId);
 
       if (membersError) throw membersError;
 
-      // Transform members
-      setMembers(membersData.map(m => ({
+      // Transform members to include role name
+      setMembers(membersData.map((m: any) => ({
         ...m,
+        role: m.role?.name || 'Member',
         joined_at: m.created_at,
       })));
 
@@ -261,11 +274,15 @@ export const useOrganization = () => {
         .from('organizations')
         .update(updates)
         .eq('id', organization.id)
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
-      setOrganization(data);
+
+      if (!data || data.length === 0) {
+        throw new Error('Update failed or permission denied. Ensure you have Admin status.');
+      }
+
+      setOrganization({ ...organization, ...data[0] });
       toast({ title: 'Organization updated' });
       return data;
     } catch (e: any) {

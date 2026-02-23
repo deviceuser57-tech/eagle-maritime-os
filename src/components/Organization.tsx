@@ -52,6 +52,9 @@ const Organization = () => {
     const [editOrgName, setEditOrgName] = useState(organization?.name || '');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+    // Determine administrative status
+    const isAdmin = organization?.userRole === 'Super Admin' || organization?.userRole === 'Admin';
+
     useEffect(() => {
         if (organization?.name) {
             setEditOrgName(organization.name);
@@ -238,9 +241,9 @@ const Organization = () => {
                             <div className="mb-4 flex justify-end">
                                 <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
                                     <DialogTrigger asChild>
-                                        <Button>
+                                        <Button disabled={!isAdmin}>
                                             <Plus className="mr-2 h-4 w-4" />
-                                            Invite Member
+                                            {isAdmin ? 'Invite Member' : 'Admin Access Required'}
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-[425px]">
@@ -301,7 +304,7 @@ const Organization = () => {
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge variant="outline">
-                                                        Member
+                                                        {member.role || 'Member'}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="hidden md:table-cell">
@@ -310,7 +313,7 @@ const Organization = () => {
                                                 <TableCell className="text-right">
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon">
+                                                            <Button variant="ghost" size="icon" disabled={!isAdmin}>
                                                                 <MoreVertical className="h-4 w-4" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
@@ -411,15 +414,16 @@ const Organization = () => {
                                     value={editOrgName}
                                     onChange={(e) => setEditOrgName(e.target.value)}
                                     placeholder="Enter new name..."
+                                    disabled={!isAdmin}
                                 />
                             </div>
                             <Button
                                 onClick={handleUpdateOrg}
-                                disabled={isUpdating || editOrgName === organization.name}
+                                disabled={isUpdating || editOrgName === organization.name || !isAdmin}
                                 className="w-full sm:w-auto"
                             >
                                 {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Save Protocol Changes
+                                {isAdmin ? 'Save Protocol Changes' : 'Admin Privileges Required'}
                             </Button>
 
                             <div className="pt-8 border-t border-border/50 mt-8 space-y-4">
@@ -427,12 +431,13 @@ const Organization = () => {
                                     <h3 className="text-sm font-black text-destructive uppercase tracking-tighter">Terminal Deletion Protocol</h3>
                                     <p className="text-xs text-muted-foreground font-medium">
                                         Deleting this organization will permanently purge all vessels, certifications, and crew data. This action is irreversible.
+                                        {!isAdmin && <span className="block mt-1 text-rose-500 font-bold">LOCKED: Requires Admin Clearance.</span>}
                                     </p>
                                 </div>
                                 <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                                     <DialogTrigger asChild>
-                                        <Button variant="destructive" className="w-full sm:w-auto font-black italic">
-                                            Initiate Organization Purge
+                                        <Button variant="destructive" className="w-full sm:w-auto font-black italic" disabled={!isAdmin}>
+                                            {isAdmin ? 'Initiate Organization Purge' : 'Purge Interface Locked'}
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent>
