@@ -14,6 +14,7 @@ import { useSetupCompanies } from '@/hooks/useSetupCompanies';
 import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
 import { useMaintenanceTasks } from '@/hooks/useMaintenanceTasks';
 import { useVesselRegulatoryPortfolio } from '@/hooks/useRegulations';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
@@ -44,7 +45,8 @@ import {
   Clock,
   Paperclip,
   ListChecks,
-  Scale
+  Scale,
+  Info
 } from 'lucide-react';
 
 
@@ -135,6 +137,7 @@ const initialFormData: VesselFormData = {
 const VesselManagement = () => {
   const { vessels, loading, addVessel, updateVessel, deleteVessel, uploadVesselAsset, getVesselAssetUrl } = useVessels();
   const { addTask } = useMaintenanceTasks();
+  const { toast } = useToast();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVessel, setEditingVessel] = useState<Vessel | null>(null);
@@ -238,8 +241,10 @@ const VesselManagement = () => {
   const statusOptions = ['active', 'inactive', 'maintenance', 'drydock', 'laid_up'];
   const currencies = ['USD', 'EUR', 'GBP', 'SGD', 'NOK', 'JPY'];
 
-  const handleSmartFill = async (overrideUrl?: string) => {
-    const url = overrideUrl || formData.vessel_brochure;
+  const handleSmartFill = async (overrideUrl?: string | React.MouseEvent) => {
+    // If called from a button click, the first argument is a MouseEvent
+    const url = typeof overrideUrl === 'string' ? overrideUrl : formData.vessel_brochure;
+
     if (!url) {
       toast({ title: 'Brochure Required', description: 'Please upload a brochure in the Media tab first.', variant: 'destructive' });
       return;
@@ -255,7 +260,7 @@ const VesselManagement = () => {
       const { data, error } = await supabase.functions.invoke('analyze-image', {
         body: {
           fileUrl: url,
-          prompt: `Extract technical specs from this vessel brochure. Return JSON with keys like: name, imo_number, gross_tonnage, deadweight, length_overall, beam, engine_make, etc.`
+          prompt: `Extract technical specs from this vessel brochure. Return JSON with keys matching these exactly: name, imo_number, vessel_type, flag_state, port_of_registry, call_sign, mmsi_number, official_number, gross_tonnage, net_tonnage, deadweight, year_built, classification_society, class_number, length_overall, beam, depth, draft, engine_make, engine_model, engine_power, propulsion_type, max_speed, service_speed, fuel_consumption, fuel_type, cargo_capacity, passenger_capacity, crew_capacity, hull_material.`
         }
       });
 
@@ -264,20 +269,29 @@ const VesselManagement = () => {
 
       const extracted = data.data;
 
-      // Update form data with extracted fields, merging with existing
-      setFormData(prev => ({
-        ...prev,
-        ...extracted,
-        // Ensure numbers are converted to strings for the form if necessary
-        gross_tonnage: extracted.gross_tonnage?.toString() || prev.gross_tonnage,
-        deadweight: extracted.deadweight?.toString() || prev.deadweight,
-        year_built: extracted.year_built?.toString() || prev.year_built,
-        length_overall: extracted.length_overall?.toString() || prev.length_overall,
-        beam: extracted.beam?.toString() || prev.beam,
-        depth: extracted.depth?.toString() || prev.depth,
-        draft: extracted.draft?.toString() || prev.draft,
-        engine_power: extracted.engine_power?.toString() || prev.engine_power,
-      }));
+      // Update form data with extracted fields, ensuring everything is a string for the form inputs
+      setFormData(prev => {
+        const next = { ...prev };
+
+        // Map common fields, converting to string and handling potential key mismatches
+        const fields = [
+          'name', 'imo_number', 'vessel_type', 'flag_state', 'port_of_registry',
+          'call_sign', 'mmsi_number', 'official_number', 'gross_tonnage',
+          'net_tonnage', 'deadweight', 'year_built', 'classification_society',
+          'class_number', 'length_overall', 'beam', 'depth', 'draft',
+          'engine_make', 'engine_model', 'engine_power', 'propulsion_type',
+          'max_speed', 'service_speed', 'fuel_consumption', 'fuel_type',
+          'cargo_capacity', 'passenger_capacity', 'crew_capacity', 'hull_material'
+        ];
+
+        fields.forEach(field => {
+          if (extracted[field] !== undefined && extracted[field] !== null) {
+            (next as any)[field] = extracted[field].toString();
+          }
+        });
+
+        return next;
+      });
 
       setAiMessages(prev => [...prev, {
         role: 'assistant',
@@ -316,7 +330,7 @@ const VesselManagement = () => {
         handleSmartFill();
         return;
       } else if (prompt.toLowerCase().includes('dd') || prompt.toLowerCase().includes('drydock')) {
-        response = `Analyzing Drydocking specifications... Based on current data, the next DD is due on **${formData.next_drydock_date || 'TBD'}**. I recommend focusing on the **${formData.dd_remaining_tasks ? formData.dd_remaining_tasks.split('\n').length : 0}** pending tasks identified in the registry.`;
+        response = `Analyzing Drydocking specifications... Based on current data, the next DD is due on **${formData.next_drydock_date || 'TBD'}**. I recommend focusing on the **${formData.remaining_tasks ? formData.remaining_tasks.split('\n').length : 0}** pending tasks identified in the registry.`;
       } else {
         response = `Received your query regarding **${formData.name}**. Based on the technical data, this ${formData.vessel_type || 'vessel'} has a GT of ${formData.gross_tonnage || 'N/A'}. Is there a specific machinery or safety spec you'd like me to extract?`;
       }
@@ -1114,7 +1128,7 @@ const VesselManagement = () => {
                           <Button
                             variant="ghost"
                             className="h-7 px-3 text-[10px] font-bold text-primary hover:text-white hover:bg-primary rounded-full border border-primary/30 uppercase"
-                            onClick={handleSmartFill}
+                            onClick={() => handleSmartFill()}
                             disabled={isAiGenerating || !formData.vessel_brochure}
                           >
                             <Sparkles className="h-3 w-3 mr-1" /> Smart Tech Extract
