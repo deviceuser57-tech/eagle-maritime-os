@@ -257,17 +257,23 @@ const VesselManagement = () => {
     }]);
 
     try {
+      console.log('Initiating AI Technical Extraction for:', url);
       const { data, error } = await supabase.functions.invoke('analyze-image', {
         body: {
           fileUrl: url,
-          prompt: `Extract technical specs from this vessel brochure. Return JSON with keys matching these exactly: name, imo_number, vessel_type, flag_state, port_of_registry, call_sign, mmsi_number, official_number, gross_tonnage, net_tonnage, deadweight, year_built, classification_society, class_number, length_overall, beam, depth, draft, engine_make, engine_model, engine_power, propulsion_type, max_speed, service_speed, fuel_consumption, fuel_type, cargo_capacity, passenger_capacity, crew_capacity, hull_material.`
+          prompt: `Strict Technical Extraction. Analyze the maritime dossier and return only a JSON object. Keys: name, imo_number, vessel_type, gross_tonnage, length_overall, beam, engine_model, engine_make.`
         }
       });
 
-      if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || 'Extraction failed');
+      if (error) {
+        console.error('Supabase Invoke Error:', error);
+        throw new Error(`Cloud connection failed: ${error.message || 'Service unreachable'}`);
+      }
+
+      if (!data?.success) throw new Error(data?.error || 'Intelligence extraction failed');
 
       const extracted = data.data;
+      console.log('AI Data Payload Received:', extracted);
 
       // Update form data with extracted fields, ensuring everything is a string for the form inputs
       setFormData(prev => {
