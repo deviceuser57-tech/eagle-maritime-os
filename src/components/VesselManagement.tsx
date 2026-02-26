@@ -271,8 +271,7 @@ const VesselManagement = () => {
       console.log('Initiating AI Technical Extraction for:', url);
       const { data, error } = await supabase.functions.invoke('analyze-image', {
         body: {
-          fileUrl: url,
-          prompt: `Strict Technical Extraction. Analyze the maritime dossier and return only a JSON object. Keys: name, imo_number, vessel_type, gross_tonnage, length_overall, beam, engine_model, engine_make.`
+          fileUrl: url
         }
       });
 
@@ -286,24 +285,44 @@ const VesselManagement = () => {
       const extracted = data.data;
       console.log('AI Data Payload Received:', extracted);
 
-      // Update form data with extracted fields, ensuring everything is a string for the form inputs
+      // Normalization Map for common Gemini variations
+      const keyNormalization: Record<string, string> = {
+        'vesselName': 'name',
+        'vessel_name': 'name',
+        'imo': 'imo_number',
+        'imoNumber': 'imo_number',
+        'vesselType': 'vessel_type',
+        'vessel_type': 'vessel_type',
+        'gt': 'gross_tonnage',
+        'grossTonnage': 'gross_tonnage',
+        'dwt': 'deadweight',
+        'loa': 'length_overall',
+        'lengthOverall': 'length_overall',
+        'engineMake': 'engine_make',
+        'engineModel': 'engine_model',
+        'enginePower': 'engine_power'
+      };
+
+      // Update form data with extracted fields
       setFormData(prev => {
         const next = { ...prev };
 
-        // Map common fields, converting to string and handling potential key mismatches
-        const fields = [
-          'name', 'imo_number', 'vessel_type', 'flag_state', 'port_of_registry',
-          'call_sign', 'mmsi_number', 'official_number', 'gross_tonnage',
-          'net_tonnage', 'deadweight', 'year_built', 'classification_society',
-          'class_number', 'length_overall', 'beam', 'depth', 'draft',
-          'engine_make', 'engine_model', 'engine_power', 'propulsion_type',
-          'max_speed', 'service_speed', 'fuel_consumption', 'fuel_type',
-          'cargo_capacity', 'passenger_capacity', 'crew_capacity', 'hull_material'
-        ];
+        // 1. Apply Normalization Map
+        Object.entries(extracted).forEach(([key, value]) => {
+          const normalizedKey = keyNormalization[key] || key;
+          if (normalizedKey in next && value !== null && value !== undefined) {
+            (next as any)[normalizedKey] = value.toString();
+          }
+        });
 
-        fields.forEach(field => {
-          if (extracted[field] !== undefined && extracted[field] !== null) {
-            (next as any)[field] = extracted[field].toString();
+        // 2. Handle Case-Insensitive Matching for all standard fields
+        const allFields = Object.keys(initialFormData);
+        Object.entries(extracted).forEach(([key, value]) => {
+          const snakeKey = key.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
+          if (allFields.includes(snakeKey) && !(snakeKey in extracted)) {
+            if (value !== null && value !== undefined) {
+              (next as any)[snakeKey] = value.toString();
+            }
           }
         });
 

@@ -16,6 +16,15 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    // 1. Verify Authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "No authorization header" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
+
     const body = await req.json();
     const { fileUrl, contentType, prompt: customPrompt } = body;
 
@@ -47,14 +56,19 @@ Deno.serve(async (req: Request) => {
     const base64Data = btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
 
     const systemPrompt = `
-      Extract vessel technical specifications from the provided brochure/document.
-      Return a FLAT JSON object with standard maritime keys: 
+      You are a Maritime Specifications Expert. Extract vessel technical data from the provided document.
+      Return a FLAT JSON object with strings for all values. 
+      Keys MUST be: 
       - name, imo_number, vessel_type, flag_state, port_of_registry, call_sign, mmsi_number, official_number,
       - gross_tonnage, net_tonnage, deadweight, year_built, classification_society, class_number,
       - length_overall, beam, depth, draft, engine_make, engine_model, engine_power,
       - propulsion_type, max_speed, service_speed, fuel_consumption, fuel_type,
       - cargo_capacity, passenger_capacity, crew_capacity, hull_material
-      Values should be strings. Return ONLY pure JSON.
+      
+      Rules:
+      1. If a value is missing, return null for that key.
+      2. Keep units with the values (e.g., "52000 GT", "229 m").
+      3. Focus on accuracy. Return ONLY valid JSON.
     `;
 
     console.log("Invoking Gemini 1.5 Flash Technical Analysis...");
@@ -65,20 +79,25 @@ Deno.serve(async (req: Request) => {
           mimeType: contentType || blob.type || "application/pdf"
         }
       },
-      customPrompt || systemPrompt
+      systemPrompt + (customPrompt ? `\n\nAdditional Instructions: ${customPrompt}` : "")
     ]);
 
     const responseText = result.response.text();
     console.log("Analysis Complete");
 
-    // Robust JSON parsing fallback
+    // Robust JSON parsing
     let data;
     try {
-      data = JSON.parse(responseText.replace(/```json|```/g, "").trim());
+      const cleanedText = responseText.replace(/```json|```/g, "").trim();
+      data = JSON.parse(cleanedText);
     } catch (e) {
+      console.warn("JSON Parse failed, attempting fallback extraction", e);
       const match = responseText.match(/\{[\s\S]*\}/);
-      if (match) data = JSON.parse(match[0]);
-      else throw new Error("Invalid intelligence format returned by Gemini");
+      if (match) {
+        data = JSON.parse(match[0]);
+      } else {
+        throw new Error("Invalid intelligence format returned by Gemini: " + responseText.substring(0, 100));
+      }
     }
 
     return new Response(
@@ -86,7 +105,7 @@ Deno.serve(async (req: Request) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
 
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Edge Function Runtime Error: ${error.message}`);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),

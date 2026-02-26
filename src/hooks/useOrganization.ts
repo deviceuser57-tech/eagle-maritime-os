@@ -14,7 +14,7 @@ export interface Organization {
 
 export interface OrganizationMember {
   id: string;
-  organization_id: string;
+  org_id: string;
   user_id: string;
   role: string;
   joined_at: string;
@@ -23,7 +23,7 @@ export interface OrganizationMember {
 
 export interface OrganizationInvitation {
   id: string;
-  organization_id: string;
+  org_id: string;
   email: string;
   role: string;
   status: string;
@@ -56,7 +56,7 @@ export const useOrganization = () => {
       // 1. Get the organization the user belongs to
       const { data: membership, error: memberError } = await supabase
         .from('organization_members')
-        .select('organization_id, role, organizations(*)')
+        .select('org_id, role, organizations(*)')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -74,7 +74,7 @@ export const useOrganization = () => {
         const { data: allMembers, error: membersError } = await supabase
           .from('organization_members')
           .select('*')
-          .eq('organization_id', org.id);
+          .eq('org_id', org.id);
 
         if (membersError) throw membersError;
         setMembers(allMembers || []);
@@ -83,7 +83,7 @@ export const useOrganization = () => {
         const { data: allInvites, error: invitesError } = await supabase
           .from('organization_invitations')
           .select('*')
-          .eq('organization_id', org.id)
+          .eq('org_id', org.id)
           .eq('status', 'pending');
 
         if (invitesError) throw invitesError;
@@ -122,7 +122,7 @@ export const useOrganization = () => {
       const { error: memberError } = await supabase
         .from('organization_members')
         .insert([{
-          organization_id: org.id,
+          org_id: org.id,
           user_id: user.id,
           role: 'Super Admin'
         }]);
@@ -175,10 +175,10 @@ export const useOrganization = () => {
   const inviteMember = async (email: string, role: string = 'Member') => {
     if (!organization || !user) return;
     try {
-      const { error } = await supabase
+      const { error: error } = await supabase
         .from('organization_invitations')
         .insert([{
-          organization_id: organization.id,
+          org_id: organization.id,
           email,
           role,
           invited_by: user.id,
@@ -215,7 +215,7 @@ export const useOrganization = () => {
       const { error } = await supabase
         .from('organization_members')
         .delete()
-        .eq('organization_id', organization.id)
+        .eq('org_id', organization.id)
         .eq('user_id', userId);
 
       if (error) throw error;
@@ -232,7 +232,7 @@ export const useOrganization = () => {
       const { error } = await supabase
         .from('organization_members')
         .update({ role })
-        .eq('organization_id', organization.id)
+        .eq('org_id', organization.id)
         .eq('user_id', userId);
 
       if (error) throw error;

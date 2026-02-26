@@ -91,7 +91,7 @@ CREATE POLICY "Users can view org compliance scores" ON public.vessel_compliance
   FOR SELECT 
   USING (
     org_id IN (
-      SELECT organization_id 
+      SELECT org_id 
       FROM public.organization_members 
       WHERE user_id = auth.uid()
     )
@@ -118,7 +118,7 @@ CREATE POLICY "Users can view org compliance history" ON public.vessel_complianc
   FOR SELECT 
   USING (
     org_id IN (
-      SELECT organization_id 
+      SELECT org_id 
       FROM public.organization_members 
       WHERE user_id = auth.uid()
     )
