@@ -140,7 +140,7 @@ const initialFormData: VesselFormData = {
 
 const VesselManagement = () => {
   const { vessels, loading, addVessel, updateVessel, deleteVessel, uploadVesselAsset, getVesselAssetUrl } = useVessels();
-  const { organization } = useOrg();
+  const { organization, orgId } = useOrg();
   const { addTask } = useMaintenanceTasks();
 
   const { toast } = useToast();
@@ -368,15 +368,26 @@ const VesselManagement = () => {
       }
 
       let errorMessage = err.message;
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('Failed to send')) {
-        errorMessage = `Connectivity Failure: The browser could not reach the extraction service at ${import.meta.env.VITE_SUPABASE_URL}. This usually means the Edge Function 'analyze-image' is not yet deployed or is being blocked by a security extension.`;
+      if (err.message?.includes('Failed to fetch') || err.message?.includes('Failed to send') || err.message?.includes('404')) {
+        errorMessage = `**Extraction Service Unreachable:** Connection refused by AI Registry. 
+
+This usually means:
+1. The Edge Function 'analyze-image' is not yet deployed.
+2. The browser is blocking cross-origin requests.
+3. Your local environment cannot reach ${import.meta.env.VITE_SUPABASE_URL}.
+
+Please verify your Supabase setup and try again in 30 seconds.`;
       }
 
       setAiMessages(prev => [...prev, {
         role: 'assistant',
-        content: `**Extraction Blocker:** ${errorMessage}`
+        content: `**Extraction Blocker Encountered:** ${errorMessage}`
       }]);
-      toast({ title: 'Service Unreachable', description: 'Network connection to the AI Registry failed. Verify function deployment.', variant: 'destructive' });
+      toast({
+        title: 'Extraction Service Unreachable',
+        description: 'Connection refused by AI Registry. Verify function deployment and environment variables.',
+        variant: 'destructive'
+      });
     } finally {
 
       setIsAiGenerating(false);
