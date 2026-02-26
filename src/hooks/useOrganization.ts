@@ -84,15 +84,19 @@ export const useOrganization = () => {
         }));
         setMembers(formattedMembers);
 
-        // 3. Fetch pending invitations
+        // 3. Fetch pending invitations - handle potential missing table gracefully
         const { data: allInvites, error: invitesError } = await supabase
           .from('organization_invitations')
           .select('*')
           .eq('org_id', org.id)
           .eq('status', 'pending');
 
-        if (invitesError) throw invitesError;
-        setInvitations(allInvites || []);
+        if (invitesError) {
+          console.warn('Invitations Fetch Error (Non-critical):', invitesError.message);
+          setInvitations([]);
+        } else {
+          setInvitations(allInvites || []);
+        }
       } else {
         setOrganization(null);
         setOrgId(null);
