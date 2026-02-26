@@ -16,7 +16,8 @@ export interface OrganizationMember {
   id: string;
   org_id: string;
   user_id: string;
-  role: string;
+  role_id: string;
+  role?: string;
   joined_at: string;
   email?: string;
 }
@@ -56,7 +57,7 @@ export const useOrganization = () => {
       // 1. Get the organization the user belongs to
       const { data: membership, error: memberError } = await supabase
         .from('organization_members')
-        .select('org_id, role, organizations(*)')
+        .select('org_id, role:org_roles(name), organizations(*)')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -65,7 +66,7 @@ export const useOrganization = () => {
       if (membership && membership.organizations) {
         const org = {
           ...(membership.organizations as any),
-          userRole: membership.role
+          userRole: (membership as any).role?.name || 'Member'
         };
         setOrganization(org);
         setOrgId(org.id);
@@ -73,11 +74,15 @@ export const useOrganization = () => {
         // 2. Fetch all members of this org
         const { data: allMembers, error: membersError } = await supabase
           .from('organization_members')
-          .select('*')
+          .select('*, role:org_roles(name)')
           .eq('org_id', org.id);
 
         if (membersError) throw membersError;
-        setMembers(allMembers || []);
+        const formattedMembers = (allMembers || []).map(m => ({
+          ...m,
+          role: (m as any).role?.name || 'Member'
+        }));
+        setMembers(formattedMembers);
 
         // 3. Fetch pending invitations
         const { data: allInvites, error: invitesError } = await supabase
@@ -119,12 +124,26 @@ export const useOrganization = () => {
 
       if (orgError) throw orgError;
 
+      // Create default roles for the new organization
+      const { data: adminRole, error: roleError } = await supabase
+        .from('org_roles')
+        .insert([
+          { org_id: org.id, name: 'Super Admin', permissions: ['*'] },
+          { org_id: org.id, name: 'Admin', permissions: ['vessels.*', 'members.*'] },
+          { org_id: org.id, name: 'Member', permissions: ['vessels.view'] }
+        ])
+        .select()
+        .eq('name', 'Super Admin')
+        .single();
+
+      if (roleError) throw roleError;
+
       const { error: memberError } = await supabase
         .from('organization_members')
         .insert([{
           org_id: org.id,
           user_id: user.id,
-          role: 'Super Admin'
+          role_id: adminRole.id
         }]);
 
       if (memberError) throw memberError;
@@ -226,12 +245,22 @@ export const useOrganization = () => {
     }
   };
 
-  const updateMemberRole = async (userId: string, role: string) => {
+  const updateMemberRole = async (userId: string, roleName: string) => {
     if (!organization) return;
     try {
+      // Get the role ID for this org
+      const { data: roles, error: roleError } = await supabase
+        .from('org_roles')
+        .select('id')
+        .eq('org_id', organization.id)
+        .eq('name', roleName)
+        .single();
+
+      if (roleError) throw roleError;
+
       const { error } = await supabase
         .from('organization_members')
-        .update({ role })
+        .update({ role_id: roles.id })
         .eq('org_id', organization.id)
         .eq('user_id', userId);
 
