@@ -271,7 +271,8 @@ const VesselManagement = () => {
       console.log('Initiating AI Technical Extraction for:', url);
       const { data, error } = await supabase.functions.invoke('analyze-image', {
         body: {
-          fileUrl: url
+          fileUrl: url,
+          org_id: orgId
         }
       });
 

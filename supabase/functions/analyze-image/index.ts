@@ -26,9 +26,49 @@ Deno.serve(async (req: Request) => {
     }
 
     const body = await req.json();
-    const { fileUrl, contentType, prompt: customPrompt } = body;
+    const { fileUrl, contentType, prompt: customPrompt, org_id } = body;
 
-    console.log(`Analyzing Vessel Document: ${fileUrl}`);
+    if (!org_id) {
+      return new Response(JSON.stringify({ error: "Missing org_id" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+
+    // 2. Initialize Supabase Client to verify membership
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!; // Use service role for admin check
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.39.7");
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // 3. Get User from Auth Header
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
+
+    // 4. Verify Membership
+    const { data: member, error: memberError } = await supabase
+      .from('organization_members')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('org_id', org_id)
+      .maybeSingle();
+
+    if (memberError || !member) {
+      console.warn(`Unauthorized access attempt by ${user.id} for org ${org_id}`);
+      return new Response(JSON.stringify({ error: "Not a member of this organization" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+      });
+    }
+
+    console.log(`Analyzing Vessel Document for ${user.email} in Org: ${org_id}`);
 
     const apiKey = Deno.env.get('GEMINI_API_KEY') || Deno.env.get('LOVABLE_API_KEY');
     if (!apiKey) {
