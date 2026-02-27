@@ -825,6 +825,32 @@ Please verify your Supabase setup and try again in 30 seconds.`;
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-8 mt-6">
+              {/* Global Hidden Inputs - Persistently Mounted for AI/Ref accessibility */}
+              <input
+                type="file"
+                ref={photoInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => {
+                  const index = parseInt(photoInputRef.current?.getAttribute('data-index') || '0');
+                  handlePhotoUpload(e, index);
+                }}
+              />
+              <input
+                type="file"
+                ref={brochureInputRef}
+                className="hidden"
+                accept=".pdf"
+                onChange={handleBrochureUpload}
+              />
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileUpload}
+                accept=".pdf,.doc,.docx,.txt,.csv,.xlsx"
+              />
+
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-5 md:grid-cols-9 bg-muted/50 p-1 rounded-xl h-auto min-h-12 overflow-x-auto gap-1">
                   <TabsTrigger value="general" className="rounded-lg text-[10px] data-[state=active]:bg-background data-[state=active]:shadow-sm px-1"><Ship className="h-3 w-3 mr-1" />Gen</TabsTrigger>
@@ -1068,18 +1094,6 @@ Please verify your Supabase setup and try again in 30 seconds.`;
                     <div className="space-y-4">
                       <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Vessel Gallery (5 Photos Required)</Label>
 
-                      {/* Hidden Photo Input */}
-                      <input
-                        type="file"
-                        ref={photoInputRef}
-                        className="hidden"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const index = parseInt(photoInputRef.current?.getAttribute('data-index') || '0');
-                          handlePhotoUpload(e, index);
-                        }}
-                      />
-
                       <div className="grid grid-cols-5 gap-3">
                         {[0, 1, 2, 3, 4].map((i) => (
                           <div
@@ -1107,14 +1121,6 @@ Please verify your Supabase setup and try again in 30 seconds.`;
 
                       <div className="pt-4 space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Approved Vessel Brochure (PDF)</Label>
-
-                        <input
-                          type="file"
-                          ref={brochureInputRef}
-                          className="hidden"
-                          accept=".pdf"
-                          onChange={handleBrochureUpload}
-                        />
 
                         <div className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-background/50">
                           <div className="p-3 rounded-xl bg-orange-500/10 text-orange-600">
@@ -1233,13 +1239,6 @@ Please verify your Supabase setup and try again in 30 seconds.`;
                           >
                             <Paperclip className="h-5 w-5" />
                           </Button>
-                          <input
-                            type="file"
-                            ref={fileInputRef}
-                            className="hidden"
-                            onChange={handleFileUpload}
-                            accept=".pdf,.doc,.docx,.txt,.csv,.xlsx"
-                          />
                           <div className="relative flex-1">
                             <Input
                               value={aiInput}
