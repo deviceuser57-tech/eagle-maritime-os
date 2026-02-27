@@ -113,7 +113,10 @@ Deno.serve(async (req: Request) => {
     const base64Data = btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
 
     const systemPrompt = `
-      You are a Maritime Specifications Expert. Extract vessel technical data from the provided document.
+      You are a specialized Maritime Intelligence Agent. Your task is to perform a high-fidelity extraction of vessel technical specifications from the provided maritime document (brochure, registry, or photo).
+      
+      CRITICAL: You must extract the Vessel Name with 100% accuracy. It is often found in the document header, main title, or Registry/Class sections.
+      
       Return a FLAT JSON object with strings for all values. 
       Keys MUST be: 
       - name, imo_number, vessel_type, flag_state, port_of_registry, call_sign, mmsi_number, official_number,
@@ -123,9 +126,10 @@ Deno.serve(async (req: Request) => {
       - cargo_capacity, passenger_capacity, crew_capacity, hull_material
       
       Rules:
-      1. If a value is missing, return null for that key.
-      2. Keep units with the values (e.g., "52000 GT", "229 m").
-      3. Focus on accuracy. Return ONLY valid JSON.
+      1. If a value is missing or illegible, return null for that key. Do NOT guess.
+      2. For the 'name', do not include prefixes like "MV" or "MT" if they are clearly separate, but keep them if they are part of the formal name.
+      3. Keep units attached to the numerical values (e.g., "52000 GT", "229 m", "15 knots").
+      4. Focus on 'Merchant Vessel' standards. Return ONLY valid JSON.
     `;
 
     console.log("Invoking Gemini 1.5 Flash Technical Analysis...");

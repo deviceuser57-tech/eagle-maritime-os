@@ -794,10 +794,29 @@ Please verify your Supabase setup and try again in 30 seconds.`;
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()} className="btn-maritime px-6 h-12 rounded-xl text-sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Register Vessel
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={() => handleOpenDialog()}
+                className="btn-maritime px-6 h-12 rounded-xl text-sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Register Vessel
+              </Button>
+              <Button
+                onClick={() => {
+                  handleOpenDialog();
+                  // When starting with AI, we can prompt them to upload immediately
+                  setTimeout(() => {
+                    brochureInputRef.current?.click();
+                  }, 100);
+                }}
+                variant="outline"
+                className="px-6 h-12 rounded-xl text-sm border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all font-black uppercase tracking-tighter"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                AI Smart Ingest
+              </Button>
+            </div>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border-border backdrop-blur-2xl">
             <DialogHeader>
@@ -822,6 +841,37 @@ Please verify your Supabase setup and try again in 30 seconds.`;
 
                 <div className="mt-6 bg-slate-500/5 p-6 rounded-2xl border border-border/50 min-h-[400px]">
                   <TabsContent value="general" className="space-y-5 mt-0">
+                    {/* AI Quick Ingest Section */}
+                    {!viewMode && (
+                      <div className="p-5 rounded-2xl border border-primary/20 bg-primary/5 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                            <Sparkles className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-black uppercase tracking-tight text-primary">AI Technical Ingestion</h4>
+                            <p className="text-[10px] font-medium text-muted-foreground uppercase leading-relaxed max-w-[200px] md:max-w-md">
+                              Upload a technical brochure or specification sheet. Our AI will extract the name, IMO, and technical dossier automatically.
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={isUploading === 'brochure'}
+                          onClick={() => brochureInputRef.current?.click()}
+                          className="rounded-xl h-10 px-4 border-primary/30 hover:bg-primary hover:text-white transition-all font-bold text-xs"
+                        >
+                          {isUploading === 'brochure' ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <><Upload className="h-3.5 w-3.5 mr-2" /> Upload PDF</>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                       {renderFormField('name', 'Vessel Name *', formData.name, (v) => setFormData({ ...formData, name: v }))}
                       {renderFormField('imo_number', 'IMO Number', formData.imo_number, (v) => setFormData({ ...formData, imo_number: v }), 'text', '9876543')}
@@ -1304,10 +1354,10 @@ Please verify your Supabase setup and try again in 30 seconds.`;
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+      </div >
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      < div className="grid grid-cols-1 md:grid-cols-3 gap-6" >
         <Card className="maritime-card group">
           <CardContent className="p-8 flex items-center justify-between">
             <div>
@@ -1341,10 +1391,10 @@ Please verify your Supabase setup and try again in 30 seconds.`;
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div >
 
       {/* Vessels Table */}
-      <div className="maritime-card">
+      < div className="maritime-card" >
         <div className="p-6 border-b border-border bg-slate-500/5">
           <h3 className="font-bold text-base tracking-tight uppercase">Fleet Intelligence Table</h3>
           <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">Verified Multi-vessel Monitoring Node</p>
