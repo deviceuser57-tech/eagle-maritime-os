@@ -41,9 +41,9 @@ export const useMaintenanceTasks = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from('maintenance_tasks')
-        .select('*, vessels(name)')
+        .select('*, vessels(name)') as any)
         .eq('org_id', orgId)
         .order('due_date', { ascending: true });
 

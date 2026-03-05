@@ -34,9 +34,9 @@ export const useCommunications = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from('communications')
-        .select('*')
+        .select('*') as any)
         .eq('org_id', orgId)
         .order('sent_at', { ascending: false });
 

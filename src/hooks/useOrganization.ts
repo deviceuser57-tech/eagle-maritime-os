@@ -18,19 +18,21 @@ export interface OrganizationMember {
   user_id: string;
   role_id: string;
   role?: string;
-  joined_at: string;
+  joined_at?: string;
+  created_at?: string;
   email?: string;
 }
 
 export interface OrganizationInvitation {
   id: string;
-  org_id: string;
+  org_id?: string | null;
   email: string;
-  role: string;
-  status: string;
-  invited_by: string;
-  created_at: string;
-  expires_at: string;
+  role?: string | null;
+  status?: string | null;
+  invited_by?: string | null;
+  created_at?: string | null;
+  expires_at?: string | null;
+  token?: string | null;
 }
 
 export const useOrganization = () => {
@@ -55,9 +57,9 @@ export const useOrganization = () => {
     try {
       setLoading(true);
       // 1. Get the organization the user belongs to
-      const { data: membership, error: memberError } = await supabase
+      const { data: membership, error: memberError } = await (supabase
         .from('organization_members')
-        .select('org_id, role:org_roles(name), organizations(*)')
+        .select('org_id, role:org_roles(name), organizations(*)') as any)
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -72,9 +74,9 @@ export const useOrganization = () => {
         setOrgId(org.id);
 
         // 2. Fetch all members of this org
-        const { data: allMembers, error: membersError } = await supabase
+        const { data: allMembers, error: membersError } = await (supabase
           .from('organization_members')
-          .select('*, role:org_roles(name)')
+          .select('*, role:org_roles(name)') as any)
           .eq('org_id', org.id);
 
         if (membersError) throw membersError;
@@ -82,12 +84,12 @@ export const useOrganization = () => {
           ...m,
           role: (m as any).role?.name || 'Member'
         }));
-        setMembers(formattedMembers);
+        setMembers(formattedMembers as any);
 
         // 3. Fetch pending invitations - handle potential missing table gracefully
-        const { data: allInvites, error: invitesError } = await supabase
+        const { data: allInvites, error: invitesError } = await (supabase
           .from('organization_invitations')
-          .select('*')
+          .select('*') as any)
           .eq('org_id', org.id)
           .eq('status', 'pending');
 
@@ -95,7 +97,7 @@ export const useOrganization = () => {
           console.warn('Invitations Fetch Error (Non-critical):', invitesError.message);
           setInvitations([]);
         } else {
-          setInvitations(allInvites || []);
+          setInvitations((allInvites || []) as any);
         }
       } else {
         setOrganization(null);
@@ -120,35 +122,35 @@ export const useOrganization = () => {
   const createOrganization = async (name: string, slug: string) => {
     if (!user) return;
     try {
-      const { data: org, error: orgError } = await supabase
+      const { data: org, error: orgError } = await (supabase
         .from('organizations')
-        .insert([{ name, slug }])
+        .insert([{ name, slug }] as any)
         .select()
-        .single();
+        .single() as any);
 
       if (orgError) throw orgError;
 
       // Create default roles for the new organization
-      const { data: adminRole, error: roleError } = await supabase
+      const { data: adminRole, error: roleError } = await (supabase
         .from('org_roles')
         .insert([
           { org_id: org.id, name: 'Super Admin', permissions: ['*'] },
           { org_id: org.id, name: 'Admin', permissions: ['vessels.*', 'members.*'] },
           { org_id: org.id, name: 'Member', permissions: ['vessels.view'] }
-        ])
+        ] as any)
         .select()
         .eq('name', 'Super Admin')
-        .single();
+        .single() as any);
 
       if (roleError) throw roleError;
 
-      const { error: memberError } = await supabase
+      const { error: memberError } = await (supabase
         .from('organization_members')
         .insert([{
           org_id: org.id,
           user_id: user.id,
           role_id: adminRole.id
-        }]);
+        }] as any) as any);
 
       if (memberError) throw memberError;
 
@@ -164,9 +166,9 @@ export const useOrganization = () => {
   const updateOrganization = async (updates: Partial<Organization>) => {
     if (!organization) return;
     try {
-      const { error } = await supabase
+      const { error } = await (supabase
         .from('organizations')
-        .update(updates)
+        .update(updates as any) as any)
         .eq('id', organization.id);
 
       if (error) throw error;
@@ -180,9 +182,9 @@ export const useOrganization = () => {
   const deleteOrganization = async () => {
     if (!organization) return;
     try {
-      const { error } = await supabase
+      const { error } = await (supabase
         .from('organizations')
-        .delete()
+        .delete() as any)
         .eq('id', organization.id);
 
       if (error) throw error;
@@ -198,7 +200,7 @@ export const useOrganization = () => {
   const inviteMember = async (email: string, role: string = 'Member') => {
     if (!organization || !user) return;
     try {
-      const { error: error } = await supabase
+      const { error: error } = await (supabase
         .from('organization_invitations')
         .insert([{
           org_id: organization.id,
@@ -206,7 +208,7 @@ export const useOrganization = () => {
           role,
           invited_by: user.id,
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        }]);
+        }] as any) as any);
 
       if (error) throw error;
       toast({ title: 'Success', description: `Invitation sent to ${email}` });
@@ -219,9 +221,9 @@ export const useOrganization = () => {
 
   const revokeInvitation = async (id: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase
         .from('organization_invitations')
-        .delete()
+        .delete() as any)
         .eq('id', id);
 
       if (error) throw error;
@@ -235,9 +237,9 @@ export const useOrganization = () => {
   const removeMember = async (userId: string) => {
     if (!organization) return;
     try {
-      const { error } = await supabase
+      const { error } = await (supabase
         .from('organization_members')
-        .delete()
+        .delete() as any)
         .eq('org_id', organization.id)
         .eq('user_id', userId);
 
@@ -253,18 +255,18 @@ export const useOrganization = () => {
     if (!organization) return;
     try {
       // Get the role ID for this org
-      const { data: roles, error: roleError } = await supabase
+      const { data: roles, error: roleError } = await (supabase
         .from('org_roles')
-        .select('id')
+        .select('id') as any)
         .eq('org_id', organization.id)
         .eq('name', roleName)
         .single();
 
       if (roleError) throw roleError;
 
-      const { error } = await supabase
+      const { error } = await (supabase
         .from('organization_members')
-        .update({ role_id: roles.id })
+        .update({ role_id: roles.id } as any) as any)
         .eq('org_id', organization.id)
         .eq('user_id', userId);
 

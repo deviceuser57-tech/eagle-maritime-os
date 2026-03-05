@@ -56,11 +56,11 @@ export const useRegulations = () => {
     const { data: vesselLinks = [] } = useQuery({
         queryKey: ['vessel_regulation_tags', orgId],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('vessel_regulation_tags')
-                .select('*, regulations(*)');
+            const { data, error } = await (supabase
+                .from('vessel_regulation_tags' as any)
+                .select('*, regulations(*)') as any);
             if (error) throw error;
-            return data as (VesselRegulationTag & { regulations: Regulation })[];
+            return (data || []) as any as (VesselRegulationTag & { regulations: Regulation })[];
         },
         enabled: !!orgId,
     });
@@ -68,11 +68,11 @@ export const useRegulations = () => {
     // Mutations
     const upsertRegulation = useMutation({
         mutationFn: async (reg: Partial<Regulation>) => {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase
                 .from('regulations')
-                .upsert({ ...reg, org_id: reg.isGlobal ? null : orgId })
+                .upsert({ ...reg, org_id: reg.isGlobal ? null : orgId } as any)
                 .select()
-                .single();
+                .single() as any);
             if (error) throw error;
             return data;
         },
@@ -85,11 +85,11 @@ export const useRegulations = () => {
 
     const linkToCertificate = useMutation({
         mutationFn: async (link: Omit<CertificateRegulation, 'id'>) => {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase
                 .from('certificate_regulations')
-                .insert({ ...link, org_id: orgId })
+                .insert({ ...link, org_id: orgId } as any)
                 .select()
-                .single();
+                .single() as any);
             if (error) throw error;
             return data;
         },
@@ -101,11 +101,11 @@ export const useRegulations = () => {
 
     const linkToAudit = useMutation({
         mutationFn: async (link: Omit<AuditRegulation, 'id'>) => {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase
                 .from('audit_regulations')
-                .insert({ ...link, org_id: orgId })
+                .insert({ ...link, org_id: orgId } as any)
                 .select()
-                .single();
+                .single() as any);
             if (error) throw error;
             return data;
         },
@@ -117,11 +117,11 @@ export const useRegulations = () => {
 
     const tagVessel = useMutation({
         mutationFn: async (tag: Omit<VesselRegulationTag, 'id'>) => {
-            const { data, error } = await supabase
-                .from('vessel_regulation_tags')
-                .insert({ ...tag, org_id: orgId })
+            const { data, error } = await (supabase
+                .from('vessel_regulation_tags' as any)
+                .insert({ ...tag, org_id: orgId } as any)
                 .select()
-                .single();
+                .single() as any);
             if (error) throw error;
             return data;
         },
@@ -153,18 +153,18 @@ export const useVesselRegulatoryPortfolio = (vesselId?: string) => {
             if (!vesselId) return [];
 
             // 1. Get vessel tags
-            const { data: taggedRegs } = await supabase
-                .from('vessel_regulation_tags')
+            const { data: taggedRegs } = await (supabase
+                .from('vessel_regulation_tags' as any)
                 .select('regulations(*)')
-                .eq('vessel_id', vesselId);
+                .eq('vessel_id', vesselId) as any);
 
             // 2. Get regs from vessel certificates
-            const { data: certs } = await supabase
+            const { data: certs } = await (supabase
                 .from('vessel_certifications')
-                .select('certificate_type_id')
-                .eq('vessel_id', vesselId);
+                .select('certificate_type')
+                .eq('vessel_id', vesselId) as any);
 
-            const certTypeIds = certs?.map(c => c.certificate_type_id).filter(Boolean) || [];
+            const certTypeIds = (certs as any[])?.map((c: any) => c.certificate_type).filter(Boolean) || [];
             let certRegs: any[] = [];
             if (certTypeIds.length > 0) {
                 const { data } = await supabase

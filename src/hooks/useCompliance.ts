@@ -28,11 +28,11 @@ export const useCompliance = (vesselId?: string) => {
     const fleetQuery = useQuery({
         queryKey: ['fleet_compliance', orgId],
         queryFn: async () => {
-            const { data, error } = await supabase.rpc('rpc_get_fleet_compliance_index', {
+            const { data, error } = await (supabase.rpc as any)('rpc_get_fleet_compliance_index', {
                 p_org_id: orgId
             });
             if (error) throw error;
-            return data as FleetCompliance;
+            return data as unknown as FleetCompliance;
         },
         enabled: !!orgId
     });
@@ -41,14 +41,13 @@ export const useCompliance = (vesselId?: string) => {
     const vesselQuery = useQuery({
         queryKey: ['vessel_compliance', vesselId],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('vessel_compliance_scores')
+            const { data, error } = await (supabase.from as any)('vessel_compliance_scores')
                 .select('*')
                 .eq('vessel_id', vesselId)
                 .single();
 
             if (error) throw error;
-            return data as ComplianceScore;
+            return data as unknown as ComplianceScore;
         },
         enabled: !!vesselId
     });
@@ -56,7 +55,7 @@ export const useCompliance = (vesselId?: string) => {
     // Recalculate Score Mutation
     const calculateMutation = useMutation({
         mutationFn: async (vid: string) => {
-            const { data, error } = await supabase.rpc('rpc_calculate_vessel_compliance', {
+            const { data, error } = await (supabase.rpc as any)('rpc_calculate_vessel_compliance', {
                 p_vessel_id: vid
             });
             if (error) throw error;
