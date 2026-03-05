@@ -38,9 +38,9 @@ export const useInsuranceClaims = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from('insurance_claims')
-        .select('*')
+        .select('*') as any)
         .eq('org_id', orgId)
         .order('submitted_date', { ascending: false });
 

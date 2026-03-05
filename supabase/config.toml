@@ -1,1 +1,7 @@
 project_id = "afnikeaidcczjgogmppm"
+
+[functions.analyze-image]
+verify_jwt = false
+
+[functions.erp-adapter]
+verify_jwt = false

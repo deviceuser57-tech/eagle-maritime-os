@@ -15,9 +15,9 @@ export const useFindings = (vesselId?: string) => {
         queryFn: async () => {
             if (!orgId) return [];
 
-            let query = supabase
+            let query = (supabase
                 .from('audit_findings')
-                .select('*, audits!inner(org_id, vessel_id)')
+                .select('*, audits!inner(org_id, vessel_id)') as any)
                 .eq('audits.org_id', orgId);
 
             if (vesselId) {
@@ -27,7 +27,7 @@ export const useFindings = (vesselId?: string) => {
             const { data, error } = await query.order('created_at', { ascending: false });
 
             if (error) throw error;
-            return data as (AuditFinding & { audits: { org_id: string; vessel_id: string } })[];
+            return (data || []) as any as (AuditFinding & { audits: { org_id: string; vessel_id: string } })[];
         },
         enabled: !!user && !!orgId,
     });

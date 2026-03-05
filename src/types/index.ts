@@ -349,6 +349,63 @@ export interface Vessel {
   updatedAt: Date;
 }
 
+// Regulation types
+export interface Regulation {
+  id: string;
+  code: string;
+  title: string;
+  convention: string;
+  description: string | null;
+  effective_date: string | null;
+  issuing_body: string | null;
+  isGlobal: boolean | null;
+  is_global?: boolean | null;
+  org_id: string | null;
+  created_at: string;
+  updated_at: string;
+  [key: string]: any;
+}
+
+export interface CertificateRegulation {
+  id: string;
+  certificateTypeId: string;
+  certificate_type_id?: string;
+  regulationId: string;
+  regulation_id?: string;
+  mandatory: boolean | null;
+  notes: string | null;
+  org_id: string | null;
+  created_at: string;
+  updated_at: string;
+  [key: string]: any;
+}
+
+export interface AuditRegulation {
+  id: string;
+  auditTypeId: string;
+  audit_type_id?: string;
+  regulationId: string;
+  regulation_id?: string;
+  org_id: string | null;
+  created_at: string;
+  updated_at: string;
+  [key: string]: any;
+}
+
+export interface VesselRegulationTag {
+  id: string;
+  vesselId?: string;
+  vessel_id?: string;
+  regulationId: string;
+  regulation_id?: string;
+  relevanceType?: string;
+  compliance_status?: string;
+  notes?: string | null;
+  org_id: string | null;
+  created_at: string;
+  [key: string]: any;
+}
+
 // Form validation and UI types
 export interface SetupFormData {
   type: string;

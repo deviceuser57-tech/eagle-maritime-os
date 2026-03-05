@@ -20,9 +20,9 @@ export const useCrewMembers = () => {
     queryKey: ['crew_members', orgId],
     queryFn: async () => {
       if (!orgId) return [];
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from('crew_members')
-        .select('*, vessels(name)')
+        .select('*, vessels(name)') as any)
         .eq('org_id', orgId)
         .order('last_name', { ascending: true });
 
