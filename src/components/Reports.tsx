@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useVessels } from '@/hooks/useVessels';
+import { useVessels, Vessel } from '@/hooks/useVessels';
 import { useMaintenanceTasks } from '@/hooks/useMaintenanceTasks';
 import { supabase } from '@/integrations/supabase/client';
 import jsPDF from 'jspdf';
@@ -23,9 +23,81 @@ import {
   AlertTriangle,
   Users,
   Calendar,
-  BarChart3,
-  Settings
+  Settings,
+  ImageIcon
 } from 'lucide-react';
+
+// ── Shared helpers ──
+
+const loadImageAsBase64 = async (url: string): Promise<string | null> => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+};
+
+const addVesselPhotosPage = async (doc: jsPDF, vessel: Vessel, headerColor: [number, number, number]) => {
+  const photos = (vessel.vessel_photos || []).filter(p => p && p.length > 0);
+  if (photos.length === 0) return;
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  doc.addPage();
+  doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
+  doc.rect(0, 0, pageWidth, 22, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`VESSEL IMAGERY — ${vessel.name}`, 14, 15);
+
+  let imgY = 30;
+
+  for (let i = 0; i < Math.min(photos.length, 4); i++) {
+    const base64 = await loadImageAsBase64(photos[i]);
+    if (base64) {
+      if (imgY + 95 > pageHeight - 20) {
+        doc.addPage();
+        imgY = 20;
+      }
+      try {
+        doc.addImage(base64, 'JPEG', 14, imgY, 182, 90);
+        doc.setFontSize(7);
+        doc.setTextColor(120, 120, 120);
+        doc.text(`Photo ${i + 1} — ${vessel.name}`, 14, imgY + 93);
+      } catch {
+        doc.setDrawColor(200);
+        doc.rect(14, imgY, 182, 90);
+        doc.setFontSize(9);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Photo ${i + 1} — Could not render`, 105, imgY + 45, { align: 'center' });
+      }
+      imgY += 100;
+    }
+  }
+};
+
+const addFooters = (doc: jsPDF, label: string) => {
+  const pageCount = doc.getNumberOfPages();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(7);
+    doc.setTextColor(128, 128, 128);
+    doc.text(`Page ${i} of ${pageCount}`, pageWidth - 30, pageHeight - 10);
+    doc.text(label, 14, pageHeight - 10);
+  }
+};
 
 const Reports = () => {
   const { toast } = useToast();
@@ -40,6 +112,7 @@ const Reports = () => {
   const [includeCharts, setIncludeCharts] = useState(true);
   const [includeSummary, setIncludeSummary] = useState(true);
   const [includeDetails, setIncludeDetails] = useState(true);
+  const [includePhotos, setIncludePhotos] = useState(true);
   const [generating, setGenerating] = useState(false);
 
   const reportTypes = [
@@ -51,12 +124,19 @@ const Reports = () => {
     { id: 'certificate-expiry', name: 'Certificate Expiry Report', icon: Calendar, description: 'Upcoming certificate and document expirations' },
   ];
 
-  const generateFleetStatusPDF = () => {
+  const getFilteredVessels = (): Vessel[] => {
+    if (selectedVessel === 'all') return vessels;
+    return vessels.filter(v => v.id === selectedVessel);
+  };
+
+  const generateFleetStatusPDF = async () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const headerColor: [number, number, number] = [30, 64, 175];
+    const filteredVessels = getFilteredVessels();
 
     // Header
-    doc.setFillColor(30, 64, 175);
+    doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
     doc.rect(0, 0, pageWidth, 40, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
@@ -64,56 +144,81 @@ const Reports = () => {
     doc.setFontSize(10);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 35);
 
-    // Reset text color
     doc.setTextColor(0, 0, 0);
 
     if (includeSummary) {
       doc.setFontSize(16);
       doc.text('Executive Summary', 14, 55);
       doc.setFontSize(11);
-      doc.text(`Total Vessels: ${vessels.length}`, 14, 65);
-      doc.text(`Active Vessels: ${vessels.filter(v => v.status === 'active').length}`, 14, 72);
-      doc.text(`Under Maintenance: ${vessels.filter(v => v.status === 'maintenance').length}`, 14, 79);
+      doc.text(`Total Vessels: ${filteredVessels.length}`, 14, 65);
+      doc.text(`Active Vessels: ${filteredVessels.filter(v => v.status === 'active').length}`, 14, 72);
+      doc.text(`Under Maintenance: ${filteredVessels.filter(v => v.status === 'maintenance').length}`, 14, 79);
+      doc.text(`In Drydock: ${filteredVessels.filter(v => v.status === 'drydock').length}`, 14, 86);
     }
 
-    if (includeDetails && vessels.length > 0) {
+    if (includeDetails && filteredVessels.length > 0) {
       doc.setFontSize(16);
-      doc.text('Vessel Details', 14, 95);
+      doc.text('Vessel Details', 14, 100);
 
       autoTable(doc, {
-        startY: 100,
-        head: [['Vessel Name', 'IMO Number', 'Type', 'Flag State', 'Status']],
-        body: vessels.map(v => [
+        startY: 105,
+        head: [['Vessel Name', 'IMO Number', 'Type', 'Flag State', 'GT', 'DWT', 'Status']],
+        body: filteredVessels.map(v => [
           v.name,
           v.imo_number || 'N/A',
           v.vessel_type || 'N/A',
           v.flag_state || 'N/A',
+          v.gross_tonnage ? v.gross_tonnage.toLocaleString() : 'N/A',
+          v.deadweight ? v.deadweight.toLocaleString() : 'N/A',
           v.status || 'Active'
         ]),
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [30, 64, 175] }
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: headerColor }
       });
+
+      // Technical details per vessel
+      for (const v of filteredVessels) {
+        const detailStartY = (doc as any).lastAutoTable.finalY + 12;
+        if (detailStartY > 240) doc.addPage();
+
+        const y = detailStartY > 240 ? 20 : detailStartY;
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(headerColor[0], headerColor[1], headerColor[2]);
+        doc.text(`${v.name} — Technical Summary`, 14, y);
+        doc.setFont('helvetica', 'normal');
+
+        autoTable(doc, {
+          startY: y + 4,
+          body: [
+            ['LOA', v.length_overall ? `${v.length_overall} m` : 'N/A', 'Beam', v.beam ? `${v.beam} m` : 'N/A'],
+            ['Engine', `${v.engine_make || ''} ${v.engine_model || ''}`.trim() || 'N/A', 'Power', v.engine_power ? `${v.engine_power} kW` : 'N/A'],
+            ['Speed (Max/Svc)', `${v.max_speed || '-'} / ${v.service_speed || '-'} kn`, 'Fuel Type', v.fuel_type || 'N/A'],
+            ['Class Society', v.classification_society || 'N/A', 'Year Built', v.year_built?.toString() || 'N/A'],
+          ],
+          theme: 'grid',
+          styles: { fontSize: 8 },
+        });
+      }
     }
 
-    // Footer
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(128, 128, 128);
-      doc.text(`Page ${i} of ${pageCount}`, pageWidth - 30, doc.internal.pageSize.getHeight() - 10);
-      doc.text('Maritime Compliance System', 14, doc.internal.pageSize.getHeight() - 10);
+    // Add vessel photos
+    if (includePhotos) {
+      for (const v of filteredVessels) {
+        await addVesselPhotosPage(doc, v, headerColor);
+      }
     }
 
+    addFooters(doc, 'Maritime Compliance System — Fleet Status');
     return doc;
   };
 
-  const generateMaintenancePDF = () => {
+  const generateMaintenancePDF = async () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const headerColor: [number, number, number] = [22, 163, 74];
 
-    // Header
-    doc.setFillColor(22, 163, 74);
+    doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
     doc.rect(0, 0, pageWidth, 40, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
@@ -157,25 +262,34 @@ const Reports = () => {
           t.status
         ]),
         styles: { fontSize: 8 },
-        headStyles: { fillColor: [22, 163, 74] }
+        headStyles: { fillColor: headerColor }
       });
     }
 
+    // Add vessel photos for filtered vessels
+    if (includePhotos) {
+      const vesselIds = [...new Set(filteredTasks.map(t => t.vessel_id).filter(Boolean))];
+      for (const vid of vesselIds) {
+        const v = vessels.find(vl => vl.id === vid);
+        if (v) await addVesselPhotosPage(doc, v, headerColor);
+      }
+    }
+
+    addFooters(doc, 'Maritime Compliance System — Maintenance');
     return doc;
   };
 
   const generateAuditPDF = async () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const headerColor: [number, number, number] = [147, 51, 234];
 
-    // Fetch audits
     const { data: audits } = await supabase
       .from('audits')
       .select('*, vessels(name)')
       .order('scheduled_date', { ascending: false });
 
-    // Header
-    doc.setFillColor(147, 51, 234);
+    doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
     doc.rect(0, 0, pageWidth, 40, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
@@ -210,24 +324,33 @@ const Reports = () => {
           a.score ? `${a.score}%` : 'N/A'
         ]),
         styles: { fontSize: 8 },
-        headStyles: { fillColor: [147, 51, 234] }
+        headStyles: { fillColor: headerColor }
       });
     }
 
+    if (includePhotos) {
+      const auditVesselIds = [...new Set((audits || []).map(a => a.vessel_id).filter(Boolean))];
+      for (const vid of auditVesselIds) {
+        const v = vessels.find(vl => vl.id === vid);
+        if (v) await addVesselPhotosPage(doc, v, headerColor);
+      }
+    }
+
+    addFooters(doc, 'Maritime Compliance System — Audit');
     return doc;
   };
 
   const generateIncidentsPDF = async () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const headerColor: [number, number, number] = [220, 38, 38];
 
     const { data: incidents } = await supabase
       .from('incidents')
       .select('*, vessels(name)')
       .order('incident_date', { ascending: false });
 
-    // Header
-    doc.setFillColor(220, 38, 38);
+    doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
     doc.rect(0, 0, pageWidth, 40, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
@@ -263,24 +386,33 @@ const Reports = () => {
           i.investigation_status
         ]),
         styles: { fontSize: 8 },
-        headStyles: { fillColor: [220, 38, 38] }
+        headStyles: { fillColor: headerColor }
       });
     }
 
+    if (includePhotos) {
+      const incidentVesselIds = [...new Set((incidents || []).map(i => i.vessel_id).filter(Boolean))];
+      for (const vid of incidentVesselIds) {
+        const v = vessels.find(vl => vl.id === vid);
+        if (v) await addVesselPhotosPage(doc, v, headerColor);
+      }
+    }
+
+    addFooters(doc, 'Maritime Compliance System — Incidents');
     return doc;
   };
 
   const generateCrewPDF = async () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const headerColor: [number, number, number] = [59, 130, 246];
 
     const { data: crew } = await supabase
       .from('crew_members')
       .select('*, vessels(name)')
       .order('last_name', { ascending: true });
 
-    // Header
-    doc.setFillColor(59, 130, 246);
+    doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
     doc.rect(0, 0, pageWidth, 40, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
@@ -315,19 +447,29 @@ const Reports = () => {
           c.status
         ]),
         styles: { fontSize: 8 },
-        headStyles: { fillColor: [59, 130, 246] }
+        headStyles: { fillColor: headerColor }
       });
     }
 
+    if (includePhotos) {
+      const crewVesselIds = [...new Set((crew || []).map(c => c.vessel_id).filter(Boolean))];
+      for (const vid of crewVesselIds) {
+        const v = vessels.find(vl => vl.id === vid);
+        if (v) await addVesselPhotosPage(doc, v, headerColor);
+      }
+    }
+
+    addFooters(doc, 'Maritime Compliance System — Crew');
     return doc;
   };
 
-  const generateCertificateExpiryPDF = () => {
+  const generateCertificateExpiryPDF = async () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const headerColor: [number, number, number] = [245, 158, 11];
+    const filteredVessels = getFilteredVessels();
 
-    // Header
-    doc.setFillColor(245, 158, 11); // Amber-500
+    doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
     doc.rect(0, 0, pageWidth, 40, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
@@ -341,21 +483,34 @@ const Reports = () => {
     doc.text('Certification Status Overview', 14, 55);
     doc.setFontSize(11);
     doc.text('This report outlines upcoming expirations for all vessel documentation.', 14, 65);
-    doc.text(`Total Vessels Checked: ${vessels.length}`, 14, 75);
+    doc.text(`Total Vessels Checked: ${filteredVessels.length}`, 14, 75);
 
-    if (includeDetails && vessels.length > 0) {
+    if (includeDetails && filteredVessels.length > 0) {
       doc.setFontSize(16);
       doc.text('Vessel Registry Snapshot', 14, 95);
 
       autoTable(doc, {
         startY: 100,
-        head: [['Vessel Name', 'IMO Number', 'Status']],
-        body: vessels.map(v => [v.name, v.imo_number || 'N/A', v.status || 'Active']),
+        head: [['Vessel Name', 'IMO Number', 'Type', 'Class Society', 'Status']],
+        body: filteredVessels.map(v => [
+          v.name,
+          v.imo_number || 'N/A',
+          v.vessel_type || 'N/A',
+          v.classification_society || 'N/A',
+          v.status || 'Active'
+        ]),
         styles: { fontSize: 9 },
-        headStyles: { fillColor: [245, 158, 11] }
+        headStyles: { fillColor: headerColor }
       });
     }
 
+    if (includePhotos) {
+      for (const v of filteredVessels) {
+        await addVesselPhotosPage(doc, v, headerColor);
+      }
+    }
+
+    addFooters(doc, 'Maritime Compliance System — Certificates');
     return doc;
   };
 
@@ -372,10 +527,10 @@ const Reports = () => {
 
       switch (selectedReportType) {
         case 'fleet-status':
-          doc = generateFleetStatusPDF();
+          doc = await generateFleetStatusPDF();
           break;
         case 'maintenance':
-          doc = generateMaintenancePDF();
+          doc = await generateMaintenancePDF();
           break;
         case 'audit-compliance':
           doc = await generateAuditPDF();
@@ -387,10 +542,10 @@ const Reports = () => {
           doc = await generateCrewPDF();
           break;
         case 'certificate-expiry':
-          doc = generateCertificateExpiryPDF();
+          doc = await generateCertificateExpiryPDF();
           break;
         default:
-          doc = generateFleetStatusPDF();
+          doc = await generateFleetStatusPDF();
       }
 
       // Save report record
@@ -404,7 +559,8 @@ const Reports = () => {
           dateTo,
           includeCharts,
           includeSummary,
-          includeDetails
+          includeDetails,
+          includePhotos
         }
       }]);
 
@@ -535,6 +691,17 @@ const Reports = () => {
                     onCheckedChange={(checked) => setIncludeCharts(checked as boolean)}
                   />
                   <Label htmlFor="charts">Include Charts (when available)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="photos"
+                    checked={includePhotos}
+                    onCheckedChange={(checked) => setIncludePhotos(checked as boolean)}
+                  />
+                  <Label htmlFor="photos" className="flex items-center gap-1.5">
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    Include Vessel Photos
+                  </Label>
                 </div>
               </div>
 
