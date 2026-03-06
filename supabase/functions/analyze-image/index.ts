@@ -1,3 +1,5 @@
+// Modern Supabase Edge Function using Deno.serve
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.21.0"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7"
 
 const corsHeaders = {
@@ -67,15 +69,16 @@ Deno.serve(async (req: Request) => {
     }
 
     // Verify Organization Membership
-    const { data: member } = await supabase
+    const { data: member, error: memberError } = await supabase
       .from('organization_members')
       .select('id')
       .eq('user_id', user.id)
       .eq('org_id', org_id)
       .maybeSingle();
 
-    if (!member) {
-      return new Response(JSON.stringify({ error: "Unauthorized for this organization" }), {
+    if (memberError || !member) {
+      console.warn(`Unauthorized access attempt by ${user.id} for org ${org_id}`);
+      return new Response(JSON.stringify({ error: "Organization access denied for AI operations" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 403,
       });
@@ -91,19 +94,35 @@ Deno.serve(async (req: Request) => {
 
     const blob = await fileResponse.blob();
     const buffer = await blob.arrayBuffer();
-    const base64Data = btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+
+    // Efficient Base64 conversion for Buffer
+    const uint8Array = new Uint8Array(buffer);
+    let binary = "";
+    const len = uint8Array.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(uint8Array[i]);
+    }
+    const base64Data = btoa(binary);
     const mimeType = contentType || blob.type || "application/pdf";
 
-    const systemPrompt = `You are a specialized Maritime Intelligence Agent. Extract vessel technical specifications from the provided maritime document (brochure, registry, or photo).
-
-CRITICAL: Extract the Vessel Name with 100% accuracy. It is often in the document header, main title, or Registry/Class sections.
-
-Rules:
-1. If a value is missing or illegible, return null. Do NOT guess.
-2. For the 'name', do not include prefixes like "MV" or "MT" if they are clearly separate titles.
-3. Keep units attached to numerical values (e.g., "52000", "229", "15").
-4. Focus on Merchant Vessel standards.
-${customPrompt ? `\nAdditional Instructions: ${customPrompt}` : ""}`;
+    const systemPrompt = `
+      You are a specialized Maritime Intelligence Agent. Your task is to perform a high-fidelity extraction of vessel technical specifications from the provided maritime document (brochure, registry, or photo).
+      
+      CRITICAL: You must extract the Vessel Name with 100% accuracy.
+      
+      Return a FLAT JSON object with strings for all values. 
+      Keys MUST be: 
+      - name, imo_number, vessel_type, flag_state, port_of_registry, call_sign, mmsi_number, official_number,
+      - gross_tonnage, net_tonnage, deadweight, year_built, classification_society, class_number,
+      - length_overall, beam, depth, draft, engine_make, engine_model, engine_power,
+      - propulsion_type, max_speed, service_speed, fuel_consumption, fuel_type,
+      - cargo_capacity, passenger_capacity, crew_capacity, hull_material
+      
+      Rules:
+      1. If a value is missing or illegible, return null.
+      2. Keep units attached (e.g., "52000 GT", "229 m", "15 knots").
+      3. Return ONLY valid JSON.
+    `;
 
     // Use Lovable AI Gateway with tool calling for structured output
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

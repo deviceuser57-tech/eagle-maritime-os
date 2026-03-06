@@ -339,12 +339,20 @@ const VesselManagement = () => {
     } catch (err: any) {
       console.error('AI Extraction Cloud Error:', err);
 
+      const isNetworkError =
+        err.message?.includes('Failed to fetch') ||
+        err.message?.includes('Failed to send') ||
+        err.message?.includes('404') ||
+        err.message?.includes('Service unreachable') ||
+        err.message?.includes('Connection refused') ||
+        err.message?.includes('Cloud connection failed');
+
       // FALLBACK: If the edge function is not deployed (common in dev), simulate for UX
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('404')) {
-        console.warn('AI Service not deployed. Simulating successful extraction for demo...');
+      if (isNetworkError) {
+        console.warn('AI Service unreachable. Engaging high-fidelity simulation fallback...');
 
         // Wait a bit to simulate processing
-        await new Promise(r => setTimeout(r, 1500));
+        await new Promise(r => setTimeout(r, 2000));
 
         const mockExtracted = {
           name: "MV EAGLE COMPLIANCE",
@@ -361,35 +369,28 @@ const VesselManagement = () => {
         setFormData(prev => ({ ...prev, ...mockExtracted }));
         setAiMessages(prev => [...prev, {
           role: 'assistant',
-          content: `**Extraction Fallback Engaged.** The AI service is not yet deployed, but I have simulated the extraction results for you to preview:\n\n- **IMO**: ${mockExtracted.imo_number}\n- **Vessel Type**: ${mockExtracted.vessel_type}\n- **GT**: ${mockExtracted.gross_tonnage}\n- **Engine**: ${mockExtracted.engine_make} ${mockExtracted.engine_model}\n- **Flag**: ${mockExtracted.flag_state}\n\n*Note: In production, this will use full Gemini OCR analysis.*`
+          content: `**Extraction Fallback Engaged.** The AI Registry service is currently unreachable (likely due to pending deployment). I have simulated the extraction results for you to preview:\n\n- **IMO**: ${mockExtracted.imo_number}\n- **Vessel Type**: ${mockExtracted.vessel_type}\n- **GT**: ${mockExtracted.gross_tonnage}\n- **Engine**: ${mockExtracted.engine_make} ${mockExtracted.engine_model}\n- **Flag**: ${mockExtracted.flag_state}\n\n*Note: Once the Edge Function is deployed, this will perform live OCR.*`
         }]);
-        toast({ title: 'AI Demo Mode', description: 'Simulated technical extraction completed.' });
+
+        toast({
+          title: 'AI Demo Mode',
+          description: 'Simulated technical extraction completed while service is offline.',
+          variant: 'default'
+        });
         return;
       }
 
       let errorMessage = err.message;
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('Failed to send') || err.message?.includes('404')) {
-        errorMessage = `**Extraction Service Unreachable:** Connection refused by AI Registry. 
-
-This usually means:
-1. The Edge Function 'analyze-image' is not yet deployed.
-2. The browser is blocking cross-origin requests.
-3. Your local environment cannot reach ${import.meta.env.VITE_SUPABASE_URL}.
-
-Please verify your Supabase setup and try again in 30 seconds.`;
-      }
-
       setAiMessages(prev => [...prev, {
         role: 'assistant',
-        content: `**Extraction Blocker Encountered:** ${errorMessage}`
+        content: `**Extraction Blocker Encountered:** ${errorMessage}\n\n*Recommended Fix:* Verify Supabase Edge Function deployment and check GEMINI_API_KEY secret.`
       }]);
       toast({
-        title: 'Extraction Service Unreachable',
-        description: 'Connection refused by AI Registry. Verify function deployment and environment variables.',
+        title: 'Extraction Service Error',
+        description: errorMessage || 'Connection refused by AI Registry. Verify system status.',
         variant: 'destructive'
       });
     } finally {
-
       setIsAiGenerating(false);
     }
   };
