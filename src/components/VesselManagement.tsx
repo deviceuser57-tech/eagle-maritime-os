@@ -272,7 +272,8 @@ const VesselManagement = () => {
       const { data, error } = await supabase.functions.invoke('analyze-image', {
         body: {
           fileUrl: url,
-          org_id: orgId
+          org_id: orgId,
+          scaffold: formData
         }
       });
 
@@ -286,47 +287,14 @@ const VesselManagement = () => {
       const extracted = data.data;
       console.log('AI Data Payload Received:', extracted);
 
-      // Normalization Map for common Gemini variations
-      const keyNormalization: Record<string, string> = {
-        'vesselName': 'name',
-        'vessel_name': 'name',
-        'imo': 'imo_number',
-        'imoNumber': 'imo_number',
-        'vesselType': 'vessel_type',
-        'vessel_type': 'vessel_type',
-        'gt': 'gross_tonnage',
-        'grossTonnage': 'gross_tonnage',
-        'dwt': 'deadweight',
-        'loa': 'length_overall',
-        'lengthOverall': 'length_overall',
-        'engineMake': 'engine_make',
-        'engineModel': 'engine_model',
-        'enginePower': 'engine_power'
-      };
-
-      // Update form data with extracted fields
+      // Update form data with extracted fields - AI now maps directly to scaffold keys
       setFormData(prev => {
         const next = { ...prev };
-
-        // 1. Apply Normalization Map
         Object.entries(extracted).forEach(([key, value]) => {
-          const normalizedKey = keyNormalization[key] || key;
-          if (normalizedKey in next && value !== null && value !== undefined) {
-            (next as any)[normalizedKey] = value.toString();
+          if (key in next && value !== null && value !== undefined) {
+            (next as any)[key] = value.toString();
           }
         });
-
-        // 2. Handle Case-Insensitive Matching for all standard fields
-        const allFields = Object.keys(initialFormData);
-        Object.entries(extracted).forEach(([key, value]) => {
-          const snakeKey = key.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
-          if (allFields.includes(snakeKey) && !(snakeKey in extracted)) {
-            if (value !== null && value !== undefined) {
-              (next as any)[snakeKey] = value.toString();
-            }
-          }
-        });
-
         return next;
       });
 

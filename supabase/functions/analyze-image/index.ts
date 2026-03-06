@@ -1,5 +1,3 @@
-// Modern Supabase Edge Function using Deno.serve
-import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.21.0"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7"
 
 const corsHeaders = {
@@ -40,7 +38,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { fileUrl, contentType, prompt: customPrompt, org_id } = body;
+    const { fileUrl, contentType, prompt: customPrompt, org_id, scaffold } = body;
 
     if (!org_id) {
       return new Response(JSON.stringify({ error: "Missing organization context (org_id)" }), {
@@ -110,18 +108,18 @@ Deno.serve(async (req: Request) => {
       
       CRITICAL: You must extract the Vessel Name with 100% accuracy.
       
-      Return a FLAT JSON object with strings for all values. 
-      Keys MUST be: 
-      - name, imo_number, vessel_type, flag_state, port_of_registry, call_sign, mmsi_number, official_number,
-      - gross_tonnage, net_tonnage, deadweight, year_built, classification_society, class_number,
-      - length_overall, beam, depth, draft, engine_make, engine_model, engine_power,
-      - propulsion_type, max_speed, service_speed, fuel_consumption, fuel_type,
-      - cargo_capacity, passenger_capacity, crew_capacity, hull_material
+      I am providing a JSON scaffold representing the target form structure. You MUST map the extracted data to the keys in this scaffold.
+      
+      SCAFFOLD:
+      ${JSON.stringify(scaffold || {}, null, 2)}
       
       Rules:
-      1. If a value is missing or illegible, return null.
-      2. Keep units attached (e.g., "52000 GT", "229 m", "15 knots").
-      3. Return ONLY valid JSON.
+      1. Map document data to the keys in the provided scaffold.
+      2. Use smart matching to identify which document data belongs to which scaffold key (e.g., if the document says "DWT", map it to "deadweight").
+      3. If a value is missing or illegible, return null for that key.
+      4. Avoid creating new keys; stay within the provided scaffold structure where possible.
+      5. Keep units attached (e.g., "52000 GT", "229 m", "15 knots").
+      6. Return ONLY a valid JSON object.
     `;
 
     // Use Lovable AI Gateway with tool calling for structured output
@@ -144,58 +142,14 @@ Deno.serve(async (req: Request) => {
               },
               {
                 type: "text",
-                text: "Extract all vessel technical specifications from this document. Return structured data using the extract_vessel_specs tool."
+                text: "Extract all vessel technical specifications from this document. Return structured data mapped to the provided scaffold."
               }
             ]
           }
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "extract_vessel_specs",
-              description: "Extract vessel technical specifications from a maritime document",
-              parameters: {
-                type: "object",
-                properties: {
-                  name: { type: "string", description: "Vessel name" },
-                  imo_number: { type: "string", description: "IMO number" },
-                  vessel_type: { type: "string", description: "Vessel type (e.g. Bulk Carrier, Container Ship)" },
-                  flag_state: { type: "string", description: "Flag state / country of registration" },
-                  port_of_registry: { type: "string", description: "Port of registry" },
-                  call_sign: { type: "string", description: "Radio call sign" },
-                  mmsi_number: { type: "string", description: "MMSI number" },
-                  official_number: { type: "string", description: "Official number" },
-                  gross_tonnage: { type: "string", description: "Gross tonnage" },
-                  net_tonnage: { type: "string", description: "Net tonnage" },
-                  deadweight: { type: "string", description: "Deadweight tonnage" },
-                  year_built: { type: "string", description: "Year built" },
-                  classification_society: { type: "string", description: "Classification society" },
-                  class_number: { type: "string", description: "Class number" },
-                  length_overall: { type: "string", description: "Length overall in meters" },
-                  beam: { type: "string", description: "Beam/width in meters" },
-                  depth: { type: "string", description: "Depth in meters" },
-                  draft: { type: "string", description: "Draft in meters" },
-                  engine_make: { type: "string", description: "Engine manufacturer" },
-                  engine_model: { type: "string", description: "Engine model" },
-                  engine_power: { type: "string", description: "Engine power" },
-                  propulsion_type: { type: "string", description: "Propulsion type" },
-                  max_speed: { type: "string", description: "Maximum speed" },
-                  service_speed: { type: "string", description: "Service speed" },
-                  fuel_consumption: { type: "string", description: "Fuel consumption" },
-                  fuel_type: { type: "string", description: "Fuel type" },
-                  cargo_capacity: { type: "string", description: "Cargo capacity" },
-                  passenger_capacity: { type: "string", description: "Passenger capacity" },
-                  crew_capacity: { type: "string", description: "Crew capacity" },
-                  hull_material: { type: "string", description: "Hull material" }
-                },
-                required: ["name"],
-                additionalProperties: false
-              }
-            }
-          }
-        ],
-        tool_choice: { type: "function", function: { name: "extract_vessel_specs" } }
+        // No hardcoded tool here, because we want the AI to dynamically map to the scaffold provided in the prompt.
+        // However, to ensure JSON output, we can use response_format if supported or just rely on the strict prompt.
+        response_format: { type: "json_object" }
       }),
     });
 
@@ -218,26 +172,19 @@ Deno.serve(async (req: Request) => {
     const aiResult = await aiResponse.json();
     console.log("AI response received");
 
-    // Extract structured data from tool call
+    const content = aiResult.choices?.[0]?.message?.content || "";
     let data: Record<string, any> = {};
-    const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
-    if (toolCall?.function?.arguments) {
-      try {
-        data = JSON.parse(toolCall.function.arguments);
-      } catch (e) {
-        console.error("Failed to parse tool call arguments:", e);
-        throw new Error("AI returned invalid structured data");
+
+    try {
+      const match = content.match(/\{[\s\S]*\}/);
+      if (match) {
+        data = JSON.parse(match[0]);
+      } else {
+        throw new Error("No structured data in response");
       }
-    } else {
-      // Fallback: try to parse content as JSON
-      const content = aiResult.choices?.[0]?.message?.content || "";
-      try {
-        const match = content.match(/\{[\s\S]*\}/);
-        if (match) data = JSON.parse(match[0]);
-        else throw new Error("No structured data in response");
-      } catch {
-        throw new Error("Could not extract vessel specifications from document");
-      }
+    } catch (e) {
+      console.error("Failed to parse AI response:", e);
+      throw new Error("Could not extract vessel specifications from document");
     }
 
     // Clean null string values
