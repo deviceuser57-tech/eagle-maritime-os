@@ -191,17 +191,24 @@ const VesselManagement = () => {
     const file = e.target.files?.[0];
     if (!file || !organization) return;
 
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({ title: 'Unsupported File', description: 'Please upload a PDF, JPG, PNG, or WEBP file.', variant: 'destructive' });
+      return;
+    }
+
     setIsUploading('brochure');
     try {
-      // Security: File paths are prefixed with org_id for backend policy isolation
       const path = await uploadVesselAsset(file, editingVessel?.id || 'new_vessel');
       if (path) {
         const url = await getVesselAssetUrl(path);
-        setFormData({ ...formData, vessel_brochure: url });
-        toast({ title: 'Brochure Uploaded', description: 'Technical specification PDF updated. Starting AI extraction...' });
+        setFormData(prev => ({ ...prev, vessel_brochure: url }));
+        const fileLabel = file.type.startsWith('image/') ? 'image' : 'PDF';
+        toast({ title: 'Document Uploaded', description: `Vessel ${fileLabel} uploaded. Starting AI extraction...` });
 
         // Automatically start AI extraction
-        await handleSmartFill(url);
+        await handleSmartFill(url, file.type);
       }
     } finally {
       setIsUploading(null);
@@ -212,23 +219,9 @@ const VesselManagement = () => {
 
 
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    const newMessages = [...aiMessages, { role: 'user', content: `[Uploaded Document]: ${file.name}` }];
-    setAiMessages(newMessages);
-    setIsAiGenerating(true);
 
-    setTimeout(() => {
-      setAiMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `I have received **${file.name}**. I am scanning the document for compliance data and technical specifications...\n\n**Analysis Complete**: The document has been indexed. I have identified 3 potential compliance gaps and added the maintenance history to the vessel profile. You can now query specific details from this file.`
-      }]);
-      setIsAiGenerating(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }, 2000);
-  };
+
 
   // Setup data
   const ownerCompanies = useSetupCompanies('owner');
@@ -252,19 +245,18 @@ const VesselManagement = () => {
   const statusOptions = ['active', 'inactive', 'maintenance', 'drydock', 'laid_up'];
   const currencies = ['USD', 'EUR', 'GBP', 'SGD', 'NOK', 'JPY'];
 
-  const handleSmartFill = async (overrideUrl?: string | React.MouseEvent) => {
-    // If called from a button click, the first argument is a MouseEvent
+  const handleSmartFill = async (overrideUrl?: string | React.MouseEvent, contentType?: string) => {
     const url = typeof overrideUrl === 'string' ? overrideUrl : formData.vessel_brochure;
 
     if (!url) {
-      toast({ title: 'Brochure Required', description: 'Please upload a brochure in the Media tab first.', variant: 'destructive' });
+      toast({ title: 'Document Required', description: 'Please upload a brochure (PDF or image) in the Media tab first.', variant: 'destructive' });
       return;
     }
 
     setIsAiGenerating(true);
     setAiMessages(prev => [...prev, {
       role: 'assistant',
-      content: "System: Initiating Deep Scan of Vessel Technical Dossier... Extracting IMO, Dimensions, and Machinery specs using Gemini Intelligence Registry."
+      content: "System: Initiating Deep Scan of Vessel Technical Dossier... Extracting IMO, Dimensions, and Machinery specs using AI Intelligence Registry."
     }]);
 
     try {
@@ -272,8 +264,8 @@ const VesselManagement = () => {
       const { data, error } = await supabase.functions.invoke('analyze-image', {
         body: {
           fileUrl: url,
+          contentType: contentType || undefined,
           org_id: orgId,
-          scaffold: formData
         }
       });
 
@@ -285,22 +277,33 @@ const VesselManagement = () => {
       if (!data?.success) throw new Error(data?.error || 'Intelligence extraction failed');
 
       const extracted = data.data;
-      console.log('AI Data Payload Received:', extracted);
+      const fieldsExtracted = data.fields_extracted || Object.keys(extracted).length;
+      console.log(`AI Data Payload: ${fieldsExtracted} fields extracted`, extracted);
 
-      // Update form data with extracted fields - AI now maps directly to scaffold keys
+      // Update form data with extracted fields
       setFormData(prev => {
         const next = { ...prev };
         Object.entries(extracted).forEach(([key, value]) => {
           if (key in next && value !== null && value !== undefined) {
-            (next as any)[key] = value.toString();
+            (next as any)[key] = String(value);
           }
         });
         return next;
       });
 
+      const highlights = [
+        extracted.name && `**Vessel**: ${extracted.name}`,
+        extracted.imo_number && `**IMO**: ${extracted.imo_number}`,
+        extracted.vessel_type && `**Type**: ${extracted.vessel_type}`,
+        extracted.gross_tonnage && `**GT**: ${extracted.gross_tonnage}`,
+        extracted.length_overall && extracted.beam && `**Dimensions**: ${extracted.length_overall}m × ${extracted.beam}m`,
+        extracted.engine_make && `**Engine**: ${extracted.engine_make} ${extracted.engine_model || ''}`,
+        extracted.flag_state && `**Flag**: ${extracted.flag_state}`,
+      ].filter(Boolean).join('\n- ');
+
       setAiMessages(prev => [...prev, {
         role: 'assistant',
-        content: `**AI Extraction Successful!**\n\nI have identified and mapped the following technical parameters:\n- **IMO**: ${extracted.imo_number || 'N/A'}\n- **Vessel Type**: ${extracted.vessel_type || 'N/A'}\n- **GT**: ${extracted.gross_tonnage || 'N/A'}\n- **Engine**: ${extracted.engine_make || ''} ${extracted.engine_model || ''}\n- **Dimensions**: ${extracted.length_overall || 'N/A'}m x ${extracted.beam || 'N/A'}m\n\nPlease check the Technical and Machinery tabs for the full updated dossier.`
+        content: `**AI Extraction Complete — ${fieldsExtracted} fields populated!**\n\n- ${highlights}\n\nCheck all tabs (General, Technical, Machinery, Safety) for the full extracted dossier.`
       }]);
 
       toast({ title: 'AI Extraction Complete', description: 'Vessel form updated with technical data.' });
@@ -809,15 +812,15 @@ const VesselManagement = () => {
                 type="file"
                 ref={brochureInputRef}
                 className="hidden"
-                accept=".pdf"
+                accept=".pdf,image/jpeg,image/png,image/webp"
                 onChange={handleBrochureUpload}
               />
               <input
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
-                onChange={handleFileUpload}
-                accept=".pdf,.doc,.docx,.txt,.csv,.xlsx"
+                accept=".pdf,image/jpeg,image/png,image/webp,.doc,.docx"
+                onChange={handleBrochureUpload}
               />
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -1089,7 +1092,7 @@ const VesselManagement = () => {
                       </div>
 
                       <div className="pt-4 space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Approved Vessel Brochure (PDF)</Label>
+                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Vessel Brochure / Spec Sheet (PDF or Image)</Label>
 
                         <div className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-background/50">
                           <div className="p-3 rounded-xl bg-orange-500/10 text-orange-600">
@@ -1106,7 +1109,7 @@ const VesselManagement = () => {
                                 : 'No brochure uploaded'}
                             </p>
                             <p className="text-xs text-muted-foreground uppercase font-medium font-mono">
-                              {formData.vessel_brochure ? 'INDEXED ON CLOUD' : 'Technical Specification PDF'}
+                              {formData.vessel_brochure ? 'INDEXED · AI READY' : 'PDF, JPG, PNG, or WEBP'}
                             </p>
                           </div>
                           <Button
