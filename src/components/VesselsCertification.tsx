@@ -8,15 +8,18 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, AlertCircle, CheckCircle, Clock, Plus, Loader2, Trash2 } from 'lucide-react';
+import { FileText, AlertCircle, CheckCircle, Clock, Plus, Loader2, Trash2, ShieldCheck, QrCode } from 'lucide-react';
 import { useVesselCertifications } from '@/hooks/useVesselCertifications';
 import { useVessels } from '@/hooks/useVessels';
 import { useToast } from '@/hooks/use-toast';
 import { format, differenceInDays } from 'date-fns';
+import { VerificationQR } from './compliance/VerificationQR';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const VesselsCertification = () => {
   const { toast } = useToast();
-  const { certifications, loading, addCertification, deleteCertification } = useVesselCertifications();
+  const { toast } = useToast();
+  const { certifications, loading, addCertification, deleteCertification, sealCertificate } = useVesselCertifications();
   const { vessels } = useVessels();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -551,6 +554,36 @@ const VesselsCertification = () => {
                           {status}
                         </span>
                         <div className="flex opacity-0 group-hover/item:opacity-100 transition-opacity gap-2">
+                          {cert.is_sealed ? (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 rounded-lg font-bold uppercase text-[9px] tracking-widest px-3 border-blue-500/40 bg-blue-500/5 text-blue-600 hover:bg-blue-500/10"
+                                >
+                                  <QrCode className="h-3.5 w-3.5 mr-1" />
+                                  Verify
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl">
+                                <VerificationQR
+                                  token={cert.verification_token || ''}
+                                  certName={cert.certificate_name}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 rounded-lg font-bold uppercase text-[9px] tracking-widest px-3 hover:border-blue-500/40 hover:bg-blue-500/5"
+                              onClick={() => sealCertificate(cert.id)}
+                            >
+                              <ShieldCheck className="h-3.5 w-3.5 mr-1" />
+                              Seal
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"

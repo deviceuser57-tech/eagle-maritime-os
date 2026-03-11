@@ -18,6 +18,8 @@ export interface VesselCertification {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  is_sealed?: boolean;
+  verification_token?: string;
 }
 
 export const useVesselCertifications = () => {
@@ -37,12 +39,25 @@ export const useVesselCertifications = () => {
     try {
       const { data, error } = await supabase
         .from('vessel_certifications')
-        .select('*')
+        .select(`
+          *,
+          certificate_seals (
+            id,
+            verification_token
+          )
+        `)
         .eq('org_id', orgId)
         .order('expiry_date', { ascending: true });
 
       if (error) throw error;
-      setCertifications(data || []);
+
+      const formattedData = (data || []).map((cert: any) => ({
+        ...cert,
+        is_sealed: !!cert.certificate_seals?.[0],
+        verification_token: cert.certificate_seals?.[0]?.verification_token
+      }));
+
+      setCertifications(formattedData);
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
@@ -108,9 +123,30 @@ export const useVesselCertifications = () => {
     }
   };
 
+  const sealCertificate = async (id: string) => {
+    if (!user || !orgId) return { error: new Error('Not authenticated') };
+
+    try {
+      const { data, error } = await (supabase.rpc as any)('rpc_seal_certificate', {
+        p_certificate_id: id,
+        p_org_id: orgId
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      toast({ title: 'Success', description: 'Certificate sealed with digital signature' });
+      await fetchCertifications();
+      return { data, error: null };
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      return { error };
+    }
+  };
+
   useEffect(() => {
     fetchCertifications();
   }, [user, orgId]);
 
-  return { certifications, loading, addCertification, updateCertification, deleteCertification, refetch: fetchCertifications };
+  return { certifications, loading, addCertification, updateCertification, deleteCertification, sealCertificate, refetch: fetchCertifications };
 };
