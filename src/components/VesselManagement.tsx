@@ -191,17 +191,24 @@ const VesselManagement = () => {
     const file = e.target.files?.[0];
     if (!file || !organization) return;
 
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({ title: 'Unsupported File', description: 'Please upload a PDF, JPG, PNG, or WEBP file.', variant: 'destructive' });
+      return;
+    }
+
     setIsUploading('brochure');
     try {
-      // Security: File paths are prefixed with org_id for backend policy isolation
       const path = await uploadVesselAsset(file, editingVessel?.id || 'new_vessel');
       if (path) {
         const url = await getVesselAssetUrl(path);
-        setFormData({ ...formData, vessel_brochure: url });
-        toast({ title: 'Brochure Uploaded', description: 'Technical specification PDF updated. Starting AI extraction...' });
+        setFormData(prev => ({ ...prev, vessel_brochure: url }));
+        const fileLabel = file.type.startsWith('image/') ? 'image' : 'PDF';
+        toast({ title: 'Document Uploaded', description: `Vessel ${fileLabel} uploaded. Starting AI extraction...` });
 
         // Automatically start AI extraction
-        await handleSmartFill(url);
+        await handleSmartFill(url, file.type);
       }
     } finally {
       setIsUploading(null);
@@ -212,23 +219,9 @@ const VesselManagement = () => {
 
 
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    const newMessages = [...aiMessages, { role: 'user', content: `[Uploaded Document]: ${file.name}` }];
-    setAiMessages(newMessages);
-    setIsAiGenerating(true);
 
-    setTimeout(() => {
-      setAiMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `I have received **${file.name}**. I am scanning the document for compliance data and technical specifications...\n\n**Analysis Complete**: The document has been indexed. I have identified 3 potential compliance gaps and added the maintenance history to the vessel profile. You can now query specific details from this file.`
-      }]);
-      setIsAiGenerating(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }, 2000);
-  };
+
 
   // Setup data
   const ownerCompanies = useSetupCompanies('owner');
@@ -252,19 +245,18 @@ const VesselManagement = () => {
   const statusOptions = ['active', 'inactive', 'maintenance', 'drydock', 'laid_up'];
   const currencies = ['USD', 'EUR', 'GBP', 'SGD', 'NOK', 'JPY'];
 
-  const handleSmartFill = async (overrideUrl?: string | React.MouseEvent) => {
-    // If called from a button click, the first argument is a MouseEvent
+  const handleSmartFill = async (overrideUrl?: string | React.MouseEvent, contentType?: string) => {
     const url = typeof overrideUrl === 'string' ? overrideUrl : formData.vessel_brochure;
 
     if (!url) {
-      toast({ title: 'Brochure Required', description: 'Please upload a brochure in the Media tab first.', variant: 'destructive' });
+      toast({ title: 'Document Required', description: 'Please upload a brochure (PDF or image) in the Media tab first.', variant: 'destructive' });
       return;
     }
 
     setIsAiGenerating(true);
     setAiMessages(prev => [...prev, {
       role: 'assistant',
-      content: "System: Initiating Deep Scan of Vessel Technical Dossier... Extracting IMO, Dimensions, and Machinery specs using Gemini Intelligence Registry."
+      content: "System: Initiating Deep Scan of Vessel Technical Dossier... Extracting IMO, Dimensions, and Machinery specs using AI Intelligence Registry."
     }]);
 
     try {
@@ -272,8 +264,8 @@ const VesselManagement = () => {
       const { data, error } = await supabase.functions.invoke('analyze-image', {
         body: {
           fileUrl: url,
+          contentType: contentType || undefined,
           org_id: orgId,
-          scaffold: formData
         }
       });
 
@@ -285,22 +277,33 @@ const VesselManagement = () => {
       if (!data?.success) throw new Error(data?.error || 'Intelligence extraction failed');
 
       const extracted = data.data;
-      console.log('AI Data Payload Received:', extracted);
+      const fieldsExtracted = data.fields_extracted || Object.keys(extracted).length;
+      console.log(`AI Data Payload: ${fieldsExtracted} fields extracted`, extracted);
 
-      // Update form data with extracted fields - AI now maps directly to scaffold keys
+      // Update form data with extracted fields
       setFormData(prev => {
         const next = { ...prev };
         Object.entries(extracted).forEach(([key, value]) => {
           if (key in next && value !== null && value !== undefined) {
-            (next as any)[key] = value.toString();
+            (next as any)[key] = String(value);
           }
         });
         return next;
       });
 
+      const highlights = [
+        extracted.name && `**Vessel**: ${extracted.name}`,
+        extracted.imo_number && `**IMO**: ${extracted.imo_number}`,
+        extracted.vessel_type && `**Type**: ${extracted.vessel_type}`,
+        extracted.gross_tonnage && `**GT**: ${extracted.gross_tonnage}`,
+        extracted.length_overall && extracted.beam && `**Dimensions**: ${extracted.length_overall}m × ${extracted.beam}m`,
+        extracted.engine_make && `**Engine**: ${extracted.engine_make} ${extracted.engine_model || ''}`,
+        extracted.flag_state && `**Flag**: ${extracted.flag_state}`,
+      ].filter(Boolean).join('\n- ');
+
       setAiMessages(prev => [...prev, {
         role: 'assistant',
-        content: `**AI Extraction Successful!**\n\nI have identified and mapped the following technical parameters:\n- **IMO**: ${extracted.imo_number || 'N/A'}\n- **Vessel Type**: ${extracted.vessel_type || 'N/A'}\n- **GT**: ${extracted.gross_tonnage || 'N/A'}\n- **Engine**: ${extracted.engine_make || ''} ${extracted.engine_model || ''}\n- **Dimensions**: ${extracted.length_overall || 'N/A'}m x ${extracted.beam || 'N/A'}m\n\nPlease check the Technical and Machinery tabs for the full updated dossier.`
+        content: `**AI Extraction Complete — ${fieldsExtracted} fields populated!**\n\n- ${highlights}\n\nCheck all tabs (General, Technical, Machinery, Safety) for the full extracted dossier.`
       }]);
 
       toast({ title: 'AI Extraction Complete', description: 'Vessel form updated with technical data.' });
@@ -393,165 +396,352 @@ const VesselManagement = () => {
   };
 
 
-  const handleGenerateAiReport = () => {
+  const loadImageAsBase64 = async (url: string): Promise<string | null> => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return null;
+    }
+  };
+
+  const handleGenerateAiReport = async () => {
     setIsAiGenerating(true);
-    setAiMessages(prev => [...prev, { role: 'assistant', content: "System: Generating professional Vessel Profile PDF... Aggregating technical specifications, drydocking history, and machinery data." }]);
+    setAiMessages(prev => [...prev, { role: 'assistant', content: "System: Generating comprehensive Vessel Profile PDF... Compiling all registry data, technical specifications, machinery, safety equipment, drydocking history, financial data, and imagery." }]);
 
-    setTimeout(() => {
-      try {
-        const doc = new jsPDF();
-        const primaryColor = [15, 23, 42]; // Slate-900
+    try {
+      const doc = new jsPDF();
+      const primaryColor: [number, number, number] = [15, 23, 42];
+      const accentColor: [number, number, number] = [59, 130, 246];
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
 
-        // Header
-        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.rect(0, 0, 210, 40, 'F');
+      const addSectionHeader = (title: string, sectionNum: number) => {
+        const y = (doc as any).lastAutoTable?.finalY
+          ? (doc as any).lastAutoTable.finalY + 15
+          : 55;
 
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(22);
-        doc.setFont('helvetica', 'bold');
-        doc.text('VESSEL REGISTRY PROFILE', 20, 20);
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`GENERATED: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}`, 20, 30);
-        doc.text('EAGLE MARITIME FLEET INTELLIGENCE', 140, 30);
-
-        // Core Data Section
-        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.setFontSize(14);
-        doc.text('1. ASSET IDENTITY', 20, 55);
-        doc.line(20, 57, 190, 57);
-
-        autoTable(doc, {
-          startY: 60,
-          head: [['Parameter', 'Specification Value']],
-          body: [
-            ['Vessel Name', formData.name || 'N/A'],
-            ['IMO Number', formData.imo_number || 'N/A'],
-            ['Call Sign', formData.call_sign || 'N/A'],
-            ['Vessel Type', formData.vessel_type || 'N/A'],
-            ['Status', formData.status || 'Active'],
-            ['Flag State', formData.flag_state || 'N/A'],
-            ['Classification', formData.classification_society || 'N/A'],
-          ],
-          theme: 'striped',
-          headStyles: { fillColor: primaryColor as [number, number, number] },
-        });
-
-        // Technical Specs
-        doc.setFontSize(14);
-        doc.text('2. TECHNICAL & MACHINERY', 20, (doc as any).lastAutoTable.finalY + 15);
-        doc.line(20, (doc as any).lastAutoTable.finalY + 17, 190, (doc as any).lastAutoTable.finalY + 17);
-
-        autoTable(doc, {
-          startY: (doc as any).lastAutoTable.finalY + 20,
-          body: [
-            ['Gross Tonnage', `${formData.gross_tonnage || 'N/A'} GT`],
-            ['Deadweight', `${formData.deadweight || 'N/A'} DWT`],
-            ['Length Overall', `${formData.length_overall || 'N/A'} m`],
-            ['Main Engine', `${formData.engine_make} ${formData.engine_model}`],
-            ['Engine Power', `${formData.engine_power || 'N/A'} kW`],
-            ['Propulsion', formData.propulsion_type || 'N/A'],
-          ],
-          margin: { left: 20 },
-          theme: 'grid',
-        });
-
-        // Drydocking Section
-        doc.setFontSize(14);
-        doc.text('3. DRYDOCKING FORECAST', 20, (doc as any).lastAutoTable.finalY + 15);
-
-        autoTable(doc, {
-          startY: (doc as any).lastAutoTable.finalY + 20,
-          head: [['Event', 'Date / Location']],
-          body: [
-            ['Last Drydock Date', formData.last_drydock_date || 'N/A'],
-            ['Previous DD Yard', formData.previous_yard || 'N/A'],
-            ['Next Scheduled DD', formData.next_drydock_date || 'TBD'],
-          ],
-          theme: 'plain',
-          bodyStyles: { fontStyle: 'bold' }
-        });
-
-        if (formData.remaining_tasks) {
-          doc.setFontSize(10);
-          doc.text('Outstanding DD Items:', 20, (doc as any).lastAutoTable.finalY + 10);
-          doc.setFontSize(8);
-          doc.setTextColor(100);
-          const splitTasks = doc.splitTextToSize(formData.remaining_tasks, 170);
-          doc.text(splitTasks, 20, (doc as any).lastAutoTable.finalY + 15);
-        }
-
-        // Regulatory Section
-        if (regulatoryPortfolio.length > 0) {
-          doc.setFontSize(14);
-          doc.text('4. REGULATORY PORTFOLIO', 20, (doc as any).lastAutoTable.finalY + 15);
-          doc.line(20, (doc as any).lastAutoTable.finalY + 17, 190, (doc as any).lastAutoTable.finalY + 17);
-
-          autoTable(doc, {
-            startY: (doc as any).lastAutoTable.finalY + 20,
-            head: [['Convention', 'Code', 'Title']],
-            body: regulatoryPortfolio.map(reg => [reg.convention, reg.code, reg.title]),
-            theme: 'striped',
-          });
-        }
-
-        // 5. VESSEL IMAGERY SECTION
-        if (formData.vessel_photos && formData.vessel_photos.length > 0) {
+        if (y > pageHeight - 50) {
           doc.addPage();
-          doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-          doc.rect(0, 0, 210, 20, 'F');
-          doc.setTextColor(255, 255, 255);
-          doc.setFontSize(12);
-          doc.text('5. VESSEL IMAGERY & DOCUMENTATION', 20, 13);
+          return 25;
+        }
 
-          doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-          doc.setFontSize(10);
-          doc.text('Current Visual Assets retrieved from the Digital Compliance Registry:', 20, 35);
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text(`${sectionNum}. ${title}`, 14, y);
+        doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
+        doc.setLineWidth(0.5);
+        doc.line(14, y + 2, 196, y + 2);
+        return y + 6;
+      };
 
-          let currentY = 45;
-          const photoLimit = Math.min(formData.vessel_photos.length, 2); // Limit to 2 for layout stability
+      // ═══ COVER / HEADER ═══
+      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.rect(0, 0, pageWidth, 45, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.text('VESSEL REGISTRY PROFILE', 14, 18);
+      doc.setFontSize(14);
+      doc.text(formData.name || 'Unnamed Vessel', 14, 28);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Generated: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}`, 14, 38);
+      doc.text('EAGLE MARITIME FLEET INTELLIGENCE', 140, 38);
 
-          for (let i = 0; i < photoLimit; i++) {
-            const photoUrl = formData.vessel_photos[i];
-            if (photoUrl) {
-              // Note: addImage works best with base64, but URLs can work depending on environment.
-              // For robustness we include a placeholder frame if image fails to render.
-              doc.setDrawColor(200);
-              doc.rect(20, currentY, 170, 90);
-              doc.text(`[ Photo Identifier: ${i + 1} - ${formData.name} ]`, 105, currentY + 45, { align: 'center' });
+      // ═══ 1. ASSET IDENTITY ═══
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      let startY = addSectionHeader('ASSET IDENTITY', 1);
 
-              try {
-                // Attempting to add the actual image
-                doc.addImage(photoUrl, 'JPEG', 20, currentY, 170, 90);
-              } catch (e) {
-                doc.setFontSize(8);
-                doc.text('Image stream connection pending or CORS restricted.', 105, currentY + 55, { align: 'center' });
-              }
-              currentY += 105;
+      autoTable(doc, {
+        startY,
+        head: [['Parameter', 'Value']],
+        body: [
+          ['Vessel Name', formData.name || 'N/A'],
+          ['IMO Number', formData.imo_number || 'N/A'],
+          ['Call Sign', formData.call_sign || 'N/A'],
+          ['MMSI Number', formData.mmsi_number || 'N/A'],
+          ['Official Number', formData.official_number || 'N/A'],
+          ['Vessel Type', formData.vessel_type || 'N/A'],
+          ['Flag State', formData.flag_state || 'N/A'],
+          ['Port of Registry', formData.port_of_registry || 'N/A'],
+          ['Classification Society', formData.classification_society || 'N/A'],
+          ['Class Number', formData.class_number || 'N/A'],
+          ['Status', formData.status || 'Active'],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: primaryColor },
+        styles: { fontSize: 9 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55 } },
+      });
+
+      // ═══ 2. DIMENSIONS & TONNAGE ═══
+      startY = addSectionHeader('DIMENSIONS & TONNAGE', 2);
+
+      autoTable(doc, {
+        startY,
+        head: [['Parameter', 'Value']],
+        body: [
+          ['Gross Tonnage', formData.gross_tonnage ? `${formData.gross_tonnage} GT` : 'N/A'],
+          ['Net Tonnage', formData.net_tonnage ? `${formData.net_tonnage} NT` : 'N/A'],
+          ['Deadweight', formData.deadweight ? `${formData.deadweight} DWT` : 'N/A'],
+          ['Length Overall', formData.length_overall ? `${formData.length_overall} m` : 'N/A'],
+          ['Beam', formData.beam ? `${formData.beam} m` : 'N/A'],
+          ['Depth', formData.depth ? `${formData.depth} m` : 'N/A'],
+          ['Draft', formData.draft ? `${formData.draft} m` : 'N/A'],
+          ['Cargo Capacity', formData.cargo_capacity ? `${formData.cargo_capacity}` : 'N/A'],
+          ['Hull Material', formData.hull_material || 'N/A'],
+          ['Hull Coating', formData.hull_coating || 'N/A'],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: primaryColor },
+        styles: { fontSize: 9 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55 } },
+      });
+
+      // ═══ 3. MACHINERY & PROPULSION ═══
+      startY = addSectionHeader('MACHINERY & PROPULSION', 3);
+
+      autoTable(doc, {
+        startY,
+        head: [['Parameter', 'Value']],
+        body: [
+          ['Engine Make', formData.engine_make || 'N/A'],
+          ['Engine Model', formData.engine_model || 'N/A'],
+          ['Engine Power', formData.engine_power ? `${formData.engine_power} kW` : 'N/A'],
+          ['Propulsion Type', formData.propulsion_type || 'N/A'],
+          ['Maximum Speed', formData.max_speed ? `${formData.max_speed} knots` : 'N/A'],
+          ['Service Speed', formData.service_speed ? `${formData.service_speed} knots` : 'N/A'],
+          ['Fuel Consumption', formData.fuel_consumption ? `${formData.fuel_consumption} t/day` : 'N/A'],
+          ['Fuel Type', formData.fuel_type || 'N/A'],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: primaryColor },
+        styles: { fontSize: 9 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55 } },
+      });
+
+      // ═══ 4. SAFETY & CAPACITY ═══
+      startY = addSectionHeader('SAFETY & CAPACITY', 4);
+
+      autoTable(doc, {
+        startY,
+        head: [['Parameter', 'Value']],
+        body: [
+          ['Lifeboats', formData.lifeboats || 'N/A'],
+          ['Life Rafts', formData.liferafts || 'N/A'],
+          ['Crew Capacity', formData.crew_capacity || 'N/A'],
+          ['Passenger Capacity', formData.passenger_capacity || 'N/A'],
+          ['Trading Area', formData.trading_area || 'N/A'],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: primaryColor },
+        styles: { fontSize: 9 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55 } },
+      });
+
+      // ═══ 5. CONSTRUCTION & DATES ═══
+      startY = addSectionHeader('CONSTRUCTION & KEY DATES', 5);
+
+      autoTable(doc, {
+        startY,
+        head: [['Parameter', 'Value']],
+        body: [
+          ['Year Built', formData.year_built || 'N/A'],
+          ['Keel Laid Date', formData.keel_laid_date || 'N/A'],
+          ['Delivery Date', formData.delivery_date || 'N/A'],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: primaryColor },
+        styles: { fontSize: 9 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55 } },
+      });
+
+      // ═══ 6. DRYDOCKING ═══
+      startY = addSectionHeader('DRYDOCKING HISTORY & FORECAST', 6);
+
+      autoTable(doc, {
+        startY,
+        head: [['Parameter', 'Value']],
+        body: [
+          ['Last Drydock Date', formData.last_drydock_date || 'N/A'],
+          ['Previous DD Yard', formData.previous_yard || 'N/A'],
+          ['Next Scheduled DD', formData.next_drydock_date || 'TBD'],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: primaryColor },
+        styles: { fontSize: 9 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55 } },
+      });
+
+      if (formData.remaining_tasks) {
+        const taskY = (doc as any).lastAutoTable.finalY + 5;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text('Outstanding DD Items:', 14, taskY);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(80, 80, 80);
+        const splitTasks = doc.splitTextToSize(formData.remaining_tasks, 178);
+        doc.text(splitTasks, 14, taskY + 5);
+      }
+
+      // ═══ 7. EQUIPMENT & ACCOMMODATION ═══
+      startY = addSectionHeader('EQUIPMENT & ACCOMMODATION', 7);
+
+      const equipmentData: string[][] = [];
+      if (formData.navigation_equipment) equipmentData.push(['Navigation Equipment', formData.navigation_equipment]);
+      if (formData.painting_details) equipmentData.push(['Painting / Coating Details', formData.painting_details]);
+      if (formData.accommodations_pax) equipmentData.push(['Accommodations', formData.accommodations_pax]);
+
+      if (equipmentData.length > 0) {
+        autoTable(doc, {
+          startY,
+          head: [['Category', 'Details']],
+          body: equipmentData,
+          theme: 'striped',
+          headStyles: { fillColor: primaryColor },
+          styles: { fontSize: 8, cellPadding: 4 },
+          columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 }, 1: { cellWidth: 132 } },
+        });
+      } else {
+        doc.setFontSize(9);
+        doc.setTextColor(120, 120, 120);
+        doc.text('No equipment details recorded.', 14, startY);
+      }
+
+      // ═══ 8. FINANCIAL ═══
+      startY = addSectionHeader('FINANCIAL INFORMATION', 8);
+
+      autoTable(doc, {
+        startY,
+        head: [['Parameter', 'Value']],
+        body: [
+          ['Purchase Price', formData.purchase_price ? `${formData.currency || 'USD'} ${Number(formData.purchase_price).toLocaleString()}` : 'N/A'],
+          ['Insurance Value', formData.insurance_value ? `${formData.currency || 'USD'} ${Number(formData.insurance_value).toLocaleString()}` : 'N/A'],
+          ['Currency', formData.currency || 'USD'],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: primaryColor },
+        styles: { fontSize: 9 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55 } },
+      });
+
+      // ═══ 9. MANAGEMENT COMPANIES ═══
+      const ownerName = ownerCompanies.companies.find(c => c.id === formData.owner_company_id)?.name;
+      const operatorName = operatorCompanies.companies.find(c => c.id === formData.operator_company_id)?.name;
+      const techMgrName = technicalManagers.companies.find(c => c.id === formData.technical_manager_id)?.name;
+      const ismMgrName = ismManagers.companies.find(c => c.id === formData.ism_manager_id)?.name;
+
+      startY = addSectionHeader('MANAGEMENT & OWNERSHIP', 9);
+
+      autoTable(doc, {
+        startY,
+        head: [['Role', 'Company']],
+        body: [
+          ['Owner', ownerName || 'N/A'],
+          ['Operator', operatorName || 'N/A'],
+          ['Technical Manager', techMgrName || 'N/A'],
+          ['ISM Manager', ismMgrName || 'N/A'],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: primaryColor },
+        styles: { fontSize: 9 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55 } },
+      });
+
+      // ═══ 10. NOTES ═══
+      if (formData.notes) {
+        startY = addSectionHeader('OPERATIONAL NOTES', 10);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(60, 60, 60);
+        const splitNotes = doc.splitTextToSize(formData.notes, 178);
+        doc.text(splitNotes, 14, startY);
+      }
+
+      // ═══ 11. REGULATORY PORTFOLIO ═══
+      if (regulatoryPortfolio.length > 0) {
+        startY = addSectionHeader('REGULATORY PORTFOLIO', formData.notes ? 11 : 10);
+
+        autoTable(doc, {
+          startY,
+          head: [['Convention', 'Code', 'Title']],
+          body: regulatoryPortfolio.map(reg => [reg.convention, reg.code, reg.title]),
+          theme: 'striped',
+          headStyles: { fillColor: accentColor },
+          styles: { fontSize: 8 },
+        });
+      }
+
+      // ═══ 12. VESSEL IMAGERY ═══
+      const validPhotos = (formData.vessel_photos || []).filter(p => p && p.length > 0);
+      if (validPhotos.length > 0) {
+        doc.addPage();
+        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.rect(0, 0, pageWidth, 22, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.text('VESSEL IMAGERY', 14, 15);
+
+        let imgY = 30;
+
+        for (let i = 0; i < Math.min(validPhotos.length, 4); i++) {
+          const base64 = await loadImageAsBase64(validPhotos[i]);
+          if (base64) {
+            if (imgY + 95 > pageHeight - 20) {
+              doc.addPage();
+              imgY = 20;
             }
+            try {
+              doc.addImage(base64, 'JPEG', 14, imgY, 182, 90);
+              doc.setFontSize(7);
+              doc.setTextColor(120, 120, 120);
+              doc.text(`Photo ${i + 1} — ${formData.name}`, 14, imgY + 93);
+            } catch {
+              doc.setDrawColor(200);
+              doc.rect(14, imgY, 182, 90);
+              doc.setFontSize(9);
+              doc.setTextColor(150, 150, 150);
+              doc.text(`Photo ${i + 1} — Could not render`, 105, imgY + 45, { align: 'center' });
+            }
+            imgY += 100;
           }
         }
-
-        // Footer
-        const pageCount = (doc as any).internal.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-          doc.setPage(i);
-          doc.setFontSize(8);
-          doc.setTextColor(150);
-          doc.text(`Page ${i} of ${pageCount} - Confidential Asset Report`, 105, 285, { align: 'center' });
-        }
-
-        doc.save(`Vessel_Profile_${formData.name || 'Registry'}.pdf`);
-
-        setAiMessages(prev => [...prev, { role: 'assistant', content: `**Report Generated Successfully.**\nVessel: ${formData.name}\nExported to high-fidelity PDF format. The document includes structural, technical, drydocking specifications, and the full Regulatory Portfolio (${regulatoryPortfolio.length} references).` }]);
-      } catch (err: any) {
-        console.error('PDF Generation Error:', err);
-        setAiMessages(prev => [...prev, { role: 'assistant', content: `Error generating PDF: ${err.message}` }]);
-      } finally {
-        setIsAiGenerating(false);
       }
-    }, 2000);
+
+      // ═══ FOOTERS ═══
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(7);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
+        doc.text('CONFIDENTIAL — EAGLE MARITIME FLEET INTELLIGENCE', 14, pageHeight - 8);
+      }
+
+      doc.save(`Vessel_Profile_${formData.name || 'Registry'}_${format(new Date(), 'yyyyMMdd')}.pdf`);
+
+      setAiMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `**Comprehensive Report Generated Successfully.**\nVessel: **${formData.name}**\nSections: Identity, Dimensions, Machinery, Safety, Construction, Drydocking, Equipment, Financial, Management, ${formData.notes ? 'Notes, ' : ''}${regulatoryPortfolio.length > 0 ? `Regulatory Portfolio (${regulatoryPortfolio.length} refs), ` : ''}${validPhotos.length > 0 ? `Imagery (${validPhotos.length} photos)` : 'No photos'}\n\nExported to PDF.`
+      }]);
+    } catch (err: any) {
+      console.error('PDF Generation Error:', err);
+      setAiMessages(prev => [...prev, { role: 'assistant', content: `Error generating PDF: ${err.message}` }]);
+    } finally {
+      setIsAiGenerating(false);
+    }
   };
 
   const handleOpenDialog = (vessel?: Vessel, view = false) => {
@@ -809,15 +999,15 @@ const VesselManagement = () => {
                 type="file"
                 ref={brochureInputRef}
                 className="hidden"
-                accept=".pdf"
+                accept=".pdf,image/jpeg,image/png,image/webp"
                 onChange={handleBrochureUpload}
               />
               <input
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
-                onChange={handleFileUpload}
-                accept=".pdf,.doc,.docx,.txt,.csv,.xlsx"
+                accept=".pdf,image/jpeg,image/png,image/webp,.doc,.docx"
+                onChange={handleBrochureUpload}
               />
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -1089,7 +1279,7 @@ const VesselManagement = () => {
                       </div>
 
                       <div className="pt-4 space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Approved Vessel Brochure (PDF)</Label>
+                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Vessel Brochure / Spec Sheet (PDF or Image)</Label>
 
                         <div className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-background/50">
                           <div className="p-3 rounded-xl bg-orange-500/10 text-orange-600">
@@ -1106,7 +1296,7 @@ const VesselManagement = () => {
                                 : 'No brochure uploaded'}
                             </p>
                             <p className="text-xs text-muted-foreground uppercase font-medium font-mono">
-                              {formData.vessel_brochure ? 'INDEXED ON CLOUD' : 'Technical Specification PDF'}
+                              {formData.vessel_brochure ? 'INDEXED · AI READY' : 'PDF, JPG, PNG, or WEBP'}
                             </p>
                           </div>
                           <Button
