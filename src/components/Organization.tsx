@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useOrganization } from '@/hooks/useOrganization';
+import EnterpriseAuditLog from './EnterpriseAuditLog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -226,6 +227,7 @@ const Organization = () => {
             <Tabs defaultValue="members" className="w-full">
                 <TabsList>
                     <TabsTrigger value="members">Members</TabsTrigger>
+                    {isAdmin && <TabsTrigger value="audit">Audit Trail</TabsTrigger>}
                     <TabsTrigger value="settings">Settings</TabsTrigger>
                 </TabsList>
 
@@ -397,6 +399,22 @@ const Organization = () => {
                         </CardContent>
                     </Card>
                 </TabsContent>
+                
+                {isAdmin && (
+                    <TabsContent value="audit" className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Security Ledger</CardTitle>
+                                <CardDescription>
+                                    Technical audit of all organizational changes and cryptographic verification.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <EnterpriseAuditLog />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                )}
 
                 <TabsContent value="settings">
                     <Card>
