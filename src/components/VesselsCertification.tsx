@@ -18,7 +18,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 const VesselsCertification = () => {
   const { toast } = useToast();
-  const { toast } = useToast();
   const { certifications, loading, addCertification, deleteCertification, sealCertificate } = useVesselCertifications();
   const { vessels } = useVessels();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
