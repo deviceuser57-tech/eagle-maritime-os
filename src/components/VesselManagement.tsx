@@ -174,7 +174,7 @@ const VesselManagement = () => {
       // Security: File paths are prefixed with org_id for backend policy isolation
       const path = await uploadVesselAsset(file, editingVessel?.id || 'new_vessel');
       if (path) {
-        const url = await getVesselAssetUrl(path);
+        const url = getVesselAssetUrl(path);
         const newPhotos = [...formData.vessel_photos];
         newPhotos[index] = url;
         setFormData({ ...formData, vessel_photos: newPhotos });
@@ -202,7 +202,7 @@ const VesselManagement = () => {
     try {
       const path = await uploadVesselAsset(file, editingVessel?.id || 'new_vessel');
       if (path) {
-        const url = await getVesselAssetUrl(path);
+        const url = getVesselAssetUrl(path);
         setFormData(prev => ({ ...prev, vessel_brochure: url }));
         const fileLabel = file.type.startsWith('image/') ? 'image' : 'PDF';
         toast({ title: 'Document Uploaded', description: `Vessel ${fileLabel} uploaded. Starting AI extraction...` });

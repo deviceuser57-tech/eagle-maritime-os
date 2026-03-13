@@ -193,17 +193,16 @@ export const useVessels = () => {
     }
   };
 
-  const getVesselAssetUrl = async (path: string) => {
+  const getVesselAssetUrl = (path: string) => {
     if (!path) return '';
     try {
-      const { data, error } = await supabase.storage
+      const { data } = supabase.storage
         .from('vessel-assets')
-        .createSignedUrl(path, 3600); // 1 hour expiry
+        .getPublicUrl(path);
 
-      if (error) throw error;
-      return data.signedUrl;
+      return data.publicUrl;
     } catch (error: any) {
-      console.error('Error generating signed URL:', error);
+      console.error('Error generating public URL:', error);
       return '';
     }
   };

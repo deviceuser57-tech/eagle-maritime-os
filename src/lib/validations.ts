@@ -26,7 +26,7 @@ export const vesselSchema = z.object({
   previous_yard: optionalSafeString(200),
   remaining_tasks: optionalSafeString(5000),
   vessel_photos: z.array(z.string()).optional().nullable(),
-  vessel_brochure: optionalSafeString(500),
+  vessel_brochure: optionalSafeString(1000),
   painting_details: optionalSafeString(1000),
   navigation_equipment: optionalSafeString(2000),
   accommodations_pax: optionalSafeString(500),
