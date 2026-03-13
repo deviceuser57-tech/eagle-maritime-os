@@ -41,7 +41,7 @@ export const useVesselCertifications = () => {
         .from('vessel_certifications')
         .select(`
           *,
-          certificate_seals (
+          certificate_seals!certificate_seals_certificate_id_fkey (
             id,
             verification_token
           )
