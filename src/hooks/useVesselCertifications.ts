@@ -37,25 +37,29 @@ export const useVesselCertifications = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      const { data: certsData, error: certsError } = await supabase
         .from('vessel_certifications')
-        .select(`
-          *,
-          certificate_seals!certificate_seals_certificate_id_fkey (
-            id,
-            verification_token
-          )
-        `)
+        .select('*')
         .eq('org_id', orgId)
         .order('expiry_date', { ascending: true });
 
-      if (error) throw error;
+      if (certsError) throw certsError;
 
-      const formattedData = (data || []).map((cert: any) => ({
-        ...cert,
-        is_sealed: !!cert.certificate_seals?.[0],
-        verification_token: cert.certificate_seals?.[0]?.verification_token
-      }));
+      const { data: sealsData, error: sealsError } = await supabase
+        .from('certificate_seals')
+        .select('certificate_id, verification_token')
+        .eq('org_id', orgId);
+
+      if (sealsError) throw sealsError;
+
+      const formattedData = (certsData || []).map((cert: any) => {
+        const seal = (sealsData || []).find(s => s.certificate_id === cert.id);
+        return {
+          ...cert,
+          is_sealed: !!seal,
+          verification_token: seal?.verification_token
+        };
+      });
 
       setCertifications(formattedData);
     } catch (error: any) {
