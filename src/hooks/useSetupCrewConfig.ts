@@ -222,7 +222,7 @@ export const useContractTypes = () => {
       const { data, error } = await supabase
         .from('setup_contract_types')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('contract_name', { ascending: true });
       if (error) throw error;
       return data as ContractType[];
