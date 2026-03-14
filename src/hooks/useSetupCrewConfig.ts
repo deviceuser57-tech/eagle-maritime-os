@@ -60,7 +60,7 @@ export const useCrewRanks = () => {
       const { data, error } = await supabase
         .from('setup_crew_ranks')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('rank_order', { ascending: true });
       if (error) throw error;
       return data as CrewRank[];
