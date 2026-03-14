@@ -303,54 +303,6 @@ export type Database = {
           },
         ]
       }
-      certificate_seals: {
-        Row: {
-          certificate_id: string
-          created_at: string
-          id: string
-          metadata: Json | null
-          org_id: string
-          seal_hash: string
-          sealed_by: string | null
-          verification_token: string
-        }
-        Insert: {
-          certificate_id: string
-          created_at?: string
-          id?: string
-          metadata?: Json | null
-          org_id: string
-          seal_hash: string
-          sealed_by?: string | null
-          verification_token?: string
-        }
-        Update: {
-          certificate_id?: string
-          created_at?: string
-          id?: string
-          metadata?: Json | null
-          org_id?: string
-          seal_hash?: string
-          sealed_by?: string | null
-          verification_token?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "certificate_seals_certificate_id_fkey"
-            columns: ["certificate_id"]
-            isOneToOne: true
-            referencedRelation: "vessel_certifications"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "certificate_seals_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       cii_records: {
         Row: {
           cargo_carried: number | null
