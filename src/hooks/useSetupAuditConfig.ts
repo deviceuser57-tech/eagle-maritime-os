@@ -62,7 +62,7 @@ export const useAuditTypes = () => {
       const { data, error } = await supabase
         .from('setup_audit_types')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('audit_type_name', { ascending: true });
       if (error) throw error;
       return data as AuditType[];
