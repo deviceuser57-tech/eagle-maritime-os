@@ -224,7 +224,7 @@ export const useFindingStatuses = () => {
       const { data, error } = await supabase
         .from('setup_finding_statuses')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('status_order', { ascending: true });
       if (error) throw error;
       return data as FindingStatus[];
