@@ -141,7 +141,7 @@ export const useNationalities = () => {
       const { data, error } = await supabase
         .from('setup_nationalities')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('country_name', { ascending: true });
       if (error) throw error;
       return data as Nationality[];
