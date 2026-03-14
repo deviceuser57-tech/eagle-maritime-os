@@ -165,20 +165,49 @@ Deno.serve(async (req: Request) => {
     console.log(`Analyzing vessel document for ${user.email} in org ${org_id}`);
 
     // Fetch the file and convert to base64
-    const fileResponse = await fetch(fileUrl);
-    if (!fileResponse.ok) {
-      throw new Error(`Could not fetch document: ${fileResponse.statusText}`);
+    let buffer: ArrayBuffer;
+    let mimeType = contentType || "application/pdf";
+    
+    // Check if it's a Supabase Storage URL
+    const storageMatch = fileUrl.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
+    if (storageMatch) {
+      const bucket = storageMatch[1];
+      const path = decodeURIComponent(storageMatch[2]);
+      console.log(`Downloading from storage bucket '${bucket}', path '${path}'`);
+      
+      const { data: fileData, error: downloadError } = await supabase.storage.from(bucket).download(path);
+      if (downloadError || !fileData) {
+        throw new Error(`Could not fetch document from storage: ${downloadError?.message || 'Unknown error'}`);
+      }
+      
+      buffer = await fileData.arrayBuffer();
+      mimeType = contentType || fileData.type || "application/pdf";
+    } else {
+      console.log(`Fetching from external URL: ${fileUrl}`);
+      // Fallback for localhost URLs when running locally
+      let fetchUrl = fileUrl;
+      const localMatch = fileUrl.match(/^http:\/\/(localhost|127\.0\.0\.1):(\d+)(.*)$/);
+      if (localMatch && supabaseUrl) {
+         const urlObj = new URL(fileUrl);
+         fetchUrl = `${supabaseUrl}${urlObj.pathname}${urlObj.search}`;
+         console.log(`Rewrote local URL to: ${fetchUrl}`);
+      }
+      
+      const fileResponse = await fetch(fetchUrl);
+      if (!fileResponse.ok) {
+        throw new Error(`Could not fetch document: ${fileResponse.statusText}`);
+      }
+      const blob = await fileResponse.blob();
+      buffer = await blob.arrayBuffer();
+      mimeType = contentType || blob.type || "application/pdf";
     }
 
-    const blob = await fileResponse.blob();
-    const buffer = await blob.arrayBuffer();
     const uint8Array = new Uint8Array(buffer);
     let binary = "";
     for (let i = 0; i < uint8Array.byteLength; i++) {
       binary += String.fromCharCode(uint8Array[i]);
     }
     const base64Data = btoa(binary);
-    const mimeType = contentType || blob.type || "application/pdf";
 
     // Build field description for the prompt
     const fieldDescriptions = Object.entries(VESSEL_EXTRACTION_SCAFFOLD)
