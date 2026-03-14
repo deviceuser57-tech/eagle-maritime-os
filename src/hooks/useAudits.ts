@@ -22,7 +22,7 @@ export const useAudits = () => {
       const { data, error } = await supabase
         .from('audits')
         .select('*, vessels(name)')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('scheduled_date', { ascending: false });
 
       if (error) throw error;

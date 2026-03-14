@@ -303,7 +303,7 @@ export const useCurrencies = () => {
       const { data, error } = await supabase
         .from('setup_currencies')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('currency_code', { ascending: true });
       if (error) throw error;
       return data as Currency[];

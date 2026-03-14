@@ -570,7 +570,7 @@ const Reports = () => {
     if (fal1) {
       y = reportUtils.addSectionHeader(doc, 'Form 1: General Declaration', y);
       const data = [
-        ['Vessel Name', fal1.vessel_name, 'IMO Number', fal1.imo_number],
+        ['IMO Number', fal1.imo_number, 'MMSI', fal1.mmsi_number],
         ['Call Sign', fal1.call_sign, 'Flag State', fal1.flag_state],
         ['Crew Count', fal1.crew_count.toString(), 'Passenger Count', fal1.passenger_count.toString()]
       ];

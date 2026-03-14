@@ -121,7 +121,7 @@ export const useFlagStates = () => {
       const { data, error } = await supabase
         .from('setup_flag_states')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('flag_name', { ascending: true });
       if (error) throw error;
       return data as FlagState[];
