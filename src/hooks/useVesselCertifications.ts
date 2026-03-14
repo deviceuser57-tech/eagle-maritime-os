@@ -45,21 +45,11 @@ export const useVesselCertifications = () => {
 
       if (certsError) throw certsError;
 
-      const { data: sealsData, error: sealsError } = await supabase
-        .from('certificate_seals')
-        .select('certificate_id, verification_token')
-        .eq('org_id', orgId);
-
-      if (sealsError) throw sealsError;
-
-      const formattedData = (certsData || []).map((cert: any) => {
-        const seal = (sealsData || []).find(s => s.certificate_id === cert.id);
-        return {
-          ...cert,
-          is_sealed: !!seal,
-          verification_token: seal?.verification_token
-        };
-      });
+      const formattedData = (certsData || []).map((cert: any) => ({
+        ...cert,
+        is_sealed: false,
+        verification_token: null
+      }));
 
       setCertifications(formattedData);
     } catch (error: any) {
