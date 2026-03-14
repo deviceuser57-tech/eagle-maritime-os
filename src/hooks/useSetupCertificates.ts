@@ -32,7 +32,7 @@ export const useCertificateTypes = (category?: CertificateType['certificate_cate
       let query = supabase
         .from('setup_certificate_types')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('certificate_name', { ascending: true });
 
       if (category) {

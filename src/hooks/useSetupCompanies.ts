@@ -38,7 +38,7 @@ export const useSetupCompanies = (companyType?: SetupCompany['company_type']) =>
       let query = supabase
         .from('setup_companies')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('created_at', { ascending: false });
 
       if (companyType) {

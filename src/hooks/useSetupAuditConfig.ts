@@ -62,7 +62,7 @@ export const useAuditTypes = () => {
       const { data, error } = await supabase
         .from('setup_audit_types')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('audit_type_name', { ascending: true });
       if (error) throw error;
       return data as AuditType[];
@@ -143,7 +143,7 @@ export const useFindingTypes = () => {
       const { data, error } = await supabase
         .from('setup_finding_types')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('finding_type_name', { ascending: true });
       if (error) throw error;
       return data as FindingType[];
@@ -224,7 +224,7 @@ export const useFindingStatuses = () => {
       const { data, error } = await supabase
         .from('setup_finding_statuses')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('status_order', { ascending: true });
       if (error) throw error;
       return data as FindingStatus[];
@@ -305,7 +305,7 @@ export const useRootCauses = () => {
       const { data, error } = await supabase
         .from('setup_root_causes')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('cause_name', { ascending: true });
       if (error) throw error;
       return data as RootCause[];

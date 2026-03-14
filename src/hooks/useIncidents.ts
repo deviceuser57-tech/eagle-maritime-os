@@ -22,7 +22,7 @@ export const useIncidents = () => {
       const { data, error } = await supabase
         .from('incidents')
         .select('*, vessels(name)')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('incident_date', { ascending: false });
 
       if (error) throw error;

@@ -37,7 +37,7 @@ export const useAuditors = () => {
       const { data, error } = await supabase
         .from('auditors')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('name', { ascending: true });
 
       if (error) throw error;

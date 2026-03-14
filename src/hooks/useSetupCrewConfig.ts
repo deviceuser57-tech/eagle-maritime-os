@@ -60,7 +60,7 @@ export const useCrewRanks = () => {
       const { data, error } = await supabase
         .from('setup_crew_ranks')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('rank_order', { ascending: true });
       if (error) throw error;
       return data as CrewRank[];
@@ -141,7 +141,7 @@ export const useNationalities = () => {
       const { data, error } = await supabase
         .from('setup_nationalities')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('country_name', { ascending: true });
       if (error) throw error;
       return data as Nationality[];
@@ -222,7 +222,7 @@ export const useContractTypes = () => {
       const { data, error } = await supabase
         .from('setup_contract_types')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('contract_name', { ascending: true });
       if (error) throw error;
       return data as ContractType[];
@@ -303,7 +303,7 @@ export const useCurrencies = () => {
       const { data, error } = await supabase
         .from('setup_currencies')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('currency_code', { ascending: true });
       if (error) throw error;
       return data as Currency[];

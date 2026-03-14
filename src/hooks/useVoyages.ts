@@ -40,7 +40,7 @@ export const useVoyages = () => {
       const { data, error } = await supabase
         .from('voyages')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('departure_date', { ascending: false });
 
       if (error) throw error;
