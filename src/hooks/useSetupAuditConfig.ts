@@ -143,7 +143,7 @@ export const useFindingTypes = () => {
       const { data, error } = await supabase
         .from('setup_finding_types')
         .select('*')
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .order('finding_type_name', { ascending: true });
       if (error) throw error;
       return data as FindingType[];
