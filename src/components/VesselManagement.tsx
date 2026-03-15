@@ -288,7 +288,9 @@ const VesselManagement = () => {
 
       const extracted = data.data;
       const fieldsExtracted = data.fields_extracted || Object.keys(extracted).length;
+      const inferences: string[] = data.inferences || [];
       console.log(`AI Data Payload: ${fieldsExtracted} fields extracted`, extracted);
+      if (inferences.length > 0) console.log('AI Inferences:', inferences);
 
       // Update form data with extracted fields
       setFormData(prev => {
@@ -306,17 +308,23 @@ const VesselManagement = () => {
         extracted.imo_number && `**IMO**: ${extracted.imo_number}`,
         extracted.vessel_type && `**Type**: ${extracted.vessel_type}`,
         extracted.gross_tonnage && `**GT**: ${extracted.gross_tonnage}`,
+        extracted.deadweight && `**DWT**: ${extracted.deadweight}`,
         extracted.length_overall && extracted.beam && `**Dimensions**: ${extracted.length_overall}m × ${extracted.beam}m`,
         extracted.engine_make && `**Engine**: ${extracted.engine_make} ${extracted.engine_model || ''}`,
         extracted.flag_state && `**Flag**: ${extracted.flag_state}`,
+        extracted.classification_society && `**Class**: ${extracted.classification_society}`,
       ].filter(Boolean).join('\n- ');
+
+      const inferenceText = inferences.length > 0
+        ? `\n\n🧠 **Smart Inferences:**\n${inferences.map(i => `- ${i}`).join('\n')}`
+        : '';
 
       setAiMessages(prev => [...prev, {
         role: 'assistant',
-        content: `**AI Extraction Complete — ${fieldsExtracted} fields populated!**\n\n- ${highlights}\n\nCheck all tabs (General, Technical, Machinery, Safety) for the full extracted dossier.`
+        content: `**AI Smart Extraction Complete — ${fieldsExtracted} fields populated!**\n\n- ${highlights}${inferenceText}\n\nCheck all tabs (General, Technical, Machinery, Safety) for the full extracted dossier.`
       }]);
 
-      toast({ title: 'AI Extraction Complete', description: 'Vessel form updated with technical data.' });
+      toast({ title: 'AI Smart Extraction Complete', description: `${fieldsExtracted} fields extracted with intelligent inference.` });
     } catch (err: any) {
       console.error('AI Extraction Cloud Error:', err);
 
