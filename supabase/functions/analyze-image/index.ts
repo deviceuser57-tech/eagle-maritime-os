@@ -119,7 +119,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { fileUrl, contentType, org_id } = body;
+    const { fileUrl, contentType, org_id, storageBucket, storagePath } = body;
 
     if (!org_id) {
       return new Response(JSON.stringify({ error: "Missing organization context (org_id)" }), {
@@ -128,8 +128,8 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    if (!fileUrl) {
-      return new Response(JSON.stringify({ error: "Missing fileUrl" }), {
+    if (!fileUrl && !storagePath) {
+      return new Response(JSON.stringify({ error: "Missing fileUrl or storagePath" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
       });
@@ -168,38 +168,39 @@ Deno.serve(async (req: Request) => {
     let buffer: ArrayBuffer;
     let mimeType = contentType || "application/pdf";
     
-    // Check if it's a Supabase Storage URL
-    const storageMatch = fileUrl.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
-    if (storageMatch) {
-      const bucket = storageMatch[1];
-      const path = decodeURIComponent(storageMatch[2]);
-      console.log(`Downloading from storage bucket '${bucket}', path '${path}'`);
-      
-      const { data: fileData, error: downloadError } = await supabase.storage.from(bucket).download(path);
+    if (storageBucket && storagePath) {
+      // Direct storage download using service role (works for private buckets)
+      console.log(`Downloading from storage bucket '${storageBucket}', path '${storagePath}'`);
+      const { data: fileData, error: downloadError } = await supabase.storage.from(storageBucket).download(storagePath);
       if (downloadError || !fileData) {
         throw new Error(`Could not fetch document from storage: ${downloadError?.message || 'Unknown error'}`);
       }
-      
       buffer = await fileData.arrayBuffer();
       mimeType = contentType || fileData.type || "application/pdf";
     } else {
-      console.log(`Fetching from external URL: ${fileUrl}`);
-      // Fallback for localhost URLs when running locally
-      let fetchUrl = fileUrl;
-      const localMatch = fileUrl.match(/^http:\/\/(localhost|127\.0\.0\.1):(\d+)(.*)$/);
-      if (localMatch && supabaseUrl) {
-         const urlObj = new URL(fileUrl);
-         fetchUrl = `${supabaseUrl}${urlObj.pathname}${urlObj.search}`;
-         console.log(`Rewrote local URL to: ${fetchUrl}`);
+      // Fallback: try to parse storage URL or fetch externally
+      const storageMatch = fileUrl.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/]+)\/(.+?)(?:\?.*)?$/);
+      if (storageMatch) {
+        const bucket = storageMatch[1];
+        const path = decodeURIComponent(storageMatch[2]);
+        console.log(`Downloading from storage bucket '${bucket}', path '${path}'`);
+        
+        const { data: fileData, error: downloadError } = await supabase.storage.from(bucket).download(path);
+        if (downloadError || !fileData) {
+          throw new Error(`Could not fetch document from storage: ${downloadError?.message || 'Unknown error'}`);
+        }
+        buffer = await fileData.arrayBuffer();
+        mimeType = contentType || fileData.type || "application/pdf";
+      } else {
+        console.log(`Fetching from external URL: ${fileUrl}`);
+        const fileResponse = await fetch(fileUrl);
+        if (!fileResponse.ok) {
+          throw new Error(`Could not fetch document: ${fileResponse.statusText}`);
+        }
+        const blob = await fileResponse.blob();
+        buffer = await blob.arrayBuffer();
+        mimeType = contentType || blob.type || "application/pdf";
       }
-      
-      const fileResponse = await fetch(fetchUrl);
-      if (!fileResponse.ok) {
-        throw new Error(`Could not fetch document: ${fileResponse.statusText}`);
-      }
-      const blob = await fileResponse.blob();
-      buffer = await blob.arrayBuffer();
-      mimeType = contentType || blob.type || "application/pdf";
     }
 
     const uint8Array = new Uint8Array(buffer);
