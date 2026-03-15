@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useOrganization } from '@/hooks/useOrganization';
+import { useAuth } from '@/contexts/AuthContext';
 import EnterpriseAuditLog from './EnterpriseAuditLog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Plus, Users, Building, Settings, ShieldCheck, Trash2, Mail, MoreVertical, Shield, UserMinus } from 'lucide-react';
+import { Loader2, Plus, Users, Building, Settings, ShieldCheck, Trash2, Mail, MoreVertical, Shield, UserMinus, User, LogOut } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 
 const Organization = () => {
+    const { user, signOut } = useAuth();
     const {
         organization,
         members,
@@ -224,12 +226,62 @@ const Organization = () => {
                 </Card>
             </div>
 
-            <Tabs defaultValue="members" className="w-full">
+            <Tabs defaultValue="profile" className="w-full">
                 <TabsList>
+                    <TabsTrigger value="profile">My Profile</TabsTrigger>
                     <TabsTrigger value="members">Members</TabsTrigger>
                     {isAdmin && <TabsTrigger value="audit">Audit Trail</TabsTrigger>}
                     <TabsTrigger value="settings">Settings</TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="profile" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>User Profile</CardTitle>
+                            <CardDescription>
+                                Your personal account details and security settings.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="flex items-center gap-6">
+                                <Avatar className="h-20 w-20">
+                                    <AvatarFallback className="text-2xl bg-primary/10 text-primary uppercase font-bold">
+                                        {user?.email ? user.email.substring(0, 2) : 'U'}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <h3 className="text-2xl font-bold">{user?.email}</h3>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <Badge variant="outline" className="font-mono">{organization?.userRole || 'Member'}</Badge>
+                                        <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20">Active Session</Badge>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="grid gap-6 md:grid-cols-2 pt-6 border-t border-border/50">
+                                <div className="space-y-1">
+                                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">User ID</p>
+                                    <p className="font-mono text-sm bg-muted/50 p-2 rounded-md">{user?.id}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Account Created</p>
+                                    <p className="text-sm bg-muted/50 p-2 rounded-md">{user?.created_at ? new Date(user.created_at).toLocaleString() : 'N/A'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Last Sign In</p>
+                                    <p className="text-sm bg-muted/50 p-2 rounded-md">{user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'N/A'}</p>
+                                </div>
+                            </div>
+
+                            <div className="pt-6 border-t border-border/50">
+                                <Button variant="destructive" onClick={signOut} className="w-full sm:w-auto font-bold">
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    Sign Out Securely
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
 
                 <TabsContent value="members" className="space-y-4">
                     <Card>
