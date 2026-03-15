@@ -261,9 +261,19 @@ const VesselManagement = () => {
 
     try {
       console.log('Initiating AI Technical Extraction for:', url);
+      // Extract storage path from public URL for private bucket access
+      let storagePath: string | undefined;
+      let storageBucket: string | undefined;
+      const storageMatch = url.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/]+)\/(.+?)(?:\?.*)?$/);
+      if (storageMatch) {
+        storageBucket = storageMatch[1];
+        storagePath = decodeURIComponent(storageMatch[2]);
+      }
       const { data, error } = await supabase.functions.invoke('analyze-image', {
         body: {
           fileUrl: url,
+          storageBucket,
+          storagePath,
           contentType: contentType || undefined,
           org_id: orgId,
         }
