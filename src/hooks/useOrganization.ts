@@ -122,41 +122,16 @@ export const useOrganization = () => {
   const createOrganization = async (name: string, slug: string) => {
     if (!user) return;
     try {
-      const { data: org, error: orgError } = await (supabase
-        .from('organizations')
-        .insert([{ name, slug }] as any)
-        .select()
-        .single() as any);
+      const { data, error } = await (supabase.rpc as any)('create_new_organization', {
+        org_name: name,
+        org_slug: slug,
+      });
 
-      if (orgError) throw orgError;
-
-      // Create default roles for the new organization
-      const { data: adminRole, error: roleError } = await (supabase
-        .from('org_roles')
-        .insert([
-          { org_id: org.id, name: 'Super Admin', permissions: ['*'] },
-          { org_id: org.id, name: 'Admin', permissions: ['vessels.*', 'members.*'] },
-          { org_id: org.id, name: 'Member', permissions: ['vessels.view'] }
-        ] as any)
-        .select()
-        .eq('name', 'Super Admin')
-        .single() as any);
-
-      if (roleError) throw roleError;
-
-      const { error: memberError } = await (supabase
-        .from('organization_members')
-        .insert([{
-          org_id: org.id,
-          user_id: user.id,
-          role_id: adminRole.id
-        }] as any) as any);
-
-      if (memberError) throw memberError;
+      if (error) throw error;
 
       toast({ title: 'Success', description: 'Organization created successfully' });
-      fetchOrganizationData();
-      return org;
+      await fetchOrganizationData();
+      return { id: data, name, slug };
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
       throw error;
