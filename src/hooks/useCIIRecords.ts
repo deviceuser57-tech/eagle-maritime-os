@@ -105,7 +105,7 @@ export const useCIIRecords = (vesselId?: string) => {
         .from('cii_records')
         .update(updates)
         .eq('id', id)
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .select()
         .single();
 
