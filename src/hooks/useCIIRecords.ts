@@ -105,7 +105,7 @@ export const useCIIRecords = (vesselId?: string) => {
         .from('cii_records')
         .update(updates)
         .eq('id', id)
-        .eq('user_id', orgId)
+        .eq('org_id', orgId)
         .select()
         .single();
 
@@ -127,7 +127,7 @@ export const useCIIRecords = (vesselId?: string) => {
         .from('cii_records')
         .delete()
         .eq('id', id)
-        .eq('user_id', orgId);
+        .eq('org_id', orgId);
 
       if (error) throw error;
       setCIIRecords(prev => prev.filter(r => r.id !== id));
