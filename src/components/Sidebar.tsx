@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Moon, Sun, LogOut, User, Menu, X, Building2, LayoutDashboard, Sparkles, Settings as SettingsIcon } from 'lucide-react';
+import eagleLogo from '@/assets/eagle-maritime-logo.png';
 
 interface SidebarProps {
   activeSection: string;
