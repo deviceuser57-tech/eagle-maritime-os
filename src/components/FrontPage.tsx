@@ -282,21 +282,18 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           className="mb-12 relative group"
           style={{ transformStyle: "preserve-3d" }}>
 
-          <div
-            className="relative w-32 h-32 md:w-44 md:h-44 transform-gpu transition-transform duration-500 group-hover:scale-110"
-            style={{ transformStyle: "preserve-3d" }}>
+            <div
+              className="relative w-32 h-32 md:w-44 md:h-44 transform-gpu transition-transform duration-500 group-hover:scale-110"
+              style={{ transformStyle: "preserve-3d" }}>
 
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary via-maritime-accent to-blue-600 blur-2xl opacity-40 group-hover:opacity-60 transition-opacity" />
-            <div className="relative h-full w-full rounded-full bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center shadow-3xl border border-white/20 overflow-hidden">
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
-              <span className="text-7xl md:text-8xl select-none filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-                🦅
-              </span>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary via-accent-foreground to-primary blur-2xl opacity-40 group-hover:opacity-60 transition-opacity" />
+              <div className="relative h-full w-full rounded-full bg-gradient-to-br from-[hsl(220,40%,13%)] to-[hsl(220,50%,8%)] flex items-center justify-center shadow-3xl border border-white/20 overflow-hidden">
+                <img src={eagleLogo} alt="Eagle Maritime OS" className="w-3/4 h-3/4 object-contain drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]" />
+              </div>
+              {/* Spinning Ring */}
+              <div className="absolute -inset-4 rounded-full border-2 border-white/5 border-t-white/20 animate-[spin_8s_linear_infinite]" />
+              <div className="absolute -inset-8 rounded-full border border-white/5 border-b-white/10 animate-[spin_12s_linear_infinite_reverse]" />
             </div>
-            {/* Spinning Ring */}
-            <div className="absolute -inset-4 rounded-full border-2 border-white/5 border-t-white/20 animate-[spin_8s_linear_infinite]" />
-            <div className="absolute -inset-8 rounded-full border border-white/5 border-b-white/10 animate-[spin_12s_linear_infinite_reverse]" />
-          </div>
         </div>
 
         {/* Hero Content */}
