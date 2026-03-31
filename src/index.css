@@ -30,34 +30,34 @@
 
 @layer base {
   :root {
-    /* Enhanced Light Maritime Theme - Professional & Elegant */
-    --background: 0 0% 96%;
-    --foreground: 0 0% 9%;
+    /* Deep Navy + Muted Gold + Soft Gray Maritime Theme */
+    --background: 220 20% 95%;
+    --foreground: 220 40% 10%;
 
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 9%;
+    --card: 220 15% 98%;
+    --card-foreground: 220 40% 10%;
 
-    --popover: 0 0% 89%;
-    --popover-foreground: 0 0% 9%;
+    --popover: 220 15% 90%;
+    --popover-foreground: 220 40% 10%;
 
-    --primary: 243 75% 58%;
-    --primary-foreground: 225 100% 96%;
+    --primary: 220 60% 25%;
+    --primary-foreground: 40 30% 92%;
 
-    --secondary: 0 0% 32%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 220 10% 35%;
+    --secondary-foreground: 220 10% 98%;
 
-    --muted: 0 0% 63%;
-    --muted-foreground: 0 0% 9%;
+    --muted: 220 10% 65%;
+    --muted-foreground: 220 20% 20%;
 
-    --accent: 250 100% 97%;
-    --accent-foreground: 258 89% 66%;
+    --accent: 40 35% 95%;
+    --accent-foreground: 38 55% 45%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 85% 97%;
 
-    --border: 0 0% 83%;
-    --input: 0 0% 83%;
-    --ring: 243 75% 58%;
+    --border: 220 15% 82%;
+    --input: 220 15% 82%;
+    --ring: 220 60% 25%;
 
     --radius: 1.25rem;
 
