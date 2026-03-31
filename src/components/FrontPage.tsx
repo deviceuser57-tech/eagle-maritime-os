@@ -11,6 +11,7 @@ import {
 "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroBg from "@/assets/hero-bg.png";
+import eagleLogo from "@/assets/eagle-maritime-logo.png";
 
 interface FrontPageProps {
   onEnterDashboard: () => void;
