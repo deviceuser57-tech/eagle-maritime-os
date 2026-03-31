@@ -306,17 +306,17 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
             <span className="inline-block bg-gradient-to-b from-white via-slate-200 to-slate-500 bg-clip-text text-transparent italic">
               EAGLE
             </span>
-            <span className="inline-block px-4 bg-gradient-to-r from-primary to-orange-400 bg-clip-text text-transparent">
-              PLATFORM
+            <span className="inline-block px-4 bg-gradient-to-r from-accent-foreground to-[hsl(38,50%,60%)] bg-clip-text text-transparent">
+              MARITIME OS
             </span>
           </h1>
 
           <h2
             ref={subtitleRef}
-            className="text-2xl md:text-3xl lg:text-4xl font-light text-maritime-accent mb-8 tracking-[0.2em] uppercase"
+            className="text-2xl md:text-3xl lg:text-4xl font-light text-accent-foreground mb-8 tracking-[0.2em] uppercase"
             style={{ transform: "translateZ(60px)" }}>
 
-            Evolution of Vessel Governance
+            Intelligent Vessel Governance
           </h2>
 
           <p

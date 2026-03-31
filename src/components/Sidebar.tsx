@@ -118,13 +118,16 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
         {/* Header */}
         <div className="p-8 border-b border-border space-y-6 bg-white/10 dark:bg-white/5 backdrop-blur-md px-[13px] py-[13px] my-0 shadow">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-br from-primary to-blue-600 bg-clip-text text-transparent">
-                EAGLE PLATFORM
-              </h1>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                Vessel Governance System
-              </p>
+            <div className="flex items-center gap-3">
+              <img src={eagleLogo} alt="Eagle Maritime OS" className="h-10 w-10 object-contain" />
+              <div>
+                <h1 className="text-xl font-black tracking-tight bg-gradient-to-br from-primary to-accent-foreground bg-clip-text text-transparent">
+                  EAGLE MARITIME OS
+                </h1>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                  Vessel Governance System
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button
