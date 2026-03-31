@@ -30,57 +30,57 @@
 
 @layer base {
   :root {
-    /* Enhanced Light Maritime Theme - Professional & Elegant */
-    --background: 0 0% 96%;
-    --foreground: 0 0% 9%;
+    /* Deep Navy + Muted Gold + Soft Gray Maritime Theme */
+    --background: 220 20% 95%;
+    --foreground: 220 40% 10%;
 
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 9%;
+    --card: 220 15% 98%;
+    --card-foreground: 220 40% 10%;
 
-    --popover: 0 0% 89%;
-    --popover-foreground: 0 0% 9%;
+    --popover: 220 15% 90%;
+    --popover-foreground: 220 40% 10%;
 
-    --primary: 243 75% 58%;
-    --primary-foreground: 225 100% 96%;
+    --primary: 220 60% 25%;
+    --primary-foreground: 40 30% 92%;
 
-    --secondary: 0 0% 32%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 220 10% 35%;
+    --secondary-foreground: 220 10% 98%;
 
-    --muted: 0 0% 63%;
-    --muted-foreground: 0 0% 9%;
+    --muted: 220 10% 65%;
+    --muted-foreground: 220 20% 20%;
 
-    --accent: 250 100% 97%;
-    --accent-foreground: 258 89% 66%;
+    --accent: 40 35% 95%;
+    --accent-foreground: 38 55% 45%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 85% 97%;
 
-    --border: 0 0% 83%;
-    --input: 0 0% 83%;
-    --ring: 243 75% 58%;
+    --border: 220 15% 82%;
+    --input: 220 15% 82%;
+    --ring: 220 60% 25%;
 
     --radius: 1.25rem;
 
     /* Maritime Palette for Light Mode */
-    --ocean-blue: 205 85% 45%;
-    --deep-sea: 222 47% 11%;
-    --maritime-accent: 185 80% 45%;
-    --sea-foam: 180 45% 95%;
-    --anchor-gray: 215 15% 50%;
+    --ocean-blue: 220 60% 35%;
+    --deep-sea: 220 45% 12%;
+    --maritime-accent: 38 55% 45%;
+    --sea-foam: 220 15% 95%;
+    --anchor-gray: 220 10% 50%;
     --warning-orange: 25 95% 55%;
     --success-green: 155 70% 40%;
     --critical-red: 0 80% 55%;
-    --gold: 42 90% 55%;
+    --gold: 38 55% 50%;
 
     /* Enhanced Visual Tokens */
-    --gradient-ocean: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    --gradient-primary: linear-gradient(135deg, hsl(205 85% 55%), hsl(205 85% 35%));
+    --gradient-ocean: linear-gradient(135deg, hsl(220 15% 97%) 0%, hsl(220 15% 90%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(220 60% 30%), hsl(220 60% 18%));
     --gradient-card: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 1) 100%);
 
     /* Premium Shadows */
     --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.04);
-    --shadow-maritime: 0 20px 40px -15px rgba(2, 40, 78, 0.08);
-    --shadow-glow: 0 0 20px rgba(12, 110, 190, 0.15);
+    --shadow-maritime: 0 20px 40px -15px rgba(15, 30, 60, 0.1);
+    --shadow-glow: 0 0 20px rgba(38, 55, 45, 0.12);
 
     /* Typography Overrides */
     --font-sans: 'Lato', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
@@ -88,31 +88,31 @@
 
     --spacing: 0.25rem;
 
-    --chart-1: 234 89% 73%;
+    --chart-1: 220 60% 40%;
 
-    --chart-2: 255 91% 76%;
+    --chart-2: 38 55% 50%;
 
-    --chart-3: 270 95% 75%;
+    --chart-3: 220 40% 55%;
 
-    --chart-4: 238 83% 66%;
+    --chart-4: 38 40% 40%;
 
-    --chart-5: 0 0% 45%;
+    --chart-5: 220 10% 45%;
 
-    --sidebar: 0 0% 98%;
+    --sidebar: 220 30% 97%;
 
-    --sidebar-foreground: 0 0% 9%;
+    --sidebar-foreground: 220 40% 10%;
 
-    --sidebar-primary: 243 75% 58%;
+    --sidebar-primary: 220 60% 25%;
 
-    --sidebar-primary-foreground: 225 100% 96%;
+    --sidebar-primary-foreground: 40 30% 92%;
 
-    --sidebar-accent: 0 0% 32%;
+    --sidebar-accent: 38 55% 45%;
 
-    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-accent-foreground: 220 40% 10%;
 
-    --sidebar-border: 0 0% 83%;
+    --sidebar-border: 220 15% 82%;
 
-    --sidebar-ring: 243 75% 58%;
+    --sidebar-ring: 220 60% 25%;
 
     --font-serif: 'EB Garamond', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
 
@@ -138,47 +138,47 @@
   }
 
   .dark {
-    --background: 0 0% 9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 14%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 25%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 234 89% 73%;
-    --primary-foreground: 243 47% 20%;
-    --secondary: 0 0% 45%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 45%;
-    --muted-foreground: 0 0% 98%;
-    --accent: 261 72% 22%;
-    --accent-foreground: 255 91% 76%;
+    --background: 220 30% 8%;
+    --foreground: 220 10% 95%;
+    --card: 220 25% 13%;
+    --card-foreground: 220 10% 95%;
+    --popover: 220 20% 18%;
+    --popover-foreground: 220 10% 95%;
+    --primary: 220 50% 55%;
+    --primary-foreground: 220 40% 10%;
+    --secondary: 220 10% 40%;
+    --secondary-foreground: 220 10% 95%;
+    --muted: 220 10% 35%;
+    --muted-foreground: 220 10% 80%;
+    --accent: 38 40% 18%;
+    --accent-foreground: 38 55% 60%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 85% 97%;
-    --border: 0 0% 32%;
-    --input: 0 0% 32%;
-    --ring: 234 89% 73%;
+    --border: 220 15% 22%;
+    --input: 220 15% 22%;
+    --ring: 220 50% 55%;
 
     /* Dark maritime colors */
-    --ocean-blue: 205 70% 70%;
-    --deep-sea: 210 80% 80%;
-    --maritime-accent: 185 70% 55%;
-    --sea-foam: 180 35% 35%;
-    --anchor-gray: 210 15% 50%;
-    --gold: 38 90% 60%;
-    --navy: 210 80% 25%;
-    --chart-1: 229 93% 81%;
-    --chart-2: 252 94% 85%;
-    --chart-3: 269 97% 85%;
-    --chart-4: 234 89% 73%;
-    --chart-5: 0 0% 45%;
-    --sidebar: 0 0% 14%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 234 89% 73%;
-    --sidebar-primary-foreground: 243 47% 20%;
-    --sidebar-accent: 255 91% 76%;
-    --sidebar-accent-foreground: 261 72% 22%;
-    --sidebar-border: 0 0% 32%;
-    --sidebar-ring: 234 89% 73%;
+    --ocean-blue: 220 50% 60%;
+    --deep-sea: 220 40% 80%;
+    --maritime-accent: 38 55% 55%;
+    --sea-foam: 220 20% 20%;
+    --anchor-gray: 220 10% 50%;
+    --gold: 38 60% 55%;
+    --navy: 220 50% 20%;
+    --chart-1: 220 50% 60%;
+    --chart-2: 38 55% 60%;
+    --chart-3: 220 35% 65%;
+    --chart-4: 38 40% 50%;
+    --chart-5: 220 10% 50%;
+    --sidebar: 220 25% 12%;
+    --sidebar-foreground: 220 10% 95%;
+    --sidebar-primary: 220 50% 55%;
+    --sidebar-primary-foreground: 220 40% 10%;
+    --sidebar-accent: 38 55% 55%;
+    --sidebar-accent-foreground: 220 10% 95%;
+    --sidebar-border: 220 15% 22%;
+    --sidebar-ring: 220 50% 55%;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
