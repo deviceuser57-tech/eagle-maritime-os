@@ -46,6 +46,16 @@ export default function PublicVerify() {
 
     return (
         <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+            <Helmet>
+                <title>Certificate Verification — Eagle Maritime OS</title>
+                <meta name="description" content="Verify the authenticity of an Eagle Maritime OS vessel certificate. Independent international maritime certificate verification portal." />
+                <link rel="canonical" href="https://eagle-voyage-guard.lovable.app/verify" />
+                <meta property="og:title" content="Certificate Verification — Eagle Maritime OS" />
+                <meta property="og:description" content="Independent verification portal for Eagle Maritime OS vessel certificates." />
+                <meta property="og:url" content="https://eagle-voyage-guard.lovable.app/verify" />
+                <meta name="twitter:title" content="Certificate Verification — Eagle Maritime OS" />
+                <meta name="twitter:description" content="Independent verification portal for Eagle Maritime OS vessel certificates." />
+            </Helmet>
             <div className="max-w-2xl mx-auto">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-slate-900 flex items-center justify-center gap-2">
@@ -59,7 +69,7 @@ export default function PublicVerify() {
                     <Card className="border-red-100 bg-red-50 text-center py-8">
                         <CardContent>
                             <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                            <CardTitle className="text-red-900 mb-2">Invalid Verification Token</CardTitle>
+                            <h2 className="text-xl font-semibold text-red-900 mb-2">Invalid Verification Token</h2>
                             <p className="text-red-700">This certificate could not be verified. It may have expired, been revoked, or the link is incorrect.</p>
                         </CardContent>
                     </Card>
@@ -72,7 +82,7 @@ export default function PublicVerify() {
                                     <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 mb-2">
                                         <CheckCircle2 className="h-3 w-3 mr-1" /> Verified Authentic
                                     </Badge>
-                                    <CardTitle className="text-2xl text-slate-900">{verification.details.certificate_name}</CardTitle>
+                                    <h2 className="text-2xl font-semibold text-slate-900">{verification.details.certificate_name}</h2>
                                 </div>
                                 <Anchor className="h-8 w-8 text-slate-400" />
                             </div>
