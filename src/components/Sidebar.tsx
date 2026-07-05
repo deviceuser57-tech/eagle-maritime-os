@@ -132,12 +132,14 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
             <div className="flex items-center gap-2">
               <button
                 onClick={onThemeToggle}
+                aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
                 className="p-2.5 rounded-2xl bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 shadow-sm">
                 
                 {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
               <button
                 onClick={onToggle}
+                aria-label="Close navigation menu"
                 className="lg:hidden p-2.5 rounded-2xl bg-muted text-muted-foreground hover:bg-muted/80 transition-all duration-300">
                 
                 <X className="h-5 w-5" />
