@@ -1,0 +1,10 @@
+# Eagle Maritime OS
+
+> Intelligent vessel governance and international maritime compliance platform covering SOLAS, MARPOL, ISM, ISPS, MLC, STCW, CII, and EEXI.
+
+Eagle Maritime OS helps fleet operators manage vessels, certificates, crew, audits, incidents, maintenance, and regulatory compliance from a single system.
+
+## Pages
+
+- [Home](/): Eagle Maritime OS landing and platform overview.
+- [Certificate Verification](/verify): Public portal to verify the authenticity of a vessel certificate issued via Eagle Maritime OS.
