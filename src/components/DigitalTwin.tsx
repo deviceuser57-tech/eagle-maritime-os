@@ -156,7 +156,7 @@ const DigitalTwin = () => {
                                     <p className="text-[10px] font-mono text-emerald-400 tracking-tighter">ROT_Y: {rotation.y.toFixed(1)}°</p>
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-muted/10 border border-border hover:bg-muted/20"
+                                    <Button variant="ghost" size="icon" aria-label="Reset digital twin view" className="h-8 w-8 rounded-lg bg-muted/10 border border-border hover:bg-muted/20"
                                         onClick={() => setRotation({ x: 0, y: 0 })}>
                                         <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
                                     </Button>
