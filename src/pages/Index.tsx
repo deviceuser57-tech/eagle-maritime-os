@@ -161,6 +161,7 @@ const IndexContent = () => {
             <div className="flex items-center gap-4 mb-8 lg:hidden">
               <button
                 onClick={() => setSidebarOpen(true)}
+                aria-label="Open navigation menu"
                 className="p-3 rounded-2xl bg-white/50 dark:bg-black/20 backdrop-blur-md border border-border/50 text-foreground"
               >
                 <Menu className="h-6 w-6" />
