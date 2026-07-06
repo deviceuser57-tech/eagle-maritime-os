@@ -355,9 +355,50 @@ Deno.serve(async (req: Request) => {
     const base64Data = btoa(binary);
 
     // -----------------------------------------------------------------------
+    // PDF Text Extraction Enhancement
+    // -----------------------------------------------------------------------
+    let pdfText = "";
+    if (mimeType.includes("pdf") || mimeType === "application/pdf") {
+      try {
+        console.log("PDF document detected. Running text extraction...");
+        const { getDocumentProxy, extractText } = await import("npm:unpdf");
+        const pdf = await getDocumentProxy(new Uint8Array(buffer));
+        const { totalPages, text } = await extractText(pdf, { mergePages: true });
+        pdfText = text || "";
+        console.log(`Successfully extracted ${totalPages} pages and ${pdfText.length} characters of text.`);
+      } catch (pdfErr) {
+        console.error("PDF text extraction failed (will rely purely on vision API):", pdfErr);
+      }
+    }
+
+    // -----------------------------------------------------------------------
     // AI call with tool-calling for structured extraction
     // -----------------------------------------------------------------------
     const systemPrompt = `You are an elite Maritime Document Intelligence specialist. You extract vessel technical specifications from ANY maritime document — brochures, data sheets, certificates, classification reports, builder specification sheets, photos of nameplates, and specification tables.
+
+SYNONYM & FIELD MAPPING GUIDE:
+- "name": "Name", "Vessel Name", "Name of Vessel", "Ship Name".
+- "imo_number": "IMO No.", "IMO Number", "IMO", "LRS No.". Exactly 7 digits.
+- "call_sign": "Call Sign", "Signal Letters", "Radio Call Sign".
+- "mmsi_number": "MMSI", "MMSI No.", "MMSI Number". Exactly 9 digits.
+- "official_number": "Official No", "Official Number", "Registry Number", "Reg. No".
+- "vessel_type": "Type", "Vessel Type", "Class / Type", "Name / Type" (if it contains both like 'MV Eagle / Bulk Carrier', extract 'Bulk Carrier').
+- "flag_state": "Flag", "Flag State", "Nationality", "Country of Registry".
+- "port_of_registry": "Port of Registry", "Home Port", "Port of Registry / Place".
+- "classification_society": "Class", "Classification", "Classification Society" (e.g., DNV, LR, ABS).
+- "gross_tonnage": "Gross Tonnage", "GRT", "GT".
+- "net_tonnage": "Net Tonnage", "NRT", "NT".
+- "deadweight": "Deadweight", "Dead Weight", "DWT", "Summer DWT".
+- "length_overall": "Length Overall", "LOA". (If only Length BP or LBP is found, you can use it if LOA is not specified, but prefer LOA).
+- "beam": "Beam", "Beam Moulded", "Breadth", "B Moulded", "Bm".
+- "depth": "Depth", "Depth to Main Deck", "Depth Moulded", "Dm".
+- "draft": "Draft", "Summer Draft", "Design Draft", "Scantling Draft", "Max Draft", "Draught".
+- "engine_make" / "engine_model": Look for "Main Engine", "Generators", "Main Diesel Generators", "Propulsion Engine" etc. to identify manufacturer and model.
+- "fuel_type": "Type of Fuel", "Fuel Type", "Fuel", "MGO/HFO/VLSFO".
+- "fuel_consumption": "Fuel Consumption", "Cons.", "Daily Consumption".
+- "navigation_equipment": Combine GMDSS, Inmarsat C, Navtex, AIS, Radars, ECDIS, Gyro, Compass, GPS, Autopilot, DP System into this text field.
+- "accommodations_pax": Combine Accommodation info (One main cabins, Two main cabins, Total beds, Hospital, Offices, Sewage, Air conditioning) into this text field.
+- "notes": Put all other unmapped fields here (e.g., Deck area, Deck strength, Deck cargo capacity, Thrusters, Bow Thruster, Anchors, Chain, Winch, FiFi, Fire Pumps, etc.) so that they are not lost!
 
 EXPERTISE:
 - You understand maritime abbreviations: LOA, LBP, B/Bm, D/Dm, T/Td, DWT, GT, NT, MCR, NCR, CSR, EEDI, EEXI, CII
@@ -367,16 +408,17 @@ EXPERTISE:
 - You can infer vessel type from cargo holds, tank descriptions, or general arrangement drawings
 
 EXTRACTION STRATEGY:
-1. First scan the entire document for the vessel name and IMO number
-2. Look for specification tables — they contain most technical data
-3. Check document headers, footers, and margins for additional data
-4. Look at general arrangement drawings for dimensions
-5. Check machinery sections for engine and propulsion data
-6. Examine safety equipment sections for lifeboats and life rafts
-7. If a value appears in multiple places with different precision, use the most precise one
-8. For numeric fields, return ONLY the numeric value — strip all units
-9. If you see "approx." or "~", still return the number
-10. For dates, normalize to YYYY-MM-DD format when possible
+1. First scan the entire document/extracted text for the vessel name and IMO number.
+2. Look for specification tables — they contain most technical data.
+3. Check document headers, footers, and margins for additional data.
+4. Look at general arrangement drawings for dimensions.
+5. Check machinery sections for engine and propulsion data.
+6. Examine safety equipment sections for lifeboats and life rafts.
+7. If a value appears in multiple places with different precision, use the most precise one.
+8. For numeric fields, return ONLY the numeric value — strip all units.
+9. If you see "approx." or "~", still return the number.
+10. For dates, normalize to YYYY-MM-DD format when possible.
+11. If a text field contains multiple matching items (e.g. Navigation systems: Radars, GPS, ECDIS), list them clearly.
 
 IMPORTANT: Call the extract_vessel_data function with ALL the data you can find. Set null for any field you cannot find or are uncertain about.`;
 
@@ -396,7 +438,12 @@ IMPORTANT: Call the extract_vessel_data function with ALL the data you can find.
             role: "user",
             content: [
               { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64Data}` } },
-              { type: "text", text: "Extract ALL vessel technical specifications from this document. Be thorough — examine every section, table, annotation, and drawing. Use the extract_vessel_data tool to return your findings." }
+              { type: "text", text: `Extract ALL vessel technical specifications from this document. Be thorough — examine every section, table, annotation, and drawing. Use the extract_vessel_data tool to return your findings.
+
+${pdfText ? `Here is the raw text extracted directly from the PDF file to help you match exactly:
+---
+${pdfText}
+---` : ""}` }
             ]
           }
         ],

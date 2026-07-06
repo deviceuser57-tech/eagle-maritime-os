@@ -1,15 +1,24 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Shield, Key, Lock } from 'lucide-react';
+import { Users, Shield, Key, Lock, Loader2 } from 'lucide-react';
+import { useProfiles } from '@/hooks/useProfiles';
 
 const UserAuth = () => {
-  const users = [
-    { id: 1, name: 'John Smith', role: 'Admin', status: 'Active', lastLogin: '2024-01-15 09:30' },
-    { id: 2, name: 'Sarah Johnson', role: 'Fleet Manager', status: 'Active', lastLogin: '2024-01-15 08:15' },
-    { id: 3, name: 'Mike Chen', role: 'Auditor', status: 'Active', lastLogin: '2024-01-14 16:45' },
-    { id: 4, name: 'Emma Wilson', role: 'Crew Manager', status: 'Inactive', lastLogin: '2024-01-10 11:20' },
-  ];
+  const { data: profiles, isLoading } = useProfiles();
+
+  const users = profiles || [];
+  const activeUsers = users.filter((u: any) => u.role && u.role !== '');
+  const uniqueRoles = [...new Set(users.map((u: any) => u.role).filter(Boolean))];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Loading user data...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -26,7 +35,7 @@ const UserAuth = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Users</p>
-                <p className="text-2xl font-bold">24</p>
+                <p className="text-2xl font-bold">{users.length}</p>
               </div>
               <Users className="h-8 w-8 text-primary" />
             </div>
@@ -37,8 +46,8 @@ const UserAuth = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Active Sessions</p>
-                <p className="text-2xl font-bold">18</p>
+                <p className="text-sm text-muted-foreground">With Assigned Roles</p>
+                <p className="text-2xl font-bold">{activeUsers.length}</p>
               </div>
               <Shield className="h-8 w-8 text-green-500" />
             </div>
@@ -50,7 +59,7 @@ const UserAuth = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Roles</p>
-                <p className="text-2xl font-bold">6</p>
+                <p className="text-2xl font-bold">{uniqueRoles.length}</p>
               </div>
               <Key className="h-8 w-8 text-primary" />
             </div>
@@ -62,7 +71,7 @@ const UserAuth = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Security Level</p>
-                <p className="text-2xl font-bold">High</p>
+                <p className="text-2xl font-bold">{users.length > 0 ? 'Active' : 'N/A'}</p>
               </div>
               <Lock className="h-8 w-8 text-green-500" />
             </div>
@@ -76,23 +85,31 @@ const UserAuth = () => {
           <CardDescription>View and manage user accounts and permissions</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {users.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex-1">
-                  <p className="font-medium">{user.name}</p>
-                  <p className="text-sm text-muted-foreground">{user.role}</p>
+          {users.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No users found. Users will appear here once they register.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {users.map((user: any) => (
+                <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium">{user.full_name || user.email || 'Unknown User'}</p>
+                    <p className="text-sm text-muted-foreground">{user.role || 'No role assigned'}</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Badge variant={user.role ? 'default' : 'secondary'}>
+                      {user.role ? 'Active' : 'Pending'}
+                    </Badge>
+                    <p className="text-sm text-muted-foreground">
+                      {user.updated_at ? new Date(user.updated_at).toLocaleDateString() : '—'}
+                    </p>
+                    <Button size="sm" variant="outline">Manage</Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <Badge variant={user.status === 'Active' ? 'default' : 'secondary'}>
-                    {user.status}
-                  </Badge>
-                  <p className="text-sm text-muted-foreground">{user.lastLogin}</p>
-                  <Button size="sm" variant="outline">Manage</Button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
