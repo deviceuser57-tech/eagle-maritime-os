@@ -265,8 +265,8 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    if (!fileUrl && !storagePath) {
-      return new Response(JSON.stringify({ error: "Missing fileUrl or storagePath" }), {
+    if (!storagePath && !fileUrl) {
+      return new Response(JSON.stringify({ error: "Missing storagePath" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
       });
     }
@@ -297,35 +297,55 @@ Deno.serve(async (req: Request) => {
     console.log(`Smart extraction for ${user.email} in org ${org_id}`);
 
     // -----------------------------------------------------------------------
-    // Download document
+    // Download document — SSRF-safe: only Supabase Storage is allowed.
+    // Arbitrary external URLs are rejected to prevent server-side request
+    // forgery against internal/cloud-metadata endpoints.
     // -----------------------------------------------------------------------
     let buffer: ArrayBuffer;
     let mimeType = contentType || "application/pdf";
+    let resolvedBucket = storageBucket as string | undefined;
+    let resolvedPath = storagePath as string | undefined;
 
-    if (storageBucket && storagePath) {
-      console.log(`Storage download: ${storageBucket}/${storagePath}`);
-      const { data: fileData, error: dlErr } = await supabase.storage.from(storageBucket).download(storagePath);
-      if (dlErr || !fileData) throw new Error(`Could not fetch document from storage: ${dlErr?.message || 'Unknown'}`);
-      buffer = await fileData.arrayBuffer();
-      mimeType = contentType || fileData.type || "application/pdf";
-    } else {
-      const storageMatch = fileUrl.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/]+)\/(.+?)(?:\?.*)?$/);
-      if (storageMatch) {
-        const bucket = storageMatch[1];
-        const path = decodeURIComponent(storageMatch[2]);
-        console.log(`Storage download (parsed URL): ${bucket}/${path}`);
-        const { data: fileData, error: dlErr } = await supabase.storage.from(bucket).download(path);
-        if (dlErr || !fileData) throw new Error(`Could not fetch document from storage: ${dlErr?.message || 'Unknown'}`);
-        buffer = await fileData.arrayBuffer();
-        mimeType = contentType || fileData.type || "application/pdf";
-      } else {
-        console.log(`External URL fetch: ${fileUrl}`);
-        const resp = await fetch(fileUrl);
-        if (!resp.ok) throw new Error(`Could not fetch document: ${resp.statusText}`);
-        const blob = await resp.blob();
-        buffer = await blob.arrayBuffer();
-        mimeType = contentType || blob.type || "application/pdf";
+    if (!resolvedBucket || !resolvedPath) {
+      // Only accept fileUrl if it clearly points to this project's Supabase Storage.
+      const expectedPrefix = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/`;
+      if (typeof fileUrl !== 'string' || !fileUrl.startsWith(expectedPrefix)) {
+        return new Response(JSON.stringify({
+          error: "Only files uploaded to project storage can be analyzed. Provide storageBucket/storagePath.",
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 });
       }
+      const storageMatch = fileUrl.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/]+)\/(.+?)(?:\?.*)?$/);
+      if (!storageMatch) {
+        return new Response(JSON.stringify({ error: "Invalid storage URL" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
+        });
+      }
+      resolvedBucket = storageMatch[1];
+      resolvedPath = decodeURIComponent(storageMatch[2]);
+    }
+
+    const ALLOWED_BUCKETS = new Set(['vessel-assets', 'regulations', 'crew-photos']);
+    if (!ALLOWED_BUCKETS.has(resolvedBucket!)) {
+      return new Response(JSON.stringify({ error: "Bucket not allowed" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
+      });
+    }
+
+    console.log(`Storage download: ${resolvedBucket}/${resolvedPath}`);
+    const { data: fileData, error: dlErr } = await supabase.storage.from(resolvedBucket!).download(resolvedPath!);
+    if (dlErr || !fileData) {
+      return new Response(JSON.stringify({ error: `Could not fetch document from storage: ${dlErr?.message || 'Unknown'}` }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
+      });
+    }
+    buffer = await fileData.arrayBuffer();
+    mimeType = contentType || fileData.type || "application/pdf";
+
+    const MAX_BYTES = 20 * 1024 * 1024;
+    if (buffer.byteLength > MAX_BYTES) {
+      return new Response(JSON.stringify({ error: "Document exceeds 20MB size limit" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 413,
+      });
     }
 
     // Convert to base64
