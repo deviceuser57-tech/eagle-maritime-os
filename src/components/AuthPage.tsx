@@ -102,7 +102,7 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
               <Anchor className="h-10 w-10 text-primary" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Maritime Compliance</h1>
+          <h1 className="text-3xl font-bold text-white mb-2 whitespace-pre-wrap">Eagle Maritime OS{"\n"}Compliance Operation System&nbsp;</h1>
           <p className="text-slate-300">Fleet Management & Safety System</p>
         </div>
 
@@ -228,8 +228,8 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
           </CardContent>
         </Card>
 
-        <p className="text-center text-slate-400 text-sm mt-6">
-          Secure maritime fleet management powered by Lovable Cloud
+        <p className="text-center text-slate-400 text-sm mt-6 whitespace-pre-wrap">
+          Secure maritime fleet management powered by Lovable Cloud{"\n"}{"\n"}Elhamy Sobhy&nbsp; 2025-2026
         </p>
       </div>
     </div>
