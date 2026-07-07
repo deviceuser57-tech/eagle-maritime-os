@@ -35,6 +35,7 @@ import MotionRiskAnalyzer from '@/components/MotionRiskAnalyzer';
 import DigitalTwin from '@/components/DigitalTwin';
 import IntegrationSettings from '@/components/IntegrationSettings';
 import Organization from '@/components/Organization';
+import HelpCenter from '@/components/HelpCenter';
 
 const IndexContent = () => {
   const { user, loading, signOut } = useAuth();
