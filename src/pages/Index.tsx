@@ -35,6 +35,7 @@ import MotionRiskAnalyzer from '@/components/MotionRiskAnalyzer';
 import DigitalTwin from '@/components/DigitalTwin';
 import IntegrationSettings from '@/components/IntegrationSettings';
 import Organization from '@/components/Organization';
+import HelpCenter from '@/components/HelpCenter';
 
 const IndexContent = () => {
   const { user, loading, signOut } = useAuth();
@@ -100,6 +101,7 @@ const IndexContent = () => {
       case 'digital-twin': return <DigitalTwin />;
       case 'integrations': return <IntegrationSettings />;
       case 'organization': return <Organization />;
+      case 'help-center': return <HelpCenter />;
       default:
         return (
           <div className="space-y-6">
