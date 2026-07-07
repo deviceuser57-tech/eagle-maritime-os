@@ -101,6 +101,7 @@ const IndexContent = () => {
       case 'digital-twin': return <DigitalTwin />;
       case 'integrations': return <IntegrationSettings />;
       case 'organization': return <Organization />;
+      case 'help-center': return <HelpCenter />;
       default:
         return (
           <div className="space-y-6">
