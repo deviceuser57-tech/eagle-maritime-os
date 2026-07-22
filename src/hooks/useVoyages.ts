@@ -60,7 +60,7 @@ export const useVoyages = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('voyages')
-        .insert([{ ...voyage, user_id: user.id }])
+        .insert([{ ...voyage, user_id: user.id, org_id: orgId }])
         .select()
         .single();
 

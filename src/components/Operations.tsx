@@ -57,9 +57,33 @@ const Operations = () => {
     }
   };
 
-  const atSeaCount = voyages.filter(v => v.status === 'underway').length;
-  const inPortCount = voyages.filter(v => v.status === 'arrived' || v.status === 'planned').length;
-  const activeVoyages = voyages.filter(v => v.status === 'underway' || v.status === 'planned');
+  const getCalculatedStatus = (voyage: any) => {
+    if (voyage.status === 'cancelled') {
+      return { label: 'تم إلغاء الرحلة', value: 'cancelled', variant: 'destructive' as const };
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const depDate = voyage.departure_date ? new Date(voyage.departure_date) : null;
+    const etaDate = voyage.eta ? new Date(voyage.eta) : null;
+
+    if (depDate) depDate.setHours(0, 0, 0, 0);
+    if (etaDate) etaDate.setHours(0, 0, 0, 0);
+
+    if (voyage.status === 'arrived' || (etaDate && today >= etaDate)) {
+      return { label: 'تم الوصول', value: 'arrived', variant: 'secondary' as const };
+    }
+
+    if (voyage.status === 'underway' || (depDate && etaDate && today >= depDate && today < etaDate)) {
+      return { label: 'جاري الابحار ومخطط الوصول', value: 'underway', variant: 'default' as const };
+    }
+
+    return { label: 'لم تبحر بعد', value: 'planned', variant: 'outline' as const };
+  };
+
+  const atSeaCount = voyages.filter(v => getCalculatedStatus(v).value === 'underway').length;
+  const inPortCount = voyages.filter(v => getCalculatedStatus(v).value === 'arrived' || getCalculatedStatus(v).value === 'planned').length;
+  const activeVoyages = voyages.filter(v => getCalculatedStatus(v).value === 'underway' || getCalculatedStatus(v).value === 'planned');
   const utilization = vessels.length > 0 ? Math.round((activeVoyages.length / vessels.length) * 100) : 0;
 
   if (loading) {
@@ -252,8 +276,8 @@ const Operations = () => {
                             ETA: {voyage.eta ? format(new Date(voyage.eta), 'MMM dd, yyyy') : 'TBD'}
                           </p>
                         </div>
-                        <Badge variant={voyage.status === 'underway' ? 'default' : 'secondary'}>
-                          {voyage.status}
+                        <Badge variant={getCalculatedStatus(voyage).variant}>
+                          {getCalculatedStatus(voyage).label}
                         </Badge>
                         <Button
                           size="sm"

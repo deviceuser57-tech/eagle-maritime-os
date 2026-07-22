@@ -38,6 +38,14 @@ const EQUIPMENT_CATEGORIES = [
   'Cargo Equipment', 'Piping & Valves', 'Propulsion System', 'Other',
 ];
 
+const LOCATIONS = [
+  { value: 'engine', label: 'Engine Room (غرفة الماكينات)' },
+  { value: 'accommodation', label: 'Accommodation (الاعاشات)' },
+  { value: 'deck', label: 'Main Deck (دك الوحدة)' },
+  { value: 'hull', label: 'Hull / Exterior (البدن / الخارجي)' },
+  { value: 'bridge', label: 'Bridge / Nav Center (البريدج / Nav Center)' },
+];
+
 const Maintenance = () => {
   const { user } = useAuth();
   const { tasks, loading, addTask, updateTask, deleteTask } = useMaintenanceTasks();
@@ -52,26 +60,59 @@ const Maintenance = () => {
     title: '', description: '', vessel_id: '', task_type: 'preventive',
     priority: 'medium', status: 'scheduled', due_date: new Date(),
     assigned_to: '', estimated_hours: '', cost_estimate: '', notes: '',
+    location: 'engine',
   });
+
+  const getTaskLocationAndNotes = (task: MaintenanceTask) => {
+    try {
+      if (task.notes && task.notes.trim().startsWith('{')) {
+        const parsed = JSON.parse(task.notes);
+        return {
+          location: parsed.location || 'engine',
+          notes: parsed.userNotes || ''
+        };
+      }
+    } catch (e) {
+      // Ignore
+    }
+    return {
+      location: 'engine',
+      notes: task.notes || ''
+    };
+  };
 
   const resetForm = () => {
     setFormData({
       title: '', description: '', vessel_id: '', task_type: 'preventive',
       priority: 'medium', status: 'scheduled', due_date: new Date(),
       assigned_to: '', estimated_hours: '', cost_estimate: '', notes: '',
+      location: 'engine',
     });
   };
 
   const handleSubmit = async () => {
     if (!formData.title || !formData.due_date) return;
+    
+    const notesWithLocation = JSON.stringify({
+      location: formData.location,
+      userNotes: formData.notes
+    });
+
     const taskData = {
-      ...formData,
+      title: formData.title,
+      description: formData.description,
       vessel_id: formData.vessel_id || null,
+      task_type: formData.task_type,
+      priority: formData.priority,
+      status: formData.status,
       due_date: format(formData.due_date, 'yyyy-MM-dd'),
+      assigned_to: formData.assigned_to || null,
       estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null,
       cost_estimate: formData.cost_estimate ? parseFloat(formData.cost_estimate) : null,
+      notes: notesWithLocation,
       completed_date: null, actual_hours: null, actual_cost: null,
     };
+
     if (editingTask) {
       await updateTask(editingTask.id, taskData);
       setEditingTask(null);
@@ -84,12 +125,15 @@ const Maintenance = () => {
 
   const handleEdit = (task: MaintenanceTask) => {
     setEditingTask(task);
+    const locNotes = getTaskLocationAndNotes(task);
     setFormData({
       title: task.title, description: task.description || '', vessel_id: task.vessel_id || '',
       task_type: task.task_type, priority: task.priority, status: task.status,
       due_date: new Date(task.due_date), assigned_to: task.assigned_to || '',
       estimated_hours: task.estimated_hours?.toString() || '',
-      cost_estimate: task.cost_estimate?.toString() || '', notes: task.notes || '',
+      cost_estimate: task.cost_estimate?.toString() || '',
+      notes: locNotes.notes,
+      location: locNotes.location,
     });
     setIsAddOpen(true);
   };
@@ -205,6 +249,15 @@ const Maintenance = () => {
                         <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
                         <SelectItem value="deferred">Deferred</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label>Execution Location (موضع التنفيذ) *</Label>
+                    <Select value={formData.location} onValueChange={(v) => setFormData({ ...formData, location: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {LOCATIONS.map(loc => <SelectItem key={loc.value} value={loc.value}>{loc.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -325,7 +378,10 @@ const Maintenance = () => {
                       <Badge variant={getStatusColor(task.status, task.due_date) as any}>{task.status.replace('_', ' ')}</Badge>
                     </div>
                     <p className="font-medium">{task.title}</p>
-                    <p className="text-sm text-muted-foreground">{task.vessels?.name || 'No vessel'} • {TASK_TYPES.find(t => t.value === task.task_type)?.label || task.task_type}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {task.vessels?.name || 'No vessel'} • {TASK_TYPES.find(t => t.value === task.task_type)?.label || task.task_type}
+                      {` • ${LOCATIONS.find(l => l.value === getTaskLocationAndNotes(task).location)?.label.split(' (')[0] || 'Engine Room'}`}
+                    </p>
                     <p className="text-xs text-muted-foreground">Due: {format(new Date(task.due_date), 'MMM d, yyyy')}</p>
                     <div className="flex gap-1 pt-2">
                       <Button size="sm" variant="outline" onClick={() => handleEdit(task)}>Edit</Button>
@@ -346,6 +402,7 @@ const Maintenance = () => {
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {task.vessels?.name || 'No vessel'} • {TASK_TYPES.find(t => t.value === task.task_type)?.label || task.task_type}
+                      {` • ${LOCATIONS.find(l => l.value === getTaskLocationAndNotes(task).location)?.label.split(' (')[0] || 'Engine Room'}`}
                       {task.assigned_to && ` • ${task.assigned_to}`}
                     </p>
                     {task.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{task.description}</p>}

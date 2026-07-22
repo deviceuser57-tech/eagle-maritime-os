@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useVessels } from '@/hooks/useVessels';
 import { useFindings } from '@/hooks/useFindings';
+import { useMaintenanceTasks, MaintenanceTask } from '@/hooks/useMaintenanceTasks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { gsap } from 'gsap';
 
@@ -32,6 +33,7 @@ const LayoutMapper = () => {
     const { vessels } = useVessels();
     const [selectedVesselId, setSelectedVesselId] = useState<string>('all');
     const { data: findings, isLoading: findingsLoading } = useFindings(selectedVesselId === 'all' ? undefined : selectedVesselId);
+    const { tasks, loading: tasksLoading } = useMaintenanceTasks();
 
     const [selectedArea, setSelectedArea] = useState<string | null>(null);
     const [hoveredArea, setHoveredArea] = useState<string | null>(null);
@@ -49,20 +51,27 @@ const LayoutMapper = () => {
         });
     }, []);
 
-    const getFindingCount = (areaId: string) => {
-        // distribute findings across areas based on a deterministic hash of areaId and findings length
-        // in a production app, the backend should return area-mapped finding counts
-        if (!findings || findings.length === 0) return 0;
+    const getTaskLocation = (taskNotes: string | null) => {
+        try {
+            if (taskNotes && taskNotes.trim().startsWith('{')) {
+                const parsed = JSON.parse(taskNotes);
+                return parsed.location || 'engine';
+            }
+        } catch (e) {
+            // Ignore
+        }
+        return 'engine';
+    };
 
-        const area = SHIP_AREAS.find(a => a.id === areaId);
-        if (!area) return 0;
-
-        // If 'all' is selected, we show more findings. If a specific vessel, we show its share.
-        // This logic ensures the UI looks populated but reflects filtering
-        const totalFindings = findings.length;
-        const areaWeight = (area.defaultFindings || 0) / SHIP_AREAS.reduce((acc, curr) => acc + (curr.defaultFindings || 0), 0);
-
-        return Math.max(1, Math.round(totalFindings * areaWeight));
+    const getOpenTasksCount = (areaId: string) => {
+        return tasks.filter(task => {
+            if (selectedVesselId !== 'all' && task.vessel_id !== selectedVesselId) {
+                return false;
+            }
+            const isOpen = task.status === 'scheduled' || task.status === 'in_progress';
+            if (!isOpen) return false;
+            return getTaskLocation(task.notes) === areaId;
+        }).length;
     };
 
     return (
@@ -153,7 +162,7 @@ const LayoutMapper = () => {
 
                             {/* INTERACTIVE NODES */}
                             {SHIP_AREAS.map((area) => {
-                                const count = getFindingCount(area.id);
+                                const count = getOpenTasksCount(area.id);
                                 const isHovered = hoveredArea === area.id;
                                 const isSelected = selectedArea === area.id;
 
@@ -207,44 +216,42 @@ const LayoutMapper = () => {
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <h3 className="text-xl font-black tracking-tight uppercase">{selectedArea}</h3>
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Sector Analysis</p>
+                                            <h3 className="text-xl font-black tracking-tight uppercase">
+                                                {SHIP_AREAS.find(a => a.id === selectedArea)?.label || selectedArea}
+                                            </h3>
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active Maintenance Tasks</p>
                                         </div>
                                         <Badge className="bg-primary/20 text-primary border-primary/20 px-3 py-1 font-black text-xs">
-                                            {getFindingCount(selectedArea)} FINDINGS
+                                            {getOpenTasksCount(selectedArea)} Open Tasks
                                         </Badge>
                                     </div>
 
-                                    <div className="space-y-4">
-                                        <div className="p-4 rounded-2xl bg-slate-500/5 border border-border/50 group hover:border-primary/30 transition-colors">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Recent Finding</span>
-                                                <Badge variant="destructive" className="text-[8px] font-black uppercase px-2 py-0">Critical</Badge>
-                                            </div>
-                                            <p className="text-xs font-bold leading-relaxed mb-3">
-                                                Hydraulic leak detected on starboard main pump assembly. Risk of pressure loss during maneuvering.
-                                            </p>
-                                            <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold p-0 text-primary hover:bg-transparent uppercase tracking-widest">
-                                                View Detail <ChevronRight className="h-3 w-3 ml-1" />
-                                            </Button>
-                                        </div>
-
-                                        <div className="p-4 rounded-2xl bg-slate-500/5 border border-border/50">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Action Status</span>
-                                                <Badge className="bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0">Planned</Badge>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
-                                                    <div className="h-full bg-amber-500 w-1/3" />
+                                    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
+                                        {tasks.filter(task => {
+                                            if (selectedVesselId !== 'all' && task.vessel_id !== selectedVesselId) return false;
+                                            const isOpen = task.status === 'scheduled' || task.status === 'in_progress';
+                                            if (!isOpen) return false;
+                                            return getTaskLocation(task.notes) === selectedArea;
+                                        }).map(task => (
+                                            <div key={task.id} className="p-4 rounded-2xl bg-muted/50 border border-border group hover:border-primary/30 transition-colors">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{task.task_type.replace('_', ' ')}</span>
+                                                    <Badge variant={task.priority === 'critical' ? 'destructive' : task.priority === 'high' ? 'secondary' : 'outline'} className="text-[8px] font-black uppercase px-2 py-0">{task.priority}</Badge>
                                                 </div>
-                                                <span className="text-[10px] font-bold text-muted-foreground">33%</span>
+                                                <p className="text-xs font-bold leading-relaxed mb-1">
+                                                    {task.title}
+                                                </p>
+                                                {task.description && <p className="text-[10px] text-muted-foreground mb-2 line-clamp-2">{task.description}</p>}
+                                                <p className="text-[9px] text-muted-foreground/60 font-semibold uppercase">Due: {task.due_date}</p>
                                             </div>
-                                        </div>
+                                        ))}
+                                        {getOpenTasksCount(selectedArea) === 0 && (
+                                            <p className="text-xs text-muted-foreground text-center py-6">No open maintenance tasks in this area.</p>
+                                        )}
                                     </div>
 
                                     <Button className="w-full btn-maritime py-6 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-primary/20">
-                                        <Target className="h-4 w-4 mr-2" /> Launch Targeted Audit
+                                        <Target className="h-4 w-4 mr-2" /> Launch Sector Audit
                                     </Button>
                                 </div>
                             ) : (
