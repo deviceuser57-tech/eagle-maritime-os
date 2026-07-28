@@ -39,7 +39,7 @@ export const useAudits = () => {
 
       const { data, error } = await supabase
         .from('audits')
-        .insert({ ...newAudit, user_id: user?.id })
+        .insert({ ...newAudit, user_id: user?.id, org_id: orgId })
         .select()
         .single();
 

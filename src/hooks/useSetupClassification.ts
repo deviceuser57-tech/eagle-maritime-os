@@ -55,7 +55,7 @@ export const useClassificationSocieties = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_classification_societies')
-        .insert({ ...society, user_id: user.id })
+        .insert({ ...society, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -136,7 +136,7 @@ export const useFlagStates = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_flag_states')
-        .insert({ ...flagState, user_id: user.id })
+        .insert({ ...flagState, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;

@@ -60,7 +60,7 @@ export const useSetupCompanies = (companyType?: SetupCompany['company_type']) =>
 
       const { data, error } = await supabase
         .from('setup_companies')
-        .insert({ ...company, user_id: user.id })
+        .insert({ ...company, user_id: user.id, org_id: orgId })
         .select()
         .single();
 

@@ -77,7 +77,7 @@ export const useAuditTypes = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_audit_types')
-        .insert({ ...auditType, user_id: user.id })
+        .insert({ ...auditType, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -158,7 +158,7 @@ export const useFindingTypes = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_finding_types')
-        .insert({ ...findingType, user_id: user.id })
+        .insert({ ...findingType, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -239,7 +239,7 @@ export const useFindingStatuses = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_finding_statuses')
-        .insert({ ...status, user_id: user.id })
+        .insert({ ...status, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -320,7 +320,7 @@ export const useRootCauses = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_root_causes')
-        .insert({ ...cause, user_id: user.id })
+        .insert({ ...cause, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;

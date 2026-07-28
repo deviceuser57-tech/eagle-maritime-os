@@ -75,7 +75,7 @@ export const useCrewRanks = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_crew_ranks')
-        .insert({ ...rank, user_id: user.id })
+        .insert({ ...rank, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -156,7 +156,7 @@ export const useNationalities = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_nationalities')
-        .insert({ ...nationality, user_id: user.id })
+        .insert({ ...nationality, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -237,7 +237,7 @@ export const useContractTypes = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error = null } = await supabase
         .from('setup_contract_types')
-        .insert({ ...contractType, user_id: user.id })
+        .insert({ ...contractType, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
@@ -318,7 +318,7 @@ export const useCurrencies = () => {
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_currencies')
-        .insert({ ...currency, user_id: user.id })
+        .insert({ ...currency, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;

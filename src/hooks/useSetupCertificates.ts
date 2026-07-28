@@ -53,7 +53,7 @@ export const useCertificateTypes = (category?: CertificateType['certificate_cate
       if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_certificate_types')
-        .insert({ ...cert, user_id: user.id })
+        .insert({ ...cert, user_id: user.id, org_id: orgId })
         .select()
         .single();
       if (error) throw error;
