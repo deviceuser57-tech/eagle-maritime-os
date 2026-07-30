@@ -1,0 +1,265 @@
+Workspace Index
+Generated: 2026-07-28
+Root: d:\Eagle Maritime OS- 06-07-2026- 0135Hrs\eagle-maritime-os
+
+Indexed files: 238
+
+Top-level directories
+- docs: 1
+- public: 7
+- src: 139
+- supabase: 59
+- tests: 1
+
+Most common extensions
+- .tsx: 94
+- .sql: 56
+- .ts: 46
+- .md: 16
+- .json: 6
+- .txt: 5
+- .css: 2
+- .js: 2
+- .png: 2
+- .toml: 1
+- .svg: 1
+- .mjs: 1
+
+Files
+- ADD_TEST_DATA_NOW.md
+- CERTIFICATE_REGISTRY_ENHANCEMENT.md
+- COMPLETE_SETUP_GUIDE.md
+- COMPLIANCE_ENGINE_VALIDATION_REPORT.md
+- CORRECTED_EXECUTION_ORDER.md
+- FINAL_STATUS.md
+- LOGIN_AND_ACCESS_GUIDE.md
+- MANUAL_EXECUTION_GUIDE.md
+- QUICK_START.md
+- README.md
+- READY_TO_EXECUTE.md
+- SETUP_CHEAT_SHEET.md
+- VALIDATION_DEMO_GUIDE.md
+- VALIDATION_DEMO_RESULTS.md
+- VALIDATION_QUICK_REFERENCE.md
+- bun.lock
+- components.json
+- docs\STANDARDS.md
+- eslint.config.js
+- index.html
+- lint_results.txt
+- matches.txt
+- package-lock.json
+- package.json
+- postcss.config.js
+- public\favicon.ico
+- public\guides\Eagle-Maritime-OS-User-Guide.docx
+- public\guides\Eagle-Maritime-OS-User-Guide.pdf
+- public\llms.txt
+- public\placeholder.svg
+- public\robots.txt
+- public\sitemap.xml
+- src\App.css
+- src\App.tsx
+- src\assets\eagle-maritime-logo.png
+- src\assets\hero-bg.png
+- src\components\AIAssistant.tsx
+- src\components\AuditExecution.tsx
+- src\components\AuditFindings.tsx
+- src\components\AuditPlan.tsx
+- src\components\AuditorManagement.tsx
+- src\components\AuthPage.tsx
+- src\components\CIIDashboard.tsx
+- src\components\Communications.tsx
+- src\components\CorrectiveAction.tsx
+- src\components\CrewManagement.tsx
+- src\components\Dashboard.tsx
+- src\components\DigitalCompliance.tsx
+- src\components\DigitalTwin.tsx
+- src\components\EnterpriseAuditLog.tsx
+- src\components\FrontPage.tsx
+- src\components\HelpCenter.tsx
+- src\components\Incidents.tsx
+- src\components\InsuranceClaims.tsx
+- src\components\IntegrationSettings.tsx
+- src\components\InteractiveClosure.tsx
+- src\components\LayoutMapper.tsx
+- src\components\Maintenance.tsx
+- src\components\MotionRiskAnalyzer.tsx
+- src\components\Operations.tsx
+- src\components\Organization.tsx
+- src\components\PredictiveCompliance.tsx
+- src\components\Projects.tsx
+- src\components\RegulatoryManager.tsx
+- src\components\Reports.tsx
+- src\components\RulesRegulations.tsx
+- src\components\SIMDashboard.tsx
+- src\components\SafetyManagement.tsx
+- src\components\SetupPage.tsx
+- src\components\Sidebar.tsx
+- src\components\UniversalSearch.tsx
+- src\components\UserAuth.tsx
+- src\components\VesselManagement.tsx
+- src\components\VesselsCertification.tsx
+- src\components\compliance\VerificationQR.tsx
+- src\components\ui\accordion.tsx
+- src\components\ui\alert-dialog.tsx
+- src\components\ui\alert.tsx
+- src\components\ui\aspect-ratio.tsx
+- src\components\ui\avatar.tsx
+- src\components\ui\badge.tsx
+- src\components\ui\breadcrumb.tsx
+- src\components\ui\button.tsx
+- src\components\ui\calendar.tsx
+- src\components\ui\card.tsx
+- src\components\ui\carousel.tsx
+- src\components\ui\chart.tsx
+- src\components\ui\checkbox.tsx
+- src\components\ui\collapsible.tsx
+- src\components\ui\command.tsx
+- src\components\ui\context-menu.tsx
+- src\components\ui\dialog.tsx
+- src\components\ui\drawer.tsx
+- src\components\ui\dropdown-menu.tsx
+- src\components\ui\form.tsx
+- src\components\ui\hover-card.tsx
+- src\components\ui\input-otp.tsx
+- src\components\ui\input.tsx
+- src\components\ui\label.tsx
+- src\components\ui\menubar.tsx
+- src\components\ui\navigation-menu.tsx
+- src\components\ui\pagination.tsx
+- src\components\ui\popover.tsx
+- src\components\ui\progress.tsx
+- src\components\ui\radio-group.tsx
+- src\components\ui\resizable.tsx
+- src\components\ui\scroll-area.tsx
+- src\components\ui\select.tsx
+- src\components\ui\separator.tsx
+- src\components\ui\sheet.tsx
+- src\components\ui\sidebar.tsx
+- src\components\ui\skeleton.tsx
+- src\components\ui\slider.tsx
+- src\components\ui\sonner.tsx
+- src\components\ui\switch.tsx
+- src\components\ui\table.tsx
+- src\components\ui\tabs.tsx
+- src\components\ui\textarea.tsx
+- src\components\ui\toast.tsx
+- src\components\ui\toaster.tsx
+- src\components\ui\toggle-group.tsx
+- src\components\ui\toggle.tsx
+- src\components\ui\tooltip.tsx
+- src\components\ui\use-toast.ts
+- src\contexts\AuthContext.tsx
+- src\hooks\use-mobile.tsx
+- src\hooks\use-toast.ts
+- src\hooks\useAuditors.ts
+- src\hooks\useAudits.ts
+- src\hooks\useCIIRecords.ts
+- src\hooks\useCommunications.ts
+- src\hooks\useCompliance.ts
+- src\hooks\useCorrectiveActions.ts
+- src\hooks\useCrewMembers.ts
+- src\hooks\useCustomRegulations.ts
+- src\hooks\useCyberSecurityStatus.ts
+- src\hooks\useFindings.ts
+- src\hooks\useIncidents.ts
+- src\hooks\useInsuranceClaims.ts
+- src\hooks\useIntegrations.ts
+- src\hooks\useMaintenanceTasks.ts
+- src\hooks\useOrganization.ts
+- src\hooks\useProfiles.ts
+- src\hooks\useProjects.ts
+- src\hooks\useProjectVessels.ts
+- src\hooks\useRegulations.ts
+- src\hooks\useSetupAuditConfig.ts
+- src\hooks\useSetupCertificates.ts
+- src\hooks\useSetupClassification.ts
+- src\hooks\useSetupCompanies.ts
+- src\hooks\useSetupCrewConfig.ts
+- src\hooks\useVesselCertifications.ts
+- src\hooks\useVessels.ts
+- src\hooks\useVoyages.ts
+- src\index.css
+- src\integrations\supabase\client.ts
+- src\integrations\supabase\types.ts
+- src\lib\logger.ts
+- src\lib\service-client.ts
+- src\lib\utils.ts
+- src\lib\validations.ts
+- src\main.tsx
+- src\pages\Index.tsx
+- src\pages\NotFound.tsx
+- src\pages\PublicVerify.tsx
+- src\services\falFormsService.ts
+- src\types\errors.ts
+- src\types\index.ts
+- src\utils\errorHandling.ts
+- src\utils\reportUtils.ts
+- src\vite-env.d.ts
+- supabase\config.toml
+- supabase\functions\analyze-image\index.ts
+- supabase\functions\erp-adapter\index.ts
+- supabase\migrations\20251208231453_4c9292c1-1b20-43d9-b720-1fa2d074f1d8.sql
+- supabase\migrations\20251215014758_2a9fe47f-7f1e-4bbf-81e2-6dd47db1f608.sql
+- supabase\migrations\20260204174002_a43d1739-edf5-4e1e-996e-9a4935bfa2b3.sql
+- supabase\migrations\20260209090357_34e79b68-8e49-41c3-b67a-b1250a640254.sql
+- supabase\migrations\20260214192939_4fffa410-be09-4bfd-a31d-6b219930d197.sql
+- supabase\migrations\20260215025905_c24f70a3-4647-4bbe-919f-93e4147ef6e5.sql
+- supabase\migrations\20260215034908_340b9ecd-27a5-4cdb-b81e-86102d229799.sql
+- supabase\migrations\20260215041953_9f1f6295-b275-470c-85ed-242ca6fff0b5.sql
+- supabase\migrations\20260216030000_enterprise_saas_core.sql
+- supabase\migrations\20260216031000_org_backfill.sql
+- supabase\migrations\20260216032000_rls_hardening.sql
+- supabase\migrations\20260216033000_background_jobs.sql
+- supabase\migrations\20260216034000_performance_indices.sql
+- supabase\migrations\20260216040000_audit_logging.sql
+- supabase\migrations\20260216041000_data_retention.sql
+- supabase\migrations\20260216050000_domain_services_cii.sql
+- supabase\migrations\20260216060000_external_connectivity.sql
+- supabase\migrations\20260216061000_webhook_logs.sql
+- supabase\migrations\20260216070000_full_multitenancy.sql
+- supabase\migrations\20260217210000_regulatory_intelligence.sql
+- supabase\migrations\20260217220000_compliance_engine_core.sql
+- supabase\migrations\20260217221000_compliance_scoring_logic.sql
+- supabase\migrations\20260217222000_compliance_fleet_logic.sql
+- supabase\migrations\20260217223000_compliance_seed_rules.sql
+- supabase\migrations\20260217230000_compliance_hardening.sql
+- supabase\migrations\20260217231000_vessel_registry_expansion.sql
+- supabase\migrations\20260218000000_expand_vessel_certifications.sql
+- supabase\migrations\20260218120000_org_invitations.sql
+- supabase\migrations\20260221060000_security_hardened_core.sql
+- supabase\migrations\20260223080000_security_remediation_v2.sql
+- supabase\migrations\20260223090000_security_remediation_v3.sql
+- supabase\migrations\20260223100000_comprehensive_security_fix.sql
+- supabase\migrations\20260227120000_ultimate_security_hardening.sql
+- supabase\migrations\20260227140000_resurrect_invitations.sql
+- supabase\migrations\20260227150000_multitenancy_recovery.sql
+- supabase\migrations\20260301000000_hardened_security_v5.sql
+- supabase\migrations\20260301010000_consolidated_system_deployment.sql
+- supabase\migrations\20260311220000_digital_signatures.sql
+- supabase\migrations\20260312000000_enterprise_hardening.sql
+- supabase\migrations\20260314085427_654b0485-ab1a-4446-a3b1-32e03ac14b2c.sql
+- supabase\migrations\20260314085448_a9a10314-2919-461c-b9f1-c01eb6960edf.sql
+- supabase\migrations\20260314085515_59d2d520-b50d-449e-a114-175e0eebb6d7.sql
+- supabase\migrations\20260314085523_2e05a9a6-1fa3-4a7e-a1f2-21069ea7b400.sql
+- supabase\migrations\20260314090000_standard_ship_registry.sql
+- supabase\migrations\20260314091000_vessel_cybersecurity.sql
+- supabase\migrations\20260315203803_3cfa138a-6032-4ba9-bcda-64f215563152.sql
+- supabase\migrations\20260315203851_93ab1cfc-8e88-41aa-9343-0660aec8f1e5.sql
+- supabase\migrations\20260706200634_f12132b1-2d07-433d-bc45-d2957514e432.sql
+- supabase\migrations\20260706200654_5ce5a065-c33a-41ee-94f6-fa0aaac3b9a1.sql
+- supabase\migrations\20260706204000_regrant_execute_to_authenticated.sql
+- supabase\migrations\20260706205500_credential_audit_logging.sql
+- supabase\migrations\20260706210708_cd037cbb-ffe9-4324-a16f-fd0a1c4cd579.sql
+- supabase\migrations\20260721112714_4db3f8b3-9d7e-41d0-a720-d8d6e5aaac04.sql
+- supabase\migrations\20260721112734_ad48b05c-2f8b-4c51-b466-993da3eee719.sql
+- supabase\migrations\20261231235959_final_security_hardening.sql
+- supabase\migrations\99999999999999_VALIDATION_SUITE.sql
+- tailwind.config.ts
+- tests\graphql-exclusion.test.ts
+- tsconfig.app.json
+- tsconfig.json
+- tsconfig.node.json
+- validation-demo.mjs
+- vite.config.ts
