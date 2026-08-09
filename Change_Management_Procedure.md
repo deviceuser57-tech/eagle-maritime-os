@@ -2,6 +2,17 @@
 
 ## Purpose
 This document defines the formal change management process for the Eagle Maritime Operating System (EMOS) architecture. It establishes workflow, roles, approvals, impact assessment, and post‑implementation activities required to introduce, modify, or retire architectural artifacts in a controlled, auditable manner, ensuring compliance with TOGAF Phase G and ISO 27001 Change Management controls.
+## Change Initiation
+
+The change process begins with the submission of a **Change Request (CR)**. The initiator completes the `Change_Request_Form.md` template, providing a concise description, business justification, and preliminary impact assessment. The form is then logged in the Change Management tool and assigned a unique CR identifier.
+
+Key steps:
+1. **Submit CR Form** – Fill required fields and attach supporting documentation.
+2. **Initial Review** – Change Manager validates completeness and classifies the change (Standard, Normal, Emergency).
+3. **Stakeholder Notification** – Relevant stakeholders are notified of the new request.
+4. **Proceed to Triage** – The request moves to the Initial Triage phase described in the workflow.
+
+Refer to the `Change_Request_Form.md` template for required sections.
 
 ## Scope
 The procedure applies to all architectural changes that affect any of the following artifacts or underlying platforms:
@@ -86,6 +97,63 @@ The procedure applies to all architectural changes that affect any of the follow
 - `Risk_Management_Register.md`
 - `Traceability_Matrix.md`
 - `Architecture_Decision_Records.md`
+
+## Templates
+
+- **Change Request Form** (`Change_Request_Form.md`): Includes fields for CR ID, Title, Description, Business Justification, Impact Assessment, Risk Register, and Approval Signatures.
+- **Implementation Plan Template** (`Implementation_Plan_<CR_ID>.md`): Defines tasks, schedule, rollback steps, and resource allocations.
+- **Verification Report Template** (`Change_Verification_Report_<CR_ID>.md`): Captures test results, acceptance criteria, and sign‑off.
+
+## Metrics & KPIs
+
+| Metric | Description | Target |
+|--------|-------------|--------|
+| MTTA (Mean Time to Approve) | Average time from CR submission to approval | ≤ 3 days |
+| MTTI (Mean Time to Implement) | Average time from approval to deployment | ≤ 7 days |
+| Change Success Rate | Percentage of changes implemented without post‑implementation defects | ≥ 95% |
+| Post‑Implementation Defect Rate | Defects reported within 30 days after change | ≤ 2% |
+
+## FAQ
+
+**Q:** How urgent must a change be to be classified as *Emergency*?
+**A:** Only when the change is required to remediate a critical outage or security incident that impacts safety or compliance, and must be deployed within 4 hours.
+
+**Q:** Who can submit a Change Request?
+**A:** Any stakeholder with a justification; the request must be approved by the Change Manager before proceeding to the CAB.
+
+## Example Change Request
+
+```markdown
+# CR-003 – Deploy New Vessel Monitoring Dashboard
+
+**Type:** Normal  
+**Owner:** Alice Brown  
+**Requested Date:** 2026-08-10
+
+## Description
+Introduce a new real‑time vessel monitoring dashboard using React and D3.js, displaying AIS data streams.
+
+## Business Justification
+Improves situational awareness for operations, reduces manual reporting effort by 30 %.
+
+## Impact Assessment
+- **Technical:** Front‑end code change, new API endpoint.
+- **Security:** Requires new IAM role for data access.
+- **Business:** Training required for operators.
+- **Compliance:** Must adhere to IMO data handling guidelines.
+- **Schedule:** 2‑week development, 1‑week testing.
+
+## Risk Register
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| Data latency | Medium | High | Implement caching layer. |
+| Unauthorized access | Low | High | Enforce role‑based ACLs. |
+
+## Approvals
+- **Change Manager:** _[Signature]_  
+- **Architecture Review Board:** _[Signature]_  
+- **Operations Lead:** _[Signature]_
+```
 
 ---
 *Document generated on 2026‑08‑07.*
