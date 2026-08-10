@@ -11,11 +11,13 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Users, Award, Stethoscope, Plus, Loader2, Trash2, Camera } from 'lucide-react';
 import { useCrewMembers } from '@/hooks/useCrewMembers';
 import { useVessels } from '@/hooks/useVessels';
+import { useNationalities } from '@/hooks/useSetupCrewConfig';
 import { format } from 'date-fns';
 
 const CrewManagement = () => {
   const { crewMembers, isLoading, createCrewMember, deleteCrewMember, uploadPhoto, getPhotoUrl } = useCrewMembers();
   const { vessels } = useVessels();
+  const { nationalities } = useNationalities();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
