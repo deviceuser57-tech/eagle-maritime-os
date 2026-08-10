@@ -424,13 +424,11 @@ const VesselsCertification = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
-                          <SelectItem value="USD">USD - US Dollar</SelectItem>
-                          <SelectItem value="EUR">EUR - Euro</SelectItem>
-                          <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                          <SelectItem value="SGD">SGD - Singapore Dollar</SelectItem>
-                          <SelectItem value="AED">AED - UAE Dirham</SelectItem>
-                          <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
+                          {currencyOptions.map((c) => (
+                            <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>
+                          ))}
                         </SelectContent>
+
                       </Select>
                     </div>
                   </div>
