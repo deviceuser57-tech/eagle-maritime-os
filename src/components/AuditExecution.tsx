@@ -91,15 +91,11 @@ const AuditExecution = () => {
                     <SelectValue placeholder="Select audit type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ISM">ISM Audit</SelectItem>
-                    <SelectItem value="ISPS">ISPS Audit</SelectItem>
-                    <SelectItem value="MLC">MLC Audit</SelectItem>
-                    <SelectItem value="PSC">Port State Control</SelectItem>
-                    <SelectItem value="Flag State">Flag State</SelectItem>
-                    <SelectItem value="Class">Classification</SelectItem>
-                    <SelectItem value="Internal">Internal Audit</SelectItem>
-                    <SelectItem value="Vetting">Vetting Inspection</SelectItem>
+                    {auditTypeOptions.map((name) => (
+                      <SelectItem key={name} value={name}>{name}</SelectItem>
+                    ))}
                   </SelectContent>
+
                 </Select>
               </div>
               <div className="space-y-2">
