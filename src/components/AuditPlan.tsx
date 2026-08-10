@@ -107,14 +107,11 @@ const AuditPlan = () => {
                     <SelectValue placeholder="Select audit type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ISM Annual">ISM Annual</SelectItem>
-                    <SelectItem value="ISPS Renewal">ISPS Renewal</SelectItem>
-                    <SelectItem value="Environmental">Environmental</SelectItem>
-                    <SelectItem value="PSC">Port State Control</SelectItem>
-                    <SelectItem value="Flag State">Flag State</SelectItem>
-                    <SelectItem value="Internal">Internal Audit</SelectItem>
-                    <SelectItem value="Vetting">Vetting Inspection</SelectItem>
+                    {auditTypeOptions.map((name) => (
+                      <SelectItem key={name} value={name}>{name}</SelectItem>
+                    ))}
                   </SelectContent>
+
                 </Select>
               </div>
               <div className="space-y-2">
