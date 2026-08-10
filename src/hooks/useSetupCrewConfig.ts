@@ -9,6 +9,7 @@ import { crewRankSchema, nationalitySchema, contractTypeSchema, currencySchema, 
 export interface CrewRank {
   id: string;
   user_id: string;
+  org_id?: string | null;
   rank_name: string;
   department: string | null;
   rank_order: number;
@@ -20,6 +21,7 @@ export interface CrewRank {
 export interface Nationality {
   id: string;
   user_id: string;
+  org_id?: string | null;
   country_name: string;
   country_code: string | null;
   created_at: string;
@@ -29,6 +31,7 @@ export interface Nationality {
 export interface ContractType {
   id: string;
   user_id: string;
+  org_id?: string | null;
   contract_name: string;
   duration_months: number | null;
   description: string | null;
@@ -39,6 +42,7 @@ export interface ContractType {
 export interface Currency {
   id: string;
   user_id: string;
+  org_id?: string | null;
   currency_code: string;
   currency_name: string;
   symbol: string | null;

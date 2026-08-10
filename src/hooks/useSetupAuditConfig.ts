@@ -9,6 +9,7 @@ import { auditTypeSchema, findingTypeSchema, findingStatusSchema, rootCauseSchem
 export interface AuditType {
   id: string;
   user_id: string;
+  org_id?: string | null;
   audit_type_name: string;
   description: string | null;
   frequency_months: number | null;
@@ -20,6 +21,8 @@ export interface AuditType {
 export interface FindingType {
   id: string;
   user_id: string;
+  org_id?: string | null;
+  default_deduction?: number;
   finding_type_name: string;
   severity: 'minor' | 'major' | 'critical';
   description: string | null;
@@ -30,6 +33,7 @@ export interface FindingType {
 export interface FindingStatus {
   id: string;
   user_id: string;
+  org_id?: string | null;
   status_name: string;
   status_order: number;
   is_closed: boolean;
@@ -41,6 +45,7 @@ export interface FindingStatus {
 export interface RootCause {
   id: string;
   user_id: string;
+  org_id?: string | null;
   cause_name: string;
   category: string | null;
   description: string | null;
