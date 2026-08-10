@@ -225,12 +225,29 @@ const CrewManagement = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="nationality">Nationality</Label>
-                  <Input
-                    id="nationality"
-                    value={formData.nationality}
-                    onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                  />
+                  {nationalities.length > 0 ? (
+                    <Select
+                      value={formData.nationality}
+                      onValueChange={(v) => setFormData({ ...formData, nationality: v })}
+                    >
+                      <SelectTrigger id="nationality">
+                        <SelectValue placeholder="Select nationality" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {nationalities.map((n) => (
+                          <SelectItem key={n.id} value={n.country_name}>{n.country_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="nationality"
+                      value={formData.nationality}
+                      onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
+                    />
+                  )}
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
