@@ -9,6 +9,7 @@ import { classificationSocietySchema, flagStateSchema, validate } from '@/lib/va
 export interface ClassificationSociety {
   id: string;
   user_id: string;
+  org_id?: string | null;
   society_name: string;
   abbreviation: string | null;
   website: string | null;
@@ -19,6 +20,7 @@ export interface ClassificationSociety {
 export interface FlagState {
   id: string;
   user_id: string;
+  org_id?: string | null;
   flag_name: string;
   flag_code: string | null;
   risk_level: 'low' | 'standard' | 'high';

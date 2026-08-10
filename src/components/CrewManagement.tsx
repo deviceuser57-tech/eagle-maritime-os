@@ -11,11 +11,13 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Users, Award, Stethoscope, Plus, Loader2, Trash2, Camera } from 'lucide-react';
 import { useCrewMembers } from '@/hooks/useCrewMembers';
 import { useVessels } from '@/hooks/useVessels';
+import { useNationalities } from '@/hooks/useSetupCrewConfig';
 import { format } from 'date-fns';
 
 const CrewManagement = () => {
   const { crewMembers, isLoading, createCrewMember, deleteCrewMember, uploadPhoto, getPhotoUrl } = useCrewMembers();
   const { vessels } = useVessels();
+  const { nationalities } = useNationalities();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -223,12 +225,29 @@ const CrewManagement = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="nationality">Nationality</Label>
-                  <Input
-                    id="nationality"
-                    value={formData.nationality}
-                    onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                  />
+                  {nationalities.length > 0 ? (
+                    <Select
+                      value={formData.nationality}
+                      onValueChange={(v) => setFormData({ ...formData, nationality: v })}
+                    >
+                      <SelectTrigger id="nationality">
+                        <SelectValue placeholder="Select nationality" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {nationalities.map((n) => (
+                          <SelectItem key={n.id} value={n.country_name}>{n.country_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="nationality"
+                      value={formData.nationality}
+                      onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
+                    />
+                  )}
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
