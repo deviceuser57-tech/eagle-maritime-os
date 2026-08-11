@@ -1,0 +1,275 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://jpggwhyabwettgwgktdm.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "eagle-maritime-cog-os",
+      "version": "0.1.0",
+      "title": "Eagle-Maritime COG. OS"
+    },
+    "tools": [
+      {
+        "name": "fleet_compliance_summary",
+        "title": "Fleet compliance summary",
+        "description": "Summarize fleet compliance: vessel count, certificates expired or expiring within 90 days, and open incidents.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_vessels",
+        "title": "List vessels",
+        "description": "List vessels in the signed-in user's organization fleet, optionally filtered by name or IMO number.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "search": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Filter by vessel name or IMO number."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25,
+              "description": "Maximum vessels to return."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_vessel_profile",
+        "title": "Get vessel profile",
+        "description": "Get the full particulars of one vessel plus its certificates, by vessel id or IMO number.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "vessel_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Vessel UUID."
+            },
+            "imo_number": {
+              "type": "string",
+              "minLength": 3,
+              "description": "IMO number, used when vessel_id is unknown."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_expiring_certificates",
+        "title": "List expiring certificates",
+        "description": "List statutory and class certificates in the fleet that expire within a given number of days.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "within_days": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 365,
+              "default": 90,
+              "description": "Look-ahead window in days."
+            },
+            "vessel_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Restrict to a single vessel."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_audit_findings",
+        "title": "List audit findings",
+        "description": "List audit findings (non-conformities, observations) raised across the organization's audits.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "vessel_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Restrict to findings from audits on this vessel."
+            },
+            "status": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Filter by finding status, e.g. open or closed."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_incidents",
+        "title": "List incidents",
+        "description": "List reported safety, pollution and near-miss incidents for the organization's fleet.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "vessel_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Restrict to a single vessel."
+            },
+            "severity": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "critical"
+              ],
+              "description": "Filter by severity."
+            },
+            "since": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Only incidents on or after this date (YYYY-MM-DD)."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "report_incident",
+        "title": "Report an incident",
+        "description": "Create a new incident record (safety, pollution, near-miss) for a vessel in the organization.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 200,
+              "description": "Short incident title."
+            },
+            "incident_type": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100,
+              "description": "Incident type, e.g. Near Miss, Injury, Pollution."
+            },
+            "incident_date": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Date of the incident (YYYY-MM-DD)."
+            },
+            "severity": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "critical"
+              ],
+              "default": "low"
+            },
+            "vessel_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Vessel involved."
+            },
+            "location": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "Position or port where it happened."
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 4000,
+              "description": "What happened."
+            }
+          },
+          "required": [
+            "title",
+            "incident_type",
+            "incident_date"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
