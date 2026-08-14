@@ -4,13 +4,16 @@
 
 The project is synced with:
 
-- **`devicuser57-tech/eagle-maritime-os`** (branch `main`, status Connected)
-- Clone URL: `https://github.com/deviceuser57-tech/eagle-maritime-os.git`
+- `**devicuser57-tech/eagle-maritime-os**` (branch `main`, status Connected)
+-  Clone URL: `https://github.com/deviceuser57-tech/eagle-maritime-os.git`
 
-Note: inside the build sandbox the Git remotes point to Lovable's internal mirror (`git.private.lovable-gcp.code.storage/8bb86506-...` and `s3://lovable-repositories/8bb86506-...`), which is why the GitHub URL is not visible from `git remote`. The GitHub link lives at the platform level and syncs both ways — your pushes to `main` land here, and Lovable's commits are pushed back.
+Note: inside the build sandbox the Git remotes point to Lovable's internal mirror (`git.private.lovable-gcp.code.storage/8bb86506-...` and `s3://lovable-repositories/8bb86506-...`), which is why the GitHub URL is not visible from `git remote`. The GitHub link lives at the platform level and syncs both ways — your pushes to `main` land here, and Lovable's commits are pushed back.  
+  
+its important to update the project from github repo  
+fetch the changes from the repo (clone and update the project here 
 
-
-## 2. As-built architecture (current code state)
+## 2. As-built architecture (current code state)  
+Before starting with the below , you must to ensure that the project get all the updates from the repo first 
 
 ```text
 CLIENTS
@@ -49,10 +52,12 @@ EXTERNAL:   Lovable AI Gateway   ERP / class endpoints   Agent clients
 ```
 
 ### Key characteristics
+
 - Single-page app; all modules render inside `Index.tsx` via sidebar state, not separate routes.
 - Multi-tenancy: every query is organization-scoped; `resolveOrgId` enforces the same for MCP tools.
 - MCP tools run under the signed-in user's RLS — no service-role bypass.
 - Public surface: only `/verify` (certificate QR verification) and the marketing FrontPage.
 
 ## 3. Optional next step
+
 If you want this as a rendered diagram file (Mermaid `.mmd` artifact you can download or embed in the As-Built document), approve this plan and I will generate it in build mode.
