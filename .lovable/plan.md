@@ -1,77 +1,57 @@
-# خطة تحديث ملف Eagle-MaritimeOS-AsBuilt-AR.pdf (النسخة 2)
+# Eagle Maritime OS — Repository & As-Built Architecture
 
-سيتم إنتاج ملف جديد `Eagle-MaritimeOS-AsBuilt-AR-v2.pdf` مع الإبقاء على النسخة الأصلية للمرجعية.
+## 1. GitHub repository
 
-## 1) بيانات الإصدار (Version Block)
-يُضاف صندوق بيانات الإصدار داخل الغلاف وفي الصفحة التالية له مباشرةً (قبل الفهرس):
-- رقم النسخة: **v2.0**
-- التاريخ: **2026-07-20**
-- مالك المشروع: **Eng. Elhamy Sobhy**
-- نوع الوثيقة: **As-Built Documentation**
-- الحالة: **Released**
-- التصنيف: **Marketing / Technical Brochure**
+This project is **not connected to any GitHub repository**. The only Git remotes configured are Lovable's internal storage:
 
-## 2) إصلاح اتجاه النص (RTL)
-- ضبط `alignment = TA_RIGHT` كافتراضي، مع تفعيل `wordWrap='RTL'` في جميع فقرات ReportLab.
-- توليد كل الفقرات عبر دالة `rtl_paragraph()` تُطبّق `arabic_reshaper` + `bidi` بشكل صحيح على النص العربي فقط، وتبقي المقاطع اللاتينية داخل `<font name="EN">` كما هي (بحيث تدفقها الطبيعي LTR داخل سطر RTL).
-- تحويل جميع الأرقام إلى **الأرقام العربية-الهندية** (٠١٢٣٤٥٦٧٨٩) عبر دالة `to_arabic_digits()` تُطبَّق على كل النصوص باستثناء: أسماء الإصدارات التقنية (React 18, Vite 5)، أكواد المعايير (SOLAS, MARPOL, MSC.428(98))، وأرقام الصفحات في الترويسة/التذييل الإنجليزية.
-- الجداول: عكس ترتيب الأعمدة ليبدأ العمود الأول من اليمين، مع محاذاة داخلية `RIGHT` لكل الخلايا.
+- `origin` → `git.private.lovable-gcp.code.storage/8bb86506-1849-4a48-80a9-8c84c30bfcbf.git`
+- `secondary` → `s3://lovable-repositories/8bb86506-1849-4a48-80a9-8c84c30bfcbf.git`
 
-## 3) إزالة "مستوى التنفيذ"
-- حذف عمود/شارة "قيد التنفيذ / منفذ" من كل جداول الوحدات.
-- إعادة صياغة العناوين لتقديم الميزات كخصائص جاهزة بأسلوب بروشور تسويقي احترافي (بدون كلمات مثل: قيد التطوير، Beta، MVP، Phase X).
+Both point to the Lovable project ID `8bb86506-1849-4a48-80a9-8c84c30bfcbf`, not to github.com. Earlier "changes pushed from GitHub" arrived through a sync that is no longer (or was never) reflected as a GitHub remote here. To get a real GitHub repo: chat Plus (+) menu → GitHub → Connect project.
 
-## 4) إضافة لقطات الشاشة المفقودة
-سيتم إعادة تشغيل سكربت Playwright لالتقاط لقطات جديدة بدقة عالية (1440×900) وإدراجها فعلياً داخل الأقسام المرتبطة بها بحجم مناسب (عرض 16سم مع إطار وظل خفيف):
-- الصفحة الرئيسية (FrontPage)
-- صفحة تسجيل الدخول (AuthPage) — مع الشعار الجديد
-- لوحة القيادة (Dashboard)
-- إدارة الأسطول (VesselManagement)
-- لوحة CII (CIIDashboard)
-- الامتثال الرقمي (Digital Compliance) — تبويبَي Statutory & Cyber
-- سجل الشهادات (VesselsCertification)
-- التوأم الرقمي (DigitalTwin)
-- التحقق العام (PublicVerify + QR)
-- مركز المساعدة (HelpCenter)
+## 2. As-built architecture (current code state)
 
-سيتم تضمين كل لقطة أسفل عنوان الوحدة المقابلة مع تعليق توضيحي مختصر (Caption) بالعربية.
+```text
+CLIENTS
+  Browser user                         AI agents (Claude / ChatGPT)
+      |                                            |
+      v                                            v
+FRONTEND (React 18 + Vite 5 + TS + Tailwind + shadcn)      MCP LAYER
+  App.tsx router                                    src/lib/mcp/index.ts
+    / .............. Index.tsx (app shell)            OAuth-protected, 7 tools:
+    /verify ........ PublicVerify                       fleet_compliance_summary
+    /.lovable/oauth/consent .. OAuthConsent              list_vessels
+    * .............. NotFound                            get_vessel_profile
+  AuthContext + AuthPage (JWT session)                   list_expiring_certificates
+  Sidebar + UniversalSearch                              list_audit_findings
+  37 feature components:                                 list_incidents
+    Dashboard, Reports, SIMDashboard, CIIDashboard       report_incident
+    VesselManagement, VesselsCertification, DigitalTwin
+    AuditPlan/Execution/Findings, CorrectiveAction, InteractiveClosure, AuditorManagement
+    CrewManagement, SafetyManagement, Incidents, Maintenance
+    RegulatoryManager, RulesRegulations, PredictiveCompliance, DigitalCompliance
+    Projects, Operations, InsuranceClaims, Communications, MotionRiskAnalyzer
+    Organization, SetupPage, IntegrationSettings, EnterpriseAuditLog, HelpCenter, AIAssistant
+  27 data hooks + TanStack Query  ->  supabase-js client
+                    |                                    |
+                    v                                    v
+LOVABLE CLOUD (Supabase)
+  Auth: JWT sessions + OAuth 2.1 issuer (used by MCP consent)
+  Postgres: org-scoped domain tables + setup_* reference registries
+  Security: RLS on every table, fn_is_org_admin, SECURITY DEFINER RPCs,
+            GraphQL endpoint disabled for anon/authenticated
+  Storage buckets (evidence/images)
+  Edge functions: analyze-image | erp-adapter | mcp
+                    |               |            |
+                    v               v            v
+EXTERNAL:   Lovable AI Gateway   ERP / class endpoints   Agent clients
+```
 
-## 5) مصفوفة التتبع Feature ↔ Standard ↔ Page
-جدول جديد في قسم مستقل قبل المقارنة العالمية، بأعمدة (من اليمين لليسار):
-| الخاصية | معيار الامتثال | رقم الصفحة |
+### Key characteristics
+- Single-page app; all modules render inside `Index.tsx` via sidebar state, not separate routes.
+- Multi-tenancy: every query is organization-scoped; `resolveOrgId` enforces the same for MCP tools.
+- MCP tools run under the signed-in user's RLS — no service-role bypass.
+- Public surface: only `/verify` (certificate QR verification) and the marketing FrontPage.
 
-يغطي جميع الوحدات (≥30 خاصية) مع الربط بمعايير حقيقية (SOLAS Ch.V/IX, MARPOL Annex VI, ISM Code, ISPS, MLC 2006, STCW, CII/EEXI — MEPC.328(76), BWM Convention, MSC.428(98), IACS UR E26/E27, FAL Convention).
-
-أرقام الصفحات ستُحسب ديناميكياً بعد الترقيم النهائي (باستخدام مرحلتين للتوليد: تمرير أول لجمع مواقع الأقسام ثم تمرير ثانٍ لملء المصفوفة).
-
-## 6) منهجية المقارنة العالمية (Benchmarking Methodology)
-استبدال جدول "قوي جداً/قوي/جزئي" بمنهجية شفافة قائمة على أدلة:
-
-**أ) معايير التقييم (7 محاور، لكل محور وزن):**
-1. تغطية المعايير البحرية الدولية (٢٠٪)
-2. عمق وحدات الامتثال والتدقيق (٢٠٪)
-3. الذكاء الاصطناعي وتحليل CII/EEXI (١٥٪)
-4. التوأم الرقمي و IoT (١٠٪)
-5. الأمن السيبراني MSC.428 (١٠٪)
-6. الشفافية والتحقق العام (QR/Public Verify) (١٠٪)
-7. سهولة النشر والتكلفة (١٥٪)
-
-**ب) مقياس التسجيل (0-5):** بدل الكلمات المبهمة، تُستخدم درجات رقمية موثقة مع تعريف واضح لكل درجة (0=غير متوفر، 5=متوفر بالكامل مع توثيق ومعايرة).
-
-**ج) المنافسون المقارَنون:** DNV Navigator، ABS Nautical Systems، ShipManager (DNV)، Star Information Systems، Helm Operations. (شركات حقيقية ومعروفة)
-
-**د) مصادر البيانات:** المواقع الرسمية للمنافسين + وثائق IMO + قدرات Eagle الموثقة داخل هذا الملف (مراجع مصلَّبة).
-
-**هـ) إفصاح صريح:** فقرة تنبيه تُقر بأن التقييم تم بواسطة فريق Eagle بناءً على معلومات عامة متاحة، وأن الأرقام تعكس الحالة في تاريخ الإصدار، وقد تتغير قدرات المنافسين. يُوصى بالتحقق المستقل قبل قرارات الشراء.
-
-**و) الجدول النهائي:** درجات من ٥ لكل محور لكل منتج + مجموع مرجّح، مع خانة "دليل/مرجع" لكل درجة تخص Eagle.
-
-## 7) التذييل والترويسة
-- الترويسة: الشعار (يسار) + "Eagle Maritime OS — As-Built" (مختلط عربي/إنجليزي، يمين).
-- التذييل: `Eng. Elhamy Sobhy (Copyright Reserved) © 2026` مع رقم الصفحة بالأرقام العربية.
-
-## تفاصيل تقنية للتنفيذ
-- تعديل `/tmp/asbuilt/build_pdf.py` (مرحلتان: pass1 يجمع anchors، pass2 يبني الوثيقة بمصفوفة التتبع المكتملة).
-- تحديث `/tmp/asbuilt/shoot.py` لالتقاط 10 لقطات بدلاً من 3، بعد تسجيل الدخول بجلسة Supabase المُحقنة للوصول للصفحات المحمية.
-- إخراج: `/mnt/documents/Eagle-MaritimeOS-AsBuilt-AR-v2.pdf`.
-- QA: تحويل كل صفحة إلى JPG ومراجعتها للتأكد من: RTL سليم، الأرقام العربية، عدم قص النصوص، ظهور اللقطات، اكتمال مصفوفة التتبع، صحة المقارنة.
+## 3. Optional next step
+If you want this as a rendered diagram file (Mermaid `.mmd` artifact you can download or embed in the As-Built document), approve this plan and I will generate it in build mode.
