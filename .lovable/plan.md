@@ -2,12 +2,13 @@
 
 ## 1. GitHub repository
 
-This project is **not connected to any GitHub repository**. The only Git remotes configured are Lovable's internal storage:
+The project is synced with:
 
-- `origin` → `git.private.lovable-gcp.code.storage/8bb86506-1849-4a48-80a9-8c84c30bfcbf.git`
-- `secondary` → `s3://lovable-repositories/8bb86506-1849-4a48-80a9-8c84c30bfcbf.git`
+- **`devicuser57-tech/eagle-maritime-os`** (branch `main`, status Connected)
+- Clone URL: `https://github.com/deviceuser57-tech/eagle-maritime-os.git`
 
-Both point to the Lovable project ID `8bb86506-1849-4a48-80a9-8c84c30bfcbf`, not to github.com. Earlier "changes pushed from GitHub" arrived through a sync that is no longer (or was never) reflected as a GitHub remote here. To get a real GitHub repo: chat Plus (+) menu → GitHub → Connect project.
+Note: inside the build sandbox the Git remotes point to Lovable's internal mirror (`git.private.lovable-gcp.code.storage/8bb86506-...` and `s3://lovable-repositories/8bb86506-...`), which is why the GitHub URL is not visible from `git remote`. The GitHub link lives at the platform level and syncs both ways — your pushes to `main` land here, and Lovable's commits are pushed back.
+
 
 ## 2. As-built architecture (current code state)
 
