@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Menu } from 'lucide-react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/hooks/useOrganization';
+import { seedSetupData } from '@/services/setup/seedService';
 import FrontPage from '@/components/FrontPage';
 import Sidebar from '@/components/Sidebar';
 import UniversalSearch from '@/components/UniversalSearch';
@@ -39,10 +41,17 @@ import HelpCenter from '@/components/HelpCenter';
 
 const IndexContent = () => {
   const { user, loading, signOut } = useAuth();
+  const { orgId } = useOrganization();
   const [showFrontPage, setShowFrontPage] = useState(true);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (user?.id && orgId) {
+      seedSetupData(orgId, user.id);
+    }
+  }, [user?.id, orgId]);
 
   useEffect(() => {
     if (theme === 'dark') {

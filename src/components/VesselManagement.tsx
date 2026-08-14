@@ -16,7 +16,7 @@ import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClass
 import { useMaintenanceTasks } from '@/hooks/useMaintenanceTasks';
 import { useVesselRegulatoryPortfolio } from '@/hooks/useRegulations';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/services/supabaseClient';
 
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
