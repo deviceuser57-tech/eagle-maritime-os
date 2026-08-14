@@ -263,7 +263,7 @@ var list_audit_findings_default = defineTool6({
   }
 });
 
-// src/lib/mcp/fleet-compliance-summary.ts
+// src/lib/mcp/tools/fleet-compliance-summary.ts
 import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.26.2";
 var fleet_compliance_summary_default = defineTool7({
   name: "fleet_compliance_summary",
