@@ -7,6 +7,17 @@ const safeString = (max = 255) =>
 const optionalSafeString = (max = 255) =>
   safeString(max).optional().nullable();
 
+// Numeric input helper: HTML inputs yield strings; empty values mean "not provided".
+const num = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((v) => {
+    if (v === '' || v === null || v === undefined) return undefined;
+    if (typeof v === 'string') {
+      const n = Number(v.trim());
+      return Number.isNaN(n) ? v : n;
+    }
+    return v;
+  }, schema);
+
 // ── Vessel ──
 export const vesselSchema = z.object({
   name: safeString(150).pipe(z.string().min(1, 'Vessel name is required')),
@@ -15,9 +26,9 @@ export const vesselSchema = z.object({
   mmsi_number: optionalSafeString(20),
   vessel_type: optionalSafeString(100),
   flag_state: optionalSafeString(100),
-  gross_tonnage: z.number().nonnegative().max(1_000_000).optional().nullable(),
-  deadweight: z.number().nonnegative().max(1_000_000).optional().nullable(),
-  year_built: z.number().int().min(1800).max(2100).optional().nullable(),
+  gross_tonnage: num(z.number().nonnegative().max(1_000_000).optional().nullable()),
+  deadweight: num(z.number().nonnegative().max(1_000_000).optional().nullable()),
+  year_built: num(z.number().int().min(1800).max(2100).optional().nullable()),
   classification_society: optionalSafeString(200),
   status: optionalSafeString(50),
   class_number: optionalSafeString(100),
@@ -101,7 +112,7 @@ export const companySchema = z.object({
 export const auditTypeSchema = z.object({
   audit_type_name: safeString(150).pipe(z.string().min(1, 'Audit type name is required')),
   description: optionalSafeString(2000),
-  frequency_months: z.number().int().min(1).max(120).optional().nullable(),
+  frequency_months: num(z.number().int().min(1).max(120).optional().nullable()),
   is_external: z.boolean().default(false),
 });
 
@@ -115,7 +126,7 @@ export const findingTypeSchema = z.object({
 // ── Setup Finding Status ──
 export const findingStatusSchema = z.object({
   status_name: safeString(100).pipe(z.string().min(1, 'Status name is required')),
-  status_order: z.number().int().min(0).max(1000).default(0),
+  status_order: num(z.number().int().min(0).max(1000).default(0)),
   is_closed: z.boolean().default(false),
   color: optionalSafeString(20),
 });
@@ -131,7 +142,7 @@ export const rootCauseSchema = z.object({
 export const crewRankSchema = z.object({
   rank_name: safeString(100).pipe(z.string().min(1, 'Rank name is required')),
   department: optionalSafeString(100),
-  rank_order: z.number().int().min(0).max(1000).default(0),
+  rank_order: num(z.number().int().min(0).max(1000).default(0)),
   is_officer: z.boolean().default(false),
 });
 
@@ -144,7 +155,7 @@ export const nationalitySchema = z.object({
 // ── Setup Contract Type ──
 export const contractTypeSchema = z.object({
   contract_name: safeString(150).pipe(z.string().min(1, 'Contract name is required')),
-  duration_months: z.number().int().min(1).max(120).optional().nullable(),
+  duration_months: num(z.number().int().min(1).max(120).optional().nullable()),
   description: optionalSafeString(2000),
 });
 
@@ -174,7 +185,7 @@ export const certificateTypeSchema = z.object({
   certificate_category: z.enum(['statutory', 'class', 'crew', 'other'], { required_error: 'Category is required' }),
   certificate_name: safeString(200).pipe(z.string().min(1, 'Certificate name is required')),
   issuing_authority: optionalSafeString(200),
-  validity_months: z.number().int().min(1).max(600).optional().nullable(),
+  validity_months: num(z.number().int().min(1).max(600).optional().nullable()),
   is_mandatory: z.boolean().default(false),
 });
 
@@ -186,19 +197,19 @@ export const auditorSchema = z.object({
   certification_number: optionalSafeString(100),
   specialization: optionalSafeString(200),
   status: safeString(50).default('available'),
-  rating: z.number().min(0).max(5).optional().nullable(),
-  audits_completed: z.number().int().min(0).max(100000).optional().nullable(),
+  rating: num(z.number().min(0).max(5).optional().nullable()),
+  audits_completed: num(z.number().int().min(0).max(100000).optional().nullable()),
 });
 
 // ── CII Record ──
 export const ciiRecordSchema = z.object({
-  year: z.number().int().min(2000).max(2100),
-  cii_value: z.number().min(0).max(100000),
+  year: num(z.number().int().min(2000).max(2100)),
+  cii_value: num(z.number().min(0).max(100000)),
   cii_rating: safeString(10).pipe(z.string().min(1, 'CII rating is required')),
-  target_value: z.number().min(0).max(100000).optional().nullable(),
-  fuel_consumption: z.number().min(0).max(10_000_000).optional().nullable(),
-  distance_travelled: z.number().min(0).max(10_000_000).optional().nullable(),
-  cargo_carried: z.number().min(0).max(10_000_000).optional().nullable(),
+  target_value: num(z.number().min(0).max(100000).optional().nullable()),
+  fuel_consumption: num(z.number().min(0).max(10_000_000).optional().nullable()),
+  distance_travelled: num(z.number().min(0).max(10_000_000).optional().nullable()),
+  cargo_carried: num(z.number().min(0).max(10_000_000).optional().nullable()),
   notes: optionalSafeString(2000),
 });
 
@@ -243,7 +254,7 @@ export const voyageSchema = z.object({
   arrival_date: z.string().optional().nullable(),
   eta: z.string().optional().nullable(),
   cargo_type: optionalSafeString(200),
-  cargo_quantity: z.number().min(0).max(10_000_000).optional().nullable(),
+  cargo_quantity: num(z.number().min(0).max(10_000_000).optional().nullable()),
   status: safeString(50).default('planned'),
   notes: optionalSafeString(2000),
 });
@@ -257,8 +268,8 @@ export const insuranceClaimSchema = z.object({
   incident_date: z.string().optional().nullable(),
   submitted_date: z.string().optional().nullable(),
   resolved_date: z.string().optional().nullable(),
-  claim_amount: z.number().min(0).max(1_000_000_000).optional().nullable(),
-  approved_amount: z.number().min(0).max(1_000_000_000).optional().nullable(),
+  claim_amount: num(z.number().min(0).max(1_000_000_000).optional().nullable()),
+  approved_amount: num(z.number().min(0).max(1_000_000_000).optional().nullable()),
   status: safeString(50).default('pending'),
   description: optionalSafeString(5000),
 });
@@ -272,8 +283,8 @@ export const projectSchema = z.object({
   start_date: z.string().optional().nullable(),
   deadline: z.string().optional().nullable(),
   completed_date: z.string().optional().nullable(),
-  progress: z.number().int().min(0).max(100).optional().nullable(),
-  vessel_count: z.number().int().min(0).max(10000).optional().nullable(),
+  progress: num(z.number().int().min(0).max(100).optional().nullable()),
+  vessel_count: num(z.number().int().min(0).max(10000).optional().nullable()),
 });
 
 // Helper to validate and return either { data } or { error }
