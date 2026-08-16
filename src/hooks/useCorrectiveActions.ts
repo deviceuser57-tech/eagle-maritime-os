@@ -51,7 +51,7 @@ export const useCorrectiveActions = () => {
 
     try {
       const { error: validationError } = validate(correctiveActionSchema, action);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('corrective_actions')
         .insert([{ ...action, user_id: user.id }])

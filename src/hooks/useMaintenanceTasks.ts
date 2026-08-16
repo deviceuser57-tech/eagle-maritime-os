@@ -65,7 +65,7 @@ export const useMaintenanceTasks = () => {
 
     const { error: validationError } = validate(maintenanceTaskSchema, task);
     if (validationError) {
-      toast({ title: 'Validation Error', description: validationError.errors[0]?.message || 'Invalid input', variant: 'destructive' });
+      toast({ title: 'Validation Error', description: validationError.issues[0]?.message || 'Invalid input', variant: 'destructive' });
       return { error: validationError };
     }
 

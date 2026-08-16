@@ -27,7 +27,7 @@ export const addVessel = async (
   if (validationError) {
     toast({
       title: 'Validation Error',
-      description: validationError.errors[0]?.message || 'Invalid input',
+      description: validationError.issues[0]?.message || 'Invalid input',
       variant: 'destructive',
     });
     throw validationError;
