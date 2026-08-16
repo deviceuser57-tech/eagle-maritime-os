@@ -54,7 +54,7 @@ export const useAuditors = () => {
 
     try {
       const { error: validationError } = validate(auditorSchema, auditor);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('auditors')
         .insert([{ ...auditor, user_id: user.id, org_id: orgId }])

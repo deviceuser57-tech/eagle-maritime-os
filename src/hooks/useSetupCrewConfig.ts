@@ -76,7 +76,7 @@ export const useCrewRanks = () => {
     mutationFn: async (rank: Omit<CrewRank, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
       if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(crewRankSchema, rank);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_crew_ranks')
         .insert({ ...rank, user_id: user.id, org_id: orgId })
@@ -157,7 +157,7 @@ export const useNationalities = () => {
     mutationFn: async (nationality: Omit<Nationality, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
       if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(nationalitySchema, nationality);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_nationalities')
         .insert({ ...nationality, user_id: user.id, org_id: orgId })
@@ -238,7 +238,7 @@ export const useContractTypes = () => {
     mutationFn: async (contractType: Omit<ContractType, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
       if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(contractTypeSchema, contractType);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error = null } = await supabase
         .from('setup_contract_types')
         .insert({ ...contractType, user_id: user.id, org_id: orgId })
@@ -319,7 +319,7 @@ export const useCurrencies = () => {
     mutationFn: async (currency: Omit<Currency, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
       if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(currencySchema, currency);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_currencies')
         .insert({ ...currency, user_id: user.id, org_id: orgId })

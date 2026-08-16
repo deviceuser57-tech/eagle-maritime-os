@@ -54,7 +54,7 @@ export const useCommunications = () => {
 
     try {
       const { error: validationError } = validate(communicationSchema, communication);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('communications')
         .insert([{ ...communication, user_id: user.id, org_id: orgId }])
