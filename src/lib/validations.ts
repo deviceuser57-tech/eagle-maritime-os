@@ -98,7 +98,7 @@ export const regulationSchema = z.object({
 
 // ── Setup Company ──
 export const companySchema = z.object({
-  company_type: z.enum(['owner', 'operator', 'technical', 'ism', 'doc'], { required_error: 'Company type is required' }),
+  company_type: z.enum(['owner', 'operator', 'technical', 'ism', 'doc'], { error: 'Company type is required' }),
   name: safeString(200).pipe(z.string().min(1, 'Company name is required')),
   contact_person: optionalSafeString(150),
   title: optionalSafeString(100),
@@ -183,7 +183,7 @@ export const flagStateSchema = z.object({
 
 // ── Setup Certificate Type ──
 export const certificateTypeSchema = z.object({
-  certificate_category: z.enum(['statutory', 'class', 'crew', 'other'], { required_error: 'Category is required' }),
+  certificate_category: z.enum(['statutory', 'class', 'crew', 'other'], { error: 'Category is required' }),
   certificate_name: safeString(200).pipe(z.string().min(1, 'Certificate name is required')),
   issuing_authority: optionalSafeString(200),
   validity_months: num(z.number().int().min(1).max(600).optional().nullable()),

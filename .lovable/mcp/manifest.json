@@ -42,23 +42,22 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "search": {
+              "description": "Filter by vessel name or IMO number.",
               "type": "string",
-              "minLength": 1,
-              "description": "Filter by vessel name or IMO number."
+              "minLength": 1
             },
             "limit": {
+              "default": 25,
+              "description": "Maximum vessels to return.",
               "type": "integer",
               "minimum": 1,
-              "maximum": 100,
-              "default": 25,
-              "description": "Maximum vessels to return."
+              "maximum": 100
             }
-          },
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          }
         },
         "outputSchema": null
       },
@@ -72,21 +71,21 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "vessel_id": {
+              "description": "Vessel UUID.",
               "type": "string",
               "format": "uuid",
-              "description": "Vessel UUID."
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             },
             "imo_number": {
+              "description": "IMO number, used when vessel_id is unknown.",
               "type": "string",
-              "minLength": 3,
-              "description": "IMO number, used when vessel_id is unknown."
+              "minLength": 3
             }
-          },
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          }
         },
         "outputSchema": null
       },
@@ -100,29 +99,29 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "within_days": {
+              "default": 90,
+              "description": "Look-ahead window in days.",
               "type": "integer",
               "minimum": 1,
-              "maximum": 365,
-              "default": 90,
-              "description": "Look-ahead window in days."
+              "maximum": 365
             },
             "vessel_id": {
+              "description": "Restrict to a single vessel.",
               "type": "string",
               "format": "uuid",
-              "description": "Restrict to a single vessel."
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             },
             "limit": {
+              "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 200,
-              "default": 50
+              "maximum": 200
             }
-          },
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          }
         },
         "outputSchema": null
       },
@@ -136,27 +135,27 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "vessel_id": {
+              "description": "Restrict to findings from audits on this vessel.",
               "type": "string",
               "format": "uuid",
-              "description": "Restrict to findings from audits on this vessel."
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             },
             "status": {
+              "description": "Filter by finding status, e.g. open or closed.",
               "type": "string",
-              "minLength": 1,
-              "description": "Filter by finding status, e.g. open or closed."
+              "minLength": 1
             },
             "limit": {
+              "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 100,
-              "default": 25
+              "maximum": 100
             }
-          },
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          }
         },
         "outputSchema": null
       },
@@ -170,37 +169,37 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "vessel_id": {
+              "description": "Restrict to a single vessel.",
               "type": "string",
               "format": "uuid",
-              "description": "Restrict to a single vessel."
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             },
             "severity": {
+              "description": "Filter by severity.",
               "type": "string",
               "enum": [
                 "low",
                 "medium",
                 "high",
                 "critical"
-              ],
-              "description": "Filter by severity."
+              ]
             },
             "since": {
+              "description": "Only incidents on or after this date (YYYY-MM-DD).",
               "type": "string",
-              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-              "description": "Only incidents on or after this date (YYYY-MM-DD)."
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
             },
             "limit": {
+              "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 100,
-              "default": 25
+              "maximum": 100
             }
-          },
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          }
         },
         "outputSchema": null
       },
@@ -215,6 +214,7 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "title": {
@@ -235,38 +235,37 @@
               "description": "Date of the incident (YYYY-MM-DD)."
             },
             "severity": {
+              "default": "low",
               "type": "string",
               "enum": [
                 "low",
                 "medium",
                 "high",
                 "critical"
-              ],
-              "default": "low"
+              ]
             },
             "vessel_id": {
+              "description": "Vessel involved.",
               "type": "string",
               "format": "uuid",
-              "description": "Vessel involved."
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             },
             "location": {
+              "description": "Position or port where it happened.",
               "type": "string",
-              "maxLength": 200,
-              "description": "Position or port where it happened."
+              "maxLength": 200
             },
             "description": {
+              "description": "What happened.",
               "type": "string",
-              "maxLength": 4000,
-              "description": "What happened."
+              "maxLength": 4000
             }
           },
           "required": [
             "title",
             "incident_type",
             "incident_date"
-          ],
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          ]
         },
         "outputSchema": null
       }
