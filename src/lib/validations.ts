@@ -121,6 +121,7 @@ export const findingTypeSchema = z.object({
   finding_type_name: safeString(150).pipe(z.string().min(1, 'Finding type name is required')),
   severity: z.enum(['minor', 'major', 'critical']).default('minor'),
   description: optionalSafeString(2000),
+  default_deduction: num(z.number().min(0).max(100).default(10)),
 });
 
 // ── Setup Finding Status ──
