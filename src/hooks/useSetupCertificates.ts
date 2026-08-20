@@ -50,7 +50,7 @@ export const useCertificateTypes = (category?: CertificateType['certificate_cate
     mutationFn: async (cert: Omit<CertificateType, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
       if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(certificateTypeSchema, cert);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_certificate_types')
         .insert({ ...cert, user_id: user.id, org_id: orgId })

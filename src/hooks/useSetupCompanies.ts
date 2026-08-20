@@ -56,7 +56,7 @@ export const useSetupCompanies = (companyType?: SetupCompany['company_type']) =>
     mutationFn: async (company: Omit<CompanyInsert, 'user_id' | 'org_id'>) => {
       if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(companySchema, company);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
 
       const { data, error } = await supabase
         .from('setup_companies')
@@ -79,7 +79,7 @@ export const useSetupCompanies = (companyType?: SetupCompany['company_type']) =>
   const updateCompany = useMutation({
     mutationFn: async ({ id, ...updates }: CompanyUpdate) => {
       const { error: validationError } = validate(companySchema.partial(), updates);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_companies')
         .update(updates)

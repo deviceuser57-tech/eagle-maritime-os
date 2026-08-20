@@ -7,7 +7,7 @@ import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.26.2";
 
 // src/lib/mcp/tools/list-vessels.ts
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.26.2";
-import { z } from "npm:zod@^3.23.8";
+import { z } from "npm:zod@^4";
 
 // src/lib/mcp/supabase.ts
 import { createClient } from "npm:@supabase/supabase-js@^2.87.0";
@@ -98,7 +98,7 @@ var list_vessels_default = defineTool({
 
 // src/lib/mcp/tools/get-vessel-profile.ts
 import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.26.2";
-import { z as z2 } from "npm:zod@^3.23.8";
+import { z as z2 } from "npm:zod@^4";
 var get_vessel_profile_default = defineTool2({
   name: "get_vessel_profile",
   title: "Get vessel profile",
@@ -126,7 +126,7 @@ var get_vessel_profile_default = defineTool2({
 
 // src/lib/mcp/tools/list-expiring-certificates.ts
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.26.2";
-import { z as z3 } from "npm:zod@^3.23.8";
+import { z as z3 } from "npm:zod@^4";
 var list_expiring_certificates_default = defineTool3({
   name: "list_expiring_certificates",
   title: "List expiring certificates",
@@ -167,7 +167,7 @@ var list_expiring_certificates_default = defineTool3({
 
 // src/lib/mcp/tools/list-incidents.ts
 import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.26.2";
-import { z as z4 } from "npm:zod@^3.23.8";
+import { z as z4 } from "npm:zod@^4";
 var list_incidents_default = defineTool4({
   name: "list_incidents",
   title: "List incidents",
@@ -195,7 +195,7 @@ var list_incidents_default = defineTool4({
 
 // src/lib/mcp/tools/report-incident.ts
 import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.26.2";
-import { z as z5 } from "npm:zod@^3.23.8";
+import { z as z5 } from "npm:zod@^4";
 var report_incident_default = defineTool5({
   name: "report_incident",
   title: "Report an incident",
@@ -239,7 +239,7 @@ var report_incident_default = defineTool5({
 
 // src/lib/mcp/tools/list-audit-findings.ts
 import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.26.2";
-import { z as z6 } from "npm:zod@^3.23.8";
+import { z as z6 } from "npm:zod@^4";
 var list_audit_findings_default = defineTool6({
   name: "list_audit_findings",
   title: "List audit findings",
@@ -263,7 +263,7 @@ var list_audit_findings_default = defineTool6({
   }
 });
 
-// src/lib/mcp/fleet-compliance-summary.ts
+// src/lib/mcp/tools/fleet-compliance-summary.ts
 import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.26.2";
 var fleet_compliance_summary_default = defineTool7({
   name: "fleet_compliance_summary",

@@ -54,7 +54,7 @@ export const useClassificationSocieties = () => {
     mutationFn: async (society: Omit<ClassificationSociety, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
       if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(classificationSocietySchema, society);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_classification_societies')
         .insert({ ...society, user_id: user.id, org_id: orgId })
@@ -135,7 +135,7 @@ export const useFlagStates = () => {
     mutationFn: async (flagState: Omit<FlagState, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
       if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(flagStateSchema, flagState);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_flag_states')
         .insert({ ...flagState, user_id: user.id, org_id: orgId })
