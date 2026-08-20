@@ -1,0 +1,202 @@
+{
+  "vessels": {
+    "rls_required": true,
+    "min_policies": 4,
+    "graphql_excluded": true
+  },
+  "audits": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "audit_findings": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "organizations": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "organization_members": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "crew_members": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "incidents": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "insurance_claims": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "maintenance_tasks": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "projects": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "vessel_certifications": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "vessel_compliance_scores": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "external_credentials": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "webhook_secrets": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "erp_configurations": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "activity_logs": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "cii_records": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "communications": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "corrective_actions": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "custom_regulations": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "voyages": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "reports": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "setup_companies": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "setup_crew_ranks": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "setup_currencies": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "setup_flag_states": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "setup_nationalities": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "setup_finding_types": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "setup_finding_statuses": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "setup_root_causes": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "setup_audit_types": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "setup_certificate_types": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "setup_classification_societies": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "setup_contract_types": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "org_roles": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "subscription_plans": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "webhook_endpoints": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": false
+  },
+  "security_events": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "security_scan_results": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  },
+  "security_alerts": {
+    "rls_required": true,
+    "min_policies": 1,
+    "graphql_excluded": true
+  }
+}

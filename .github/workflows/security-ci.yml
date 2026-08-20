@@ -1,0 +1,104 @@
+name: Security – RLS & GraphQL Baseline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Job 1: Verify every org-scoped table has RLS
+  # enabled and the expected minimum policy count.
+  # ──────────────────────────────────────────────
+  rls-policy-audit:
+    name: RLS Policy Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run RLS coverage verification
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/verify-rls-coverage.mjs
+
+      - name: Upload RLS report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rls-coverage-report
+          path: scripts/rls-report.json
+          retention-days: 30
+
+  # ──────────────────────────────────────────────
+  # Job 2: Ensure restricted tables are invisible
+  # in the public GraphQL schema for all roles.
+  # ──────────────────────────────────────────────
+  graphql-exposure-check:
+    name: GraphQL Exposure Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run GraphQL exclusion tests
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: npm run test:graphql-exclusion
+
+  # ──────────────────────────────────────────────
+  # Job 3: Push scan results to Supabase for the
+  # Security Posture dashboard to display.
+  # ──────────────────────────────────────────────
+  report-results:
+    name: Publish Scan Results
+    runs-on: ubuntu-latest
+    needs: [rls-policy-audit, graphql-exposure-check]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Push results to security_scan_results
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RLS_STATUS: ${{ needs.rls-policy-audit.result }}
+          GRAPHQL_STATUS: ${{ needs.graphql-exposure-check.result }}
+        run: |
+          node -e "
+            import { createClient } from '@supabase/supabase-js';
+            const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+            const rows = [
+              { environment: 'ci', scan_type: 'rls_coverage',       status: process.env.RLS_STATUS === 'success' ? 'pass' : 'fail', scanned_at: new Date().toISOString() },
+              { environment: 'ci', scan_type: 'graphql_exclusion',  status: process.env.GRAPHQL_STATUS === 'success' ? 'pass' : 'fail', scanned_at: new Date().toISOString() },
+            ];
+            const { error } = await sb.from('security_scan_results').insert(rows);
+            if (error) { console.error(error); process.exit(1); }
+            console.log('Scan results published.');
+          "
