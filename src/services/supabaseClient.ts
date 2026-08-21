@@ -1,15 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
-import { Database } from '@/types/supabase';
+// Centralised Supabase client — re-exports the generated integration client
+// so the whole app shares one auth session and typed schema.
+import { supabase } from '@/integrations/supabase/client';
 
-// Centralised Supabase client with auth handling
-export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
-
-// Optionally set auth if needed elsewhere
-export const setAuth = (accessToken: string) => {
-  supabase.auth.setAuth(accessToken);
-};
-
+export { supabase };
 export default supabase;

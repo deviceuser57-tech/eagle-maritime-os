@@ -11,12 +11,19 @@ import { ClipboardCheck, FileText, Camera, CheckSquare, Plus, Loader2, Trash2 } 
 import { useAudits } from '@/hooks/useAudits';
 import { useVessels } from '@/hooks/useVessels';
 import { useToast } from '@/hooks/use-toast';
+import { useAuditTypes } from '@/hooks/useSetupAuditConfig';
 import { format } from 'date-fns';
+
+const FALLBACK_AUDIT_TYPES = ['ISM', 'ISPS', 'MLC', 'PSC', 'Flag State', 'Class', 'Internal', 'Vetting'];
 
 const AuditExecution = () => {
   const { toast } = useToast();
   const { audits, isLoading, createAudit, updateAudit, deleteAudit } = useAudits();
   const { vessels } = useVessels();
+  const { auditTypes } = useAuditTypes();
+  const auditTypeOptions = auditTypes.length > 0
+    ? auditTypes.map((t) => t.audit_type_name)
+    : FALLBACK_AUDIT_TYPES;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     audit_type: '',
@@ -84,15 +91,11 @@ const AuditExecution = () => {
                     <SelectValue placeholder="Select audit type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ISM">ISM Audit</SelectItem>
-                    <SelectItem value="ISPS">ISPS Audit</SelectItem>
-                    <SelectItem value="MLC">MLC Audit</SelectItem>
-                    <SelectItem value="PSC">Port State Control</SelectItem>
-                    <SelectItem value="Flag State">Flag State</SelectItem>
-                    <SelectItem value="Class">Classification</SelectItem>
-                    <SelectItem value="Internal">Internal Audit</SelectItem>
-                    <SelectItem value="Vetting">Vetting Inspection</SelectItem>
+                    {auditTypeOptions.map((name) => (
+                      <SelectItem key={name} value={name}>{name}</SelectItem>
+                    ))}
                   </SelectContent>
+
                 </Select>
               </div>
               <div className="space-y-2">

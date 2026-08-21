@@ -11,11 +11,14 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Users, Award, Stethoscope, Plus, Loader2, Trash2, Camera } from 'lucide-react';
 import { useCrewMembers } from '@/hooks/useCrewMembers';
 import { useVessels } from '@/hooks/useVessels';
+import { useNationalities, useCrewRanks } from '@/hooks/useSetupCrewConfig';
 import { format } from 'date-fns';
 
 const CrewManagement = () => {
   const { crewMembers, isLoading, createCrewMember, deleteCrewMember, uploadPhoto, getPhotoUrl } = useCrewMembers();
   const { vessels } = useVessels();
+  const { nationalities } = useNationalities();
+  const { ranks } = useCrewRanks();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -173,23 +176,36 @@ const CrewManagement = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="rank">Rank *</Label>
-                  <Select value={formData.rank} onValueChange={(v) => setFormData({ ...formData, rank: v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select rank" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Master">Master</SelectItem>
-                      <SelectItem value="Chief Officer">Chief Officer</SelectItem>
-                      <SelectItem value="Second Officer">Second Officer</SelectItem>
-                      <SelectItem value="Third Officer">Third Officer</SelectItem>
-                      <SelectItem value="Chief Engineer">Chief Engineer</SelectItem>
-                      <SelectItem value="Second Engineer">Second Engineer</SelectItem>
-                      <SelectItem value="Able Seaman">Able Seaman</SelectItem>
-                      <SelectItem value="Ordinary Seaman">Ordinary Seaman</SelectItem>
-                      <SelectItem value="Bosun">Bosun</SelectItem>
-                      <SelectItem value="Cook">Cook</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {ranks.length > 0 ? (
+                    <Select value={formData.rank} onValueChange={(v) => setFormData({ ...formData, rank: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select rank" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ranks.map((r) => (
+                          <SelectItem key={r.id} value={r.rank_name}>{r.rank_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Select value={formData.rank} onValueChange={(v) => setFormData({ ...formData, rank: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select rank" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Master">Master</SelectItem>
+                        <SelectItem value="Chief Officer">Chief Officer</SelectItem>
+                        <SelectItem value="Second Officer">Second Officer</SelectItem>
+                        <SelectItem value="Third Officer">Third Officer</SelectItem>
+                        <SelectItem value="Chief Engineer">Chief Engineer</SelectItem>
+                        <SelectItem value="Second Engineer">Second Engineer</SelectItem>
+                        <SelectItem value="Able Seaman">Able Seaman</SelectItem>
+                        <SelectItem value="Ordinary Seaman">Ordinary Seaman</SelectItem>
+                        <SelectItem value="Bosun">Bosun</SelectItem>
+                        <SelectItem value="Cook">Cook</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="vessel_id">Vessel</Label>
@@ -223,12 +239,29 @@ const CrewManagement = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="nationality">Nationality</Label>
-                  <Input
-                    id="nationality"
-                    value={formData.nationality}
-                    onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                  />
+                  {nationalities.length > 0 ? (
+                    <Select
+                      value={formData.nationality}
+                      onValueChange={(v) => setFormData({ ...formData, nationality: v })}
+                    >
+                      <SelectTrigger id="nationality">
+                        <SelectValue placeholder="Select nationality" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {nationalities.map((n) => (
+                          <SelectItem key={n.id} value={n.country_name}>{n.country_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="nationality"
+                      value={formData.nationality}
+                      onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
+                    />
+                  )}
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>

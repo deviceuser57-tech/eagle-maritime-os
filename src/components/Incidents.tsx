@@ -10,11 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertTriangle, Activity, TrendingDown, FileText, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useIncidents } from '@/hooks/useIncidents';
 import { useVessels } from '@/hooks/useVessels';
+import { useRootCauses } from '@/hooks/useSetupAuditConfig';
 import { format } from 'date-fns';
 
 const Incidents = () => {
   const { incidents, isLoading, createIncident, deleteIncident } = useIncidents();
   const { vessels } = useVessels();
+  const { rootCauses } = useRootCauses();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -239,13 +241,25 @@ const Incidents = () => {
                 </div>
                 <div className="space-y-2 col-span-2">
                   <Label htmlFor="root_cause">Preliminary Root Cause Analysis (RCA)</Label>
-                  <Textarea
-                    id="root_cause"
-                    value={formData.root_cause}
-                    onChange={(e) => setFormData({ ...formData, root_cause: e.target.value })}
-                    placeholder="Identify primary failure node (Human, Technical, Organizational)..."
-                    rows={2}
-                  />
+                  {rootCauses.length > 0 ? (
+                    <Select value={formData.root_cause} onValueChange={(v) => setFormData({ ...formData, root_cause: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select root cause" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {rootCauses.map((cause) => (
+                          <SelectItem key={cause.id} value={cause.cause_name}>{cause.cause_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="root_cause"
+                      value={formData.root_cause}
+                      onChange={(e) => setFormData({ ...formData, root_cause: e.target.value })}
+                      placeholder="Initial root cause assessment..."
+                    />
+                  )}
                 </div>
               </div>
               <div className="flex justify-end gap-2">

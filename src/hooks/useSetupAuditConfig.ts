@@ -9,6 +9,7 @@ import { auditTypeSchema, findingTypeSchema, findingStatusSchema, rootCauseSchem
 export interface AuditType {
   id: string;
   user_id: string;
+  org_id?: string | null;
   audit_type_name: string;
   description: string | null;
   frequency_months: number | null;
@@ -20,6 +21,8 @@ export interface AuditType {
 export interface FindingType {
   id: string;
   user_id: string;
+  org_id?: string | null;
+  default_deduction?: number;
   finding_type_name: string;
   severity: 'minor' | 'major' | 'critical';
   description: string | null;
@@ -30,6 +33,7 @@ export interface FindingType {
 export interface FindingStatus {
   id: string;
   user_id: string;
+  org_id?: string | null;
   status_name: string;
   status_order: number;
   is_closed: boolean;
@@ -41,6 +45,7 @@ export interface FindingStatus {
 export interface RootCause {
   id: string;
   user_id: string;
+  org_id?: string | null;
   cause_name: string;
   category: string | null;
   description: string | null;
@@ -74,7 +79,7 @@ export const useAuditTypes = () => {
     mutationFn: async (auditType: Omit<AuditType, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
       if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(auditTypeSchema, auditType);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_audit_types')
         .insert({ ...auditType, user_id: user.id, org_id: orgId })
@@ -155,7 +160,7 @@ export const useFindingTypes = () => {
     mutationFn: async (findingType: Omit<FindingType, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
       if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(findingTypeSchema, findingType);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_finding_types')
         .insert({ ...findingType, user_id: user.id, org_id: orgId })
@@ -236,7 +241,7 @@ export const useFindingStatuses = () => {
     mutationFn: async (status: Omit<FindingStatus, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
       if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(findingStatusSchema, status);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_finding_statuses')
         .insert({ ...status, user_id: user.id, org_id: orgId })
@@ -317,7 +322,7 @@ export const useRootCauses = () => {
     mutationFn: async (cause: Omit<RootCause, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'org_id'>) => {
       if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { error: validationError } = validate(rootCauseSchema, cause);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
       const { data, error } = await supabase
         .from('setup_root_causes')
         .insert({ ...cause, user_id: user.id, org_id: orgId })

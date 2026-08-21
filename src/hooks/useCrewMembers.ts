@@ -36,7 +36,7 @@ export const useCrewMembers = () => {
     mutationFn: async (newMember: Omit<CrewMemberInsert, 'user_id' | 'org_id'>) => {
       if (!orgId) throw new Error('No active organization');
       const { error: validationError } = validate(crewMemberSchema, newMember);
-      if (validationError) throw new Error(validationError.errors[0]?.message || 'Invalid input');
+      if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
 
       const { data, error } = await supabase
         .from('crew_members')

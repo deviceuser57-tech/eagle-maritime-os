@@ -1341,6 +1341,12 @@ const VesselManagement = () => {
                       {renderSelectField('operator_company_id', 'Operator', formData.operator_company_id, (v) => setFormData({ ...formData, operator_company_id: v }),
                         operatorCompanies.companies.map(c => ({ value: c.id, label: c.name }))
                       )}
+                      {renderSelectField('technical_manager_id', 'Technical Manager', formData.technical_manager_id, (v) => setFormData({ ...formData, technical_manager_id: v }),
+                        technicalManagers.companies.map(c => ({ value: c.id, label: c.name }))
+                      )}
+                      {renderSelectField('ism_manager_id', 'ISM Manager', formData.ism_manager_id, (v) => setFormData({ ...formData, ism_manager_id: v }),
+                        ismManagers.companies.map(c => ({ value: c.id, label: c.name }))
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="notes" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Operational Notes</Label>
