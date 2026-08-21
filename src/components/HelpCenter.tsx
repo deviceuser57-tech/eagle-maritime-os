@@ -1,4 +1,5 @@
-import { FileText, FileDown, HelpCircle, LifeBuoy, BookOpen, MessageSquare } from 'lucide-react';
+import { FileText, FileDown, HelpCircle, LifeBuoy, BookOpen, MessageSquare, Terminal } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const GUIDE_PDF = '/guides/Eagle-Maritime-OS-User-Guide.pdf';
 const GUIDE_DOCX = '/guides/Eagle-Maritime-OS-User-Guide.docx';
@@ -56,6 +57,22 @@ const HelpCenter = () => {
             </span>
           </div>
         </a>
+
+        <Link
+          to="/mcp-api"
+          className="group flex items-start gap-4 p-6 rounded-2xl border border-border bg-card hover:border-primary hover:shadow-lg transition-all sm:col-span-2 md:col-span-1"
+        >
+          <div className="p-3 rounded-xl bg-purple-500/10 text-purple-500">
+            <Terminal className="h-6 w-6" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-foreground">MCP API Reference</h3>
+            <p className="text-sm text-muted-foreground mt-1">Test the 7 AI tools locally via HTTP.</p>
+            <span className="inline-block mt-3 text-xs font-bold uppercase tracking-widest text-primary group-hover:underline">
+              View API →
+            </span>
+          </div>
+        </Link>
       </section>
 
       <section>
