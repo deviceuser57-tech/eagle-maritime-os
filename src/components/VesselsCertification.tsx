@@ -12,6 +12,8 @@ import { FileText, AlertCircle, CheckCircle, Clock, Plus, Loader2, Trash2, Shiel
 import { useVesselCertifications } from '@/hooks/useVesselCertifications';
 import { useVessels } from '@/hooks/useVessels';
 import { useCurrencies } from '@/hooks/useSetupCrewConfig';
+import { useCertificateTypes } from '@/hooks/useSetupCertificates';
+import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
 import { useToast } from '@/hooks/use-toast';
 import { format, differenceInDays } from 'date-fns';
 import { VerificationQR } from './compliance/VerificationQR';
@@ -31,6 +33,15 @@ const VesselsCertification = () => {
   const { certifications, loading, addCertification, deleteCertification, sealCertificate } = useVesselCertifications();
   const { vessels } = useVessels();
   const { currencies } = useCurrencies();
+  const { certificateTypes } = useCertificateTypes();
+  const { societies } = useClassificationSocieties();
+  const { flagStates } = useFlagStates();
+
+  const authorityOptions = Array.from(new Set([
+    ...societies.map(s => s.society_name),
+    ...flagStates.map(f => f.flag_name)
+  ].filter(Boolean)));
+
   const currencyOptions = currencies.length > 0
     ? currencies.map((c) => ({ code: c.currency_code, label: `${c.currency_code} - ${c.currency_name}` }))
     : FALLBACK_CURRENCIES;
@@ -181,26 +192,39 @@ const VesselsCertification = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <Label htmlFor="certificate_type" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Classification *</Label>
-                      <Select value={formData.certificate_type} onValueChange={(v) => setFormData({ ...formData, certificate_type: v })}>
-                        <SelectTrigger className="rounded-xl border-border bg-background/50 h-12">
-                          <SelectValue placeholder="Select classification" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
-                          <SelectItem value="SMC">Safety Management Certificate</SelectItem>
-                          <SelectItem value="DOC">Document of Compliance</SelectItem>
-                          <SelectItem value="ISPS">ISPS Certificate</SelectItem>
-                          <SelectItem value="Class">Classification Certificate</SelectItem>
-                          <SelectItem value="Load Line">Load Line Certificate</SelectItem>
-                          <SelectItem value="IOPP">IOPP Certificate</SelectItem>
-                          <SelectItem value="IAPP">IAPP Certificate</SelectItem>
-                          <SelectItem value="MLC">MLC Certificate</SelectItem>
-                          <SelectItem value="SOLAS">SOLAS Certificates</SelectItem>
-                          <SelectItem value="Tonnage">Tonnage Certificate</SelectItem>
-                          <SelectItem value="Registry">Registry Certificate</SelectItem>
-                          <SelectItem value="Radio">Radio License</SelectItem>
-                          <SelectItem value="Other">Other Statutory Doc</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      {certificateTypes.length > 0 ? (
+                        <Select value={formData.certificate_type} onValueChange={(v) => setFormData({ ...formData, certificate_type: v })}>
+                          <SelectTrigger className="rounded-xl border-border bg-background/50 h-12">
+                            <SelectValue placeholder="Select classification" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
+                            {certificateTypes.map((c) => (
+                              <SelectItem key={c.id} value={c.certificate_name}>{c.certificate_name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Select value={formData.certificate_type} onValueChange={(v) => setFormData({ ...formData, certificate_type: v })}>
+                          <SelectTrigger className="rounded-xl border-border bg-background/50 h-12">
+                            <SelectValue placeholder="Select classification" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
+                            <SelectItem value="SMC">Safety Management Certificate</SelectItem>
+                            <SelectItem value="DOC">Document of Compliance</SelectItem>
+                            <SelectItem value="ISPS">ISPS Certificate</SelectItem>
+                            <SelectItem value="Class">Classification Certificate</SelectItem>
+                            <SelectItem value="Load Line">Load Line Certificate</SelectItem>
+                            <SelectItem value="IOPP">IOPP Certificate</SelectItem>
+                            <SelectItem value="IAPP">IAPP Certificate</SelectItem>
+                            <SelectItem value="MLC">MLC Certificate</SelectItem>
+                            <SelectItem value="SOLAS">SOLAS Certificates</SelectItem>
+                            <SelectItem value="Tonnage">Tonnage Certificate</SelectItem>
+                            <SelectItem value="Registry">Registry Certificate</SelectItem>
+                            <SelectItem value="Radio">Radio License</SelectItem>
+                            <SelectItem value="Other">Other Statutory Doc</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="vessel_id" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Associated Vessel</Label>
@@ -220,13 +244,26 @@ const VesselsCertification = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <Label htmlFor="issuing_authority" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Issuing Authority</Label>
-                      <Input
-                        id="issuing_authority"
-                        value={formData.issuing_authority}
-                        onChange={(e) => setFormData({ ...formData, issuing_authority: e.target.value })}
-                        placeholder="e.g., DNV, ABS, LR, BV"
-                        className="rounded-xl border-border bg-background/50 h-12"
-                      />
+                      {authorityOptions.length > 0 ? (
+                        <Select value={formData.issuing_authority} onValueChange={(v) => setFormData({ ...formData, issuing_authority: v })}>
+                          <SelectTrigger className="rounded-xl border-border bg-background/50 h-12">
+                            <SelectValue placeholder="Select issuing authority" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
+                            {authorityOptions.map((opt) => (
+                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id="issuing_authority"
+                          value={formData.issuing_authority}
+                          onChange={(e) => setFormData({ ...formData, issuing_authority: e.target.value })}
+                          placeholder="e.g., DNV, ABS, LR, BV"
+                          className="rounded-xl border-border bg-background/50 h-12"
+                        />
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="place_of_issue" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Place of Issue</Label>
