@@ -13,6 +13,7 @@ import { useOrganization as useOrg } from '@/hooks/useOrganization';
 import { useVessels, Vessel } from '@/hooks/useVessels';
 import { useSetupCompanies } from '@/hooks/useSetupCompanies';
 import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
+import { useCurrencies } from '@/hooks/useSetupCrewConfig';
 import { useMaintenanceTasks } from '@/hooks/useMaintenanceTasks';
 import { useVesselRegulatoryPortfolio } from '@/hooks/useRegulations';
 import { useToast } from '@/hooks/use-toast';
@@ -231,6 +232,13 @@ const VesselManagement = () => {
   const classificationSocieties = useClassificationSocieties();
   const flagStatesHook = useFlagStates();
 
+  // Dynamically load currencies from system setup
+  const crewConfigCurrencies = useCurrencies();
+  const currencies = crewConfigCurrencies.currencies.length > 0
+    ? crewConfigCurrencies.currencies.map(c => c.currency_code)
+    : ['USD', 'EUR', 'GBP', 'SGD', 'NOK', 'JPY'];
+
+  // Dynamically load vessel types from statutory certificate types or general categories if needed
   const vesselTypes = [
     'Bulk Carrier', 'Container Ship', 'Crude Oil Tanker', 'Product Tanker',
     'Chemical Tanker', 'LNG Carrier', 'LPG Carrier', 'General Cargo',
@@ -243,7 +251,7 @@ const VesselManagement = () => {
   const hullMaterials = ['Steel', 'Aluminum', 'Fiberglass', 'Composite'];
   const tradingAreas = ['Worldwide', 'Coastal', 'Short Sea', 'Inland Waterways', 'Restricted'];
   const statusOptions = ['active', 'inactive', 'maintenance', 'drydock', 'laid_up'];
-  const currencies = ['USD', 'EUR', 'GBP', 'SGD', 'NOK', 'JPY'];
+
 
   const handleSmartFill = async (overrideUrl?: string | React.MouseEvent, contentType?: string) => {
     const url = typeof overrideUrl === 'string' ? overrideUrl : formData.vessel_brochure;
