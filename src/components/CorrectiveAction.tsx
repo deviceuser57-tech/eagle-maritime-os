@@ -9,10 +9,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, Clock, AlertTriangle, TrendingUp, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useCorrectiveActions } from '@/hooks/useCorrectiveActions';
+import { useFindingStatuses, useRootCauses } from '@/hooks/useSetupAuditConfig';
 import { format, differenceInDays } from 'date-fns';
 
 const CorrectiveAction = () => {
   const { correctiveActions, loading, addCorrectiveAction, updateCorrectiveAction, deleteCorrectiveAction } = useCorrectiveActions();
+  const { findingStatuses } = useFindingStatuses();
+  const { rootCauses }      = useRootCauses();
+
+  const statusOptions   = findingStatuses.length > 0
+    ? findingStatuses.map(s => ({ value: s.status_name.toLowerCase().replace(/ /g, '_'), label: s.status_name }))
+    : [
+        { value: 'open', label: 'Open' },
+        { value: 'in_progress', label: 'In Progress' },
+        { value: 'completed', label: 'Completed' },
+      ];
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     action_description: '',
@@ -125,9 +136,9 @@ const CorrectiveAction = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
+                    {statusOptions.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

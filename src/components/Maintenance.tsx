@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useMaintenanceTasks, MaintenanceTask } from '@/hooks/useMaintenanceTasks';
 import { useVessels } from '@/hooks/useVessels';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrencies } from '@/hooks/useSetupCrewConfig';
 import { format } from 'date-fns';
 import {
   Wrench, AlertTriangle, CheckCircle, Clock, Plus, CalendarIcon,
@@ -50,6 +51,10 @@ const Maintenance = () => {
   const { user } = useAuth();
   const { tasks, loading, addTask, updateTask, deleteTask } = useMaintenanceTasks();
   const { vessels } = useVessels();
+  const { currencies } = useCurrencies();
+  const currencyOptions = currencies.length > 0
+    ? currencies.map(c => c.currency_code)
+    : ['USD', 'EUR', 'GBP', 'AED', 'JPY'];
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -59,7 +64,7 @@ const Maintenance = () => {
   const [formData, setFormData] = useState({
     title: '', description: '', vessel_id: '', task_type: 'preventive',
     priority: 'medium', status: 'scheduled', due_date: new Date(),
-    assigned_to: '', estimated_hours: '', cost_estimate: '', notes: '',
+    assigned_to: '', estimated_hours: '', cost_estimate: '', currency: 'USD', notes: '',
     location: 'engine',
   });
 
@@ -85,7 +90,7 @@ const Maintenance = () => {
     setFormData({
       title: '', description: '', vessel_id: '', task_type: 'preventive',
       priority: 'medium', status: 'scheduled', due_date: new Date(),
-      assigned_to: '', estimated_hours: '', cost_estimate: '', notes: '',
+      assigned_to: '', estimated_hours: '', cost_estimate: '', currency: 'USD', notes: '',
       location: 'engine',
     });
   };
@@ -132,6 +137,7 @@ const Maintenance = () => {
       due_date: new Date(task.due_date), assigned_to: task.assigned_to || '',
       estimated_hours: task.estimated_hours?.toString() || '',
       cost_estimate: task.cost_estimate?.toString() || '',
+      currency: 'USD',
       notes: locNotes.notes,
       location: locNotes.location,
     });
@@ -289,8 +295,14 @@ const Maintenance = () => {
                     <Input type="number" value={formData.estimated_hours} onChange={(e) => setFormData({ ...formData, estimated_hours: e.target.value })} placeholder="0" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Cost Estimate ($)</Label>
-                    <Input type="number" value={formData.cost_estimate} onChange={(e) => setFormData({ ...formData, cost_estimate: e.target.value })} placeholder="0.00" />
+                    <Label>Cost Estimate</Label>
+                    <div className="flex gap-2">
+                      <Select value={formData.currency} onValueChange={(v) => setFormData({ ...formData, currency: v })}>
+                        <SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>{currencyOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                      </Select>
+                      <Input type="number" value={formData.cost_estimate} onChange={(e) => setFormData({ ...formData, cost_estimate: e.target.value })} placeholder="0.00" className="flex-1" />
+                    </div>
                   </div>
                 </div>
               </TabsContent>

@@ -1,21 +1,48 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, AlertCircle, Info, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertTriangle, AlertCircle, Info, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useCorrectiveActions } from '@/hooks/useCorrectiveActions';
 import { useAudits } from '@/hooks/useAudits';
+import { useFindingTypes, useFindingStatuses, useRootCauses } from '@/hooks/useSetupAuditConfig';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+
+const FALLBACK_FINDING_TYPES  = ['Observation', 'Minor NC', 'Major NC', 'Positive Finding'];
+const FALLBACK_FINDING_STATUSES = ['Open', 'In Progress', 'Closed', 'Verified'];
+const FALLBACK_ROOT_CAUSES    = ['Human Error', 'Procedure Gap', 'Equipment Failure', 'Training Deficiency'];
 
 const AuditFindings = () => {
   const { toast } = useToast();
   const { correctiveActions, loading } = useCorrectiveActions();
   const { audits, isLoading: auditsLoading } = useAudits();
+  const { findingTypes }    = useFindingTypes();
+  const { findingStatuses } = useFindingStatuses();
+  const { rootCauses }      = useRootCauses();
 
-  // Group findings by severity based on status
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [filter, setFilter] = useState('all');
+
+  // Options — prefer Setup Metadata, fall back to static list
+  const findingTypeOptions   = findingTypes.length   > 0 ? findingTypes.map(t => t.finding_type_name)  : FALLBACK_FINDING_TYPES;
+  const findingStatusOptions  = findingStatuses.length > 0 ? findingStatuses.map(s => s.status_name)     : FALLBACK_FINDING_STATUSES;
+  const rootCauseOptions     = rootCauses.length     > 0 ? rootCauses.map(r => r.cause_name)            : FALLBACK_ROOT_CAUSES;
+
+  // Stats
   const criticalCount = correctiveActions.filter(a => a.status === 'open' && a.due_date && new Date(a.due_date) < new Date()).length;
-  const majorCount = correctiveActions.filter(a => a.status === 'open' || a.status === 'in_progress').length;
-  const minorCount = correctiveActions.filter(a => a.status === 'completed').length;
+  const majorCount    = correctiveActions.filter(a => a.status === 'open' || a.status === 'in_progress').length;
+  const minorCount    = correctiveActions.filter(a => a.status === 'completed').length;
+
+  // Filtered list
+  const filtered = filter === 'all'
+    ? correctiveActions
+    : correctiveActions.filter(a => a.status === filter);
 
   if (loading || auditsLoading) {
     return (
@@ -27,11 +54,28 @@ const AuditFindings = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-foreground mb-2">📝 Audit Findings</h2>
-        <p className="text-muted-foreground">
-          Track, categorize, and manage all audit findings with detailed documentation and photos.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground mb-2">📝 Audit Findings</h2>
+          <p className="text-muted-foreground">
+            Track, categorize, and manage all audit findings with detailed documentation and photos.
+          </p>
+        </div>
+
+        {/* Filter toolbar */}
+        <div className="flex items-center gap-2">
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="w-40" id="findings-filter">
+              <SelectValue placeholder="Filter status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              {findingStatusOptions.map(s => (
+                <SelectItem key={s} value={s.toLowerCase().replace(/ /g, '_')}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-4">
@@ -84,16 +128,23 @@ const AuditFindings = () => {
         </Card>
       </div>
 
+      {/* Metadata info banner */}
+      {findingTypes.length > 0 && (
+        <p className="text-xs text-muted-foreground bg-muted/30 rounded-lg px-4 py-2">
+          ✓ Using {findingTypes.length} Finding Types, {findingStatuses.length} Statuses and {rootCauses.length} Root Causes from Setup Metadata
+        </p>
+      )}
+
       <Card className="maritime-card">
         <CardHeader>
           <CardTitle>Recent Findings</CardTitle>
         </CardHeader>
         <CardContent>
-          {correctiveActions.length === 0 ? (
+          {filtered.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">No findings recorded yet.</p>
           ) : (
             <div className="space-y-4">
-              {correctiveActions.slice(0, 10).map((finding) => {
+              {filtered.slice(0, 10).map((finding) => {
                 const isOverdue = finding.due_date && new Date(finding.due_date) < new Date() && finding.status !== 'completed';
                 const severityVariant = isOverdue ? 'destructive' : finding.status === 'completed' ? 'secondary' : 'outline';
 

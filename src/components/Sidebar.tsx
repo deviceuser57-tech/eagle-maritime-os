@@ -95,6 +95,13 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
 
   },
   {
+    title: "Security & Governance",
+    items: [
+    { id: "security-posture", label: "🛡️ Security Posture", badge: null },
+    { id: "enterprise-audit-log", label: "📋 Enterprise Audit Log", badge: null }]
+
+  },
+  {
     title: "Advanced Intelligence",
     items: [
     { id: "predictive-compliance", label: "🔮 Predictive Compliance", badge: null },

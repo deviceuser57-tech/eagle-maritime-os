@@ -38,6 +38,8 @@ import DigitalTwin from '@/components/DigitalTwin';
 import IntegrationSettings from '@/components/IntegrationSettings';
 import Organization from '@/components/Organization';
 import HelpCenter from '@/components/HelpCenter';
+import SecurityPostureDashboard from '@/components/SecurityPostureDashboard';
+import EnterpriseAuditLog from '@/components/EnterpriseAuditLog';
 
 const IndexContent = () => {
   const { user, loading, signOut } = useAuth();
@@ -111,6 +113,8 @@ const IndexContent = () => {
       case 'integrations': return <IntegrationSettings />;
       case 'organization': return <Organization />;
       case 'help-center': return <HelpCenter />;
+      case 'security-posture': return <SecurityPostureDashboard />;
+      case 'enterprise-audit-log': return <EnterpriseAuditLog />;
       default:
         return (
           <div className="space-y-6">
