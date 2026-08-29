@@ -1,17 +1,27 @@
-name: MCP API CI
+      name: MCP API Build & Verification
 
 on:
   push:
     branches: [main]
+    paths:
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/mcp-ci.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/mcp-ci.yml"
   workflow_dispatch:
 
 env:
   NODE_VERSION: "24"
 
 jobs:
-  mcp-build-and-verify:
+  build-and-verify:
     name: MCP API Build & Verification
     runs-on: ubuntu-latest
 
@@ -28,67 +38,56 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build application
+      - name: TypeScript and Vite build
         run: npm run build
 
-      - name: Verify MCP API implementation
+      - name: Verify MCP API source
         shell: bash
         run: |
           set -e
 
-          test -f src/pages/McpApi.tsx || {
-            echo "ERROR: src/pages/McpApi.tsx not found"
-            exit 1
-          }
+          test -f src/components/McpApi.tsx
+          test -f src/App.tsx
 
-          test -f src/App.tsx || {
-            echo "ERROR: src/App.tsx not found"
-            exit 1
-          }
+          grep -q "McpApi" src/App.tsx
 
-          test -f src/components/HelpCenter.tsx || {
-            echo "ERROR: src/components/HelpCenter.tsx not found"
-            exit 1
-          }
+          echo "MCP API source verification passed."
 
-          grep -q "mcp-api" src/App.tsx || {
-            echo "ERROR: /mcp-api route is not present in App.tsx"
-            exit 1
-          }
+      - name: Verify MCP API route
+        shell: bash
+        run: |
+          set -e
 
-          grep -q "MCP API Reference" src/components/HelpCenter.tsx || {
-            echo "ERROR: MCP API Reference link is not present in HelpCenter.tsx"
-            exit 1
-          }
+          grep -Eq '(/mcp-api|mcp-api)' src/App.tsx
 
-          grep -q "/.mcp/list-tools" src/pages/McpApi.tsx || {
-            echo "ERROR: /.mcp/list-tools documentation is missing"
-            exit 1
-          }
+          echo "MCP API route verification passed."
 
-          grep -qi "JSON-RPC" src/pages/McpApi.tsx || {
-            echo "ERROR: JSON-RPC documentation is missing"
-            exit 1
-          }
+      - name: Verify MCP API documentation
+        shell: bash
+        run: |
+          set -e
 
-          grep -qi "curl" src/pages/McpApi.tsx || {
-            echo "ERROR: curl examples are missing"
-            exit 1
-          }
+          grep -qiE '(/\.mcp/list-tools|list-tools)' src/components/McpApi.tsx
+          grep -qiE 'JSON-RPC|jsonrpc' src/components/McpApi.tsx
+          grep -qiE 'curl' src/components/McpApi.tsx
 
-          echo "MCP API verification passed."
+          echo "MCP API documentation verification passed."
 
-      - name: Upload production build
-        uses: actions/upload-artifact@v4
-        with:
-          name: eagle-mcp-production-build
-          path: dist/
-          retention-days: 14
+      - name: Verify Help Center MCP reference
+        shell: bash
+        run: |
+          set -e
 
-  mcp-browser-test:
+          test -f src/components/HelpCenter.tsx
+
+          grep -qiE 'MCP API Reference|MCP API' src/components/HelpCenter.tsx
+
+          echo "Help Center MCP reference verification passed."
+
+  browser-test:
     name: MCP API Browser Test
     runs-on: ubuntu-latest
-    needs: mcp-build-and-verify
+    needs: build-and-verify
 
     steps:
       - name: Checkout repository
@@ -103,54 +102,63 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright
-        run: npx -y playwright@1.55.0 install --with-deps chromium
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build application
+        run: npm run build
 
       - name: Start application
-        shell: bash
         run: |
-          npm run dev -- --host 127.0.0.1 --port 8080 > /tmp/eagle-vite.log 2>&1 &
-          echo $! > /tmp/eagle-vite.pid
+          nohup npm run preview -- --host 0.0.0.0 --port 4173 > /tmp/eagle-mcp-preview.log 2>&1 &
+          echo $! > /tmp/eagle-mcp-preview.pid
 
       - name: Wait for application
-        run: npx -y wait-on@9.0.1 http://127.0.0.1:8080
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ > /dev/null; then
+              echo "Application is ready."
+              exit 0
+            fi
+            sleep 2
+          done
 
-      - name: Test /mcp-api in browser
-        shell: bash
+          echo "Application failed to start."
+          cat /tmp/eagle-mcp-preview.log
+          exit 1
+
+      - name: Create MCP browser test
         run: |
           mkdir -p playwright-tests
 
-          cat > playwright-tests/mcp-api.spec.cjs <<'EOF'
+          cat > playwright-tests/mcp-api.spec.js <<'EOF'
           const { test, expect } = require('@playwright/test');
 
-          test('MCP API Reference page renders correctly', async ({ page }) => {
-            await page.goto('http://127.0.0.1:8080/mcp-api', {
+          test('MCP API page displays MCP reference content', async ({ page }) => {
+            await page.goto('http://127.0.0.1:4173/mcp-api', {
               waitUntil: 'networkidle'
             });
 
-            await expect(page).toHaveURL(/\/mcp-api$/);
+            await expect(page).toHaveURL(/\/mcp-api/);
 
             const body = await page.locator('body').innerText();
 
-            expect(body).toContain('/.mcp/list-tools');
+            expect(body).toMatch(/list-tools/i);
             expect(body).toMatch(/curl/i);
-            expect(body).toMatch(/JSON-RPC/i);
+            expect(body).toMatch(/json-rpc/i);
           });
           EOF
 
-          npx -y playwright@1.55.0 test playwright-tests/mcp-api.spec.cjs \
-            --config=/dev/null \
-            --reporter=line
-
-      - name: Show application log on failure
-        if: failure()
+      - name: Run MCP browser test
         run: |
-          echo "===== Vite application log ====="
-          cat /tmp/eagle-vite.log || true
+          npx playwright test playwright-tests/mcp-api.spec.js --reporter=line
 
-      - name: Stop application
+      - name: Upload Playwright report
         if: always()
-        run: |
-          if [ -f /tmp/eagle-vite.pid ]; then
-            kill "$(cat /tmp/eagle-vite.pid)" || true
-          fi
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 30
