@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "24"
 
 jobs:
   mcp-build-and-verify:
@@ -84,3 +84,73 @@ jobs:
           name: eagle-mcp-production-build
           path: dist/
           retention-days: 14
+
+  mcp-browser-test:
+    name: MCP API Browser Test
+    runs-on: ubuntu-latest
+    needs: mcp-build-and-verify
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright
+        run: npx -y playwright@1.55.0 install --with-deps chromium
+
+      - name: Start application
+        shell: bash
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 8080 > /tmp/eagle-vite.log 2>&1 &
+          echo $! > /tmp/eagle-vite.pid
+
+      - name: Wait for application
+        run: npx -y wait-on@9.0.1 http://127.0.0.1:8080
+
+      - name: Test /mcp-api in browser
+        shell: bash
+        run: |
+          mkdir -p playwright-tests
+
+          cat > playwright-tests/mcp-api.spec.cjs <<'EOF'
+          const { test, expect } = require('@playwright/test');
+
+          test('MCP API Reference page renders correctly', async ({ page }) => {
+            await page.goto('http://127.0.0.1:8080/mcp-api', {
+              waitUntil: 'networkidle'
+            });
+
+            await expect(page).toHaveURL(/\/mcp-api$/);
+
+            const body = await page.locator('body').innerText();
+
+            expect(body).toContain('/.mcp/list-tools');
+            expect(body).toMatch(/curl/i);
+            expect(body).toMatch(/JSON-RPC/i);
+          });
+          EOF
+
+          npx -y playwright@1.55.0 test playwright-tests/mcp-api.spec.cjs \
+            --config=/dev/null \
+            --reporter=line
+
+      - name: Show application log on failure
+        if: failure()
+        run: |
+          echo "===== Vite application log ====="
+          cat /tmp/eagle-vite.log || true
+
+      - name: Stop application
+        if: always()
+        run: |
+          if [ -f /tmp/eagle-vite.pid ]; then
+            kill "$(cat /tmp/eagle-vite.pid)" || true
+          fi
