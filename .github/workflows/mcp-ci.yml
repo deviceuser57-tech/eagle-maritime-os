@@ -1,0 +1,86 @@
+name: MCP API CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  mcp-build-and-verify:
+    name: MCP API Build & Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Verify MCP API implementation
+        shell: bash
+        run: |
+          set -e
+
+          test -f src/pages/McpApi.tsx || {
+            echo "ERROR: src/pages/McpApi.tsx not found"
+            exit 1
+          }
+
+          test -f src/App.tsx || {
+            echo "ERROR: src/App.tsx not found"
+            exit 1
+          }
+
+          test -f src/components/HelpCenter.tsx || {
+            echo "ERROR: src/components/HelpCenter.tsx not found"
+            exit 1
+          }
+
+          grep -q "mcp-api" src/App.tsx || {
+            echo "ERROR: /mcp-api route is not present in App.tsx"
+            exit 1
+          }
+
+          grep -q "MCP API Reference" src/components/HelpCenter.tsx || {
+            echo "ERROR: MCP API Reference link is not present in HelpCenter.tsx"
+            exit 1
+          }
+
+          grep -q "/.mcp/list-tools" src/pages/McpApi.tsx || {
+            echo "ERROR: /.mcp/list-tools documentation is missing"
+            exit 1
+          }
+
+          grep -qi "JSON-RPC" src/pages/McpApi.tsx || {
+            echo "ERROR: JSON-RPC documentation is missing"
+            exit 1
+          }
+
+          grep -qi "curl" src/pages/McpApi.tsx || {
+            echo "ERROR: curl examples are missing"
+            exit 1
+          }
+
+          echo "MCP API verification passed."
+
+      - name: Upload production build
+        uses: actions/upload-artifact@v4
+        with:
+          name: eagle-mcp-production-build
+          path: dist/
+          retention-days: 14
