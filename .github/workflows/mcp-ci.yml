@@ -1,4 +1,4 @@
-      name: MCP API Build & Verification
+name: MCP API Build & Verification
 
 on:
   push:
