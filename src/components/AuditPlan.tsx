@@ -13,16 +13,13 @@ import { useAuditors } from '@/hooks/useAuditors';
 import { useAuditTypes } from '@/hooks/useSetupAuditConfig';
 import { format, isAfter, startOfMonth, endOfMonth } from 'date-fns';
 
-const FALLBACK_AUDIT_TYPES = ['ISM Annual', 'ISPS Renewal', 'Environmental', 'PSC', 'Flag State', 'Internal', 'Vetting'];
 
 const AuditPlan = () => {
   const { audits, isLoading, createAudit, deleteAudit } = useAudits();
   const { vessels } = useVessels();
   const { auditors } = useAuditors();
   const { auditTypes } = useAuditTypes();
-  const auditTypeOptions = auditTypes.length > 0
-    ? auditTypes.map((t) => t.audit_type_name)
-    : FALLBACK_AUDIT_TYPES;
+  const auditTypeOptions = auditTypes.map((t) => t.audit_type_name);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     audit_type: '',

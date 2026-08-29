@@ -14,9 +14,6 @@ import { useFindingTypes, useFindingStatuses, useRootCauses } from '@/hooks/useS
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
-const FALLBACK_FINDING_TYPES  = ['Observation', 'Minor NC', 'Major NC', 'Positive Finding'];
-const FALLBACK_FINDING_STATUSES = ['Open', 'In Progress', 'Closed', 'Verified'];
-const FALLBACK_ROOT_CAUSES    = ['Human Error', 'Procedure Gap', 'Equipment Failure', 'Training Deficiency'];
 
 const AuditFindings = () => {
   const { toast } = useToast();
@@ -29,10 +26,10 @@ const AuditFindings = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [filter, setFilter] = useState('all');
 
-  // Options — prefer Setup Metadata, fall back to static list
-  const findingTypeOptions   = findingTypes.length   > 0 ? findingTypes.map(t => t.finding_type_name)  : FALLBACK_FINDING_TYPES;
-  const findingStatusOptions  = findingStatuses.length > 0 ? findingStatuses.map(s => s.status_name)     : FALLBACK_FINDING_STATUSES;
-  const rootCauseOptions     = rootCauses.length     > 0 ? rootCauses.map(r => r.cause_name)            : FALLBACK_ROOT_CAUSES;
+  // Operational reference options are sourced exclusively from Setup Metadata.
+  const findingTypeOptions   = findingTypes.map(t => t.finding_type_name);
+  const findingStatusOptions = findingStatuses.map(s => s.status_name);
+  const rootCauseOptions     = rootCauses.map(r => r.cause_name);
 
   // Stats
   const criticalCount = correctiveActions.filter(a => a.status === 'open' && a.due_date && new Date(a.due_date) < new Date()).length;
