@@ -32,7 +32,7 @@ for (let i = 0; i < lines.length; i++) {
     }
 
     if (inEnums) {
-        if (line.startsWith('      ') && line.endsWith(': {') && !line.startsWith('        ')) {
+        if (line.startsWith('      ') && trimmed.endsWith(': {') && !line.startsWith('        ')) {
             currentEnum = trimmed.replace(': {', '').trim();
             enums[currentEnum] = [];
         } else if (currentEnum && trimmed.includes('"')) {
@@ -44,7 +44,7 @@ for (let i = 0; i < lines.length; i++) {
     }
 
     if (inTables) {
-        if (line.startsWith('      ') && line.endsWith(': {') && !line.startsWith('        ')) {
+        if (line.startsWith('      ') && trimmed.endsWith(': {') && !line.startsWith('        ')) {
             currentTable = {
                 name: trimmed.replace(': {', '').trim(),
                 columns: [],
@@ -57,11 +57,11 @@ for (let i = 0; i < lines.length; i++) {
 
         if (!currentTable) continue;
 
-        if (line.startsWith('        ') && line.endsWith(': {') && !line.startsWith('          ')) {
+        if (line.startsWith('        ') && trimmed.endsWith(': {') && !line.startsWith('          ')) {
             currentSection = trimmed.replace(': {', '').trim();
             continue;
         }
-        if (line.startsWith('        ') && line.endsWith(': [') && !line.startsWith('          ')) {
+        if (line.startsWith('        ') && trimmed.endsWith(': [') && !line.startsWith('          ')) {
             currentSection = trimmed.replace(': [', '').trim(); // Relationships
             continue;
         }
