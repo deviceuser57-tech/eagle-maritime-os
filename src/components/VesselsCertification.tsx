@@ -19,15 +19,6 @@ import { format, differenceInDays } from 'date-fns';
 import { VerificationQR } from './compliance/VerificationQR';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-const FALLBACK_CURRENCIES = [
-  { code: 'USD', label: 'USD - US Dollar' },
-  { code: 'EUR', label: 'EUR - Euro' },
-  { code: 'GBP', label: 'GBP - British Pound' },
-  { code: 'SGD', label: 'SGD - Singapore Dollar' },
-  { code: 'AED', label: 'AED - UAE Dirham' },
-  { code: 'JPY', label: 'JPY - Japanese Yen' },
-];
-
 const VesselsCertification = () => {
   const { toast } = useToast();
   const { certifications, loading, addCertification, deleteCertification, sealCertificate } = useVesselCertifications();
@@ -42,9 +33,7 @@ const VesselsCertification = () => {
     ...flagStates.map(f => f.flag_name)
   ].filter(Boolean)));
 
-  const currencyOptions = currencies.length > 0
-    ? currencies.map((c) => ({ code: c.currency_code, label: `${c.currency_code} - ${c.currency_name}` }))
-    : FALLBACK_CURRENCIES;
+  const currencyOptions = currencies.map((c) => ({ code: c.currency_code, label: `${c.currency_code} - ${c.currency_name}` }));
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     vessel_id: '',

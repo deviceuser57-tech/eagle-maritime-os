@@ -1,0 +1,74 @@
+name: One-time unify vessel company dropdowns
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[company-dropdown-unified]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch VesselManagement to use one shared company registry
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('src/components/VesselManagement.tsx')
+          s = p.read_text()
+
+          old_hooks = """  // Setup data
+          const ownerCompanies = useSetupCompanies('owner');
+          const operatorCompanies = useSetupCompanies('operator');
+          const technicalManagers = useSetupCompanies('technical');
+          const ismManagers = useSetupCompanies('ism');
+          const classificationSocieties = useClassificationSocieties();
+          const flagStatesHook = useFlagStates();
+          """
+          new_hooks = """  // Setup data
+          // All vessel company roles use ONE shared company master registry.
+          // A company may be selected as Owner, Operator, Technical Manager, and/or ISM Manager.
+          const allCompanies = useSetupCompanies();
+          const ownerCompanies = allCompanies;
+          const operatorCompanies = allCompanies;
+          const technicalManagers = allCompanies;
+          const ismManagers = allCompanies;
+          const classificationSocieties = useClassificationSocieties();
+          const flagStatesHook = useFlagStates();
+          """
+
+          if old_hooks not in s:
+              raise SystemExit('Expected company hook block was not found; no source changes made.')
+
+          s = s.replace(old_hooks, new_hooks, 1)
+          p.write_text(s)
+          PY
+
+      - name: Verify patch
+        run: |
+          grep -n "const allCompanies = useSetupCompanies();" src/components/VesselManagement.tsx
+          grep -n "const ownerCompanies = allCompanies;" src/components/VesselManagement.tsx
+          grep -n "const operatorCompanies = allCompanies;" src/components/VesselManagement.tsx
+          grep -n "const technicalManagers = allCompanies;" src/components/VesselManagement.tsx
+          grep -n "const ismManagers = allCompanies;" src/components/VesselManagement.tsx
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/VesselManagement.tsx .github/workflows/one-time-unify-company-dropdowns.yml
+          git commit -m "chore: unify vessel company dropdown source [company-dropdown-unified]"
+          git push
+
+      - name: Remove one-time workflow
+        if: ${{ success() }}
+        run: |
+          git rm .github/workflows/one-time-unify-company-dropdowns.yml
+          git commit -m "chore: remove one-time company dropdown workflow"
+          git push
