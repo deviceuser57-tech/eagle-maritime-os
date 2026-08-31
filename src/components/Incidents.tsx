@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle, Activity, TrendingDown, FileText, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useIncidents } from '@/hooks/useIncidents';
+import { useSetupIncidentTypes } from '@/hooks/useSetupIncidentTypes';
 import { useVessels } from '@/hooks/useVessels';
 import { useRootCauses } from '@/hooks/useSetupAuditConfig';
 import { format } from 'date-fns';
@@ -17,6 +18,7 @@ const Incidents = () => {
   const { incidents, isLoading, createIncident, deleteIncident } = useIncidents();
   const { vessels } = useVessels();
   const { rootCauses } = useRootCauses();
+  const { incidentTypes } = useSetupIncidentTypes();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -131,14 +133,9 @@ const Incidents = () => {
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="near_miss">Near Miss</SelectItem>
-                      <SelectItem value="injury">Injury</SelectItem>
-                      <SelectItem value="equipment_failure">Equipment Failure</SelectItem>
-                      <SelectItem value="safety_violation">Safety Violation</SelectItem>
-                      <SelectItem value="environmental">Environmental</SelectItem>
-                      <SelectItem value="security">Security</SelectItem>
-                      <SelectItem value="collision">Collision</SelectItem>
-                      <SelectItem value="grounding">Grounding</SelectItem>
+                    {incidentTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.name}>{type.name}</SelectItem>
+                    ))}
                     </SelectContent>
                   </Select>
                 </div>
