@@ -13,6 +13,8 @@ import { useVessels } from '@/hooks/useVessels';
 import { useProjectVessels } from '@/hooks/useProjectVessels';
 import { useAudits } from '@/hooks/useAudits';
 import { useCurrencies } from '@/hooks/useSetupCrewConfig';
+import { useSetupProjectTypes } from '@/hooks/useSetupProjectTypes';
+import { useAuditTypes } from '@/hooks/useSetupAuditConfig';
 import { format } from 'date-fns';
 
 const computeStatus = (startDate: string, endDate: string): string => {
@@ -32,9 +34,9 @@ const Projects = () => {
   const { projectVessels, addVesselToProject, removeVesselFromProject } = useProjectVessels();
   const { createAudit } = useAudits();
   const { currencies } = useCurrencies();
-  const currencyOptions = currencies.length > 0
-    ? currencies.map(c => c.currency_code)
-    : ['USD', 'EUR', 'GBP', 'AED', 'JPY'];
+  const { projectTypes } = useSetupProjectTypes();
+  const { auditTypes } = useAuditTypes();
+  const currencyOptions = currencies.map(c => c.currency_code);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '', description: '', project_type: '', start_date: '', end_date: '',
@@ -152,14 +154,9 @@ const Projects = () => {
                   <Select value={formData.project_type} onValueChange={(v) => setFormData({ ...formData, project_type: v })}>
                     <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Annual Audit">Annual Audit</SelectItem>
-                      <SelectItem value="ISPS Renewal">ISPS Renewal</SelectItem>
-                      <SelectItem value="Environmental Compliance">Environmental Compliance</SelectItem>
-                      <SelectItem value="Safety Inspection">Safety Inspection</SelectItem>
-                      <SelectItem value="Fleet Review">Fleet Review</SelectItem>
-                      <SelectItem value="Drydocking">Drydocking</SelectItem>
-                      <SelectItem value="Certification Renewal">Certification Renewal</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      {projectTypes.map(pt => (
+                        <SelectItem key={pt.id} value={pt.name}>{pt.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -259,13 +256,9 @@ const Projects = () => {
                       <Select value={row.audit_type} onValueChange={(v) => updateVesselRow(idx, 'audit_type', v)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Internal Audit">Internal Audit</SelectItem>
-                          <SelectItem value="ISM Annual">ISM Annual</SelectItem>
-                          <SelectItem value="ISPS Renewal">ISPS Renewal</SelectItem>
-                          <SelectItem value="Environmental">Environmental</SelectItem>
-                          <SelectItem value="PSC">Port State Control</SelectItem>
-                          <SelectItem value="Flag State">Flag State</SelectItem>
-                          <SelectItem value="Vetting">Vetting</SelectItem>
+                          {auditTypes.map(at => (
+                            <SelectItem key={at.id} value={at.audit_type_name}>{at.audit_type_name}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>

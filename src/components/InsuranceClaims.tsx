@@ -10,11 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FileText, DollarSign, Clock, CheckCircle, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useInsuranceClaims } from '@/hooks/useInsuranceClaims';
 import { useVessels } from '@/hooks/useVessels';
+import { useSetupClaimTypes } from '@/hooks/useSetupClaimTypes';
+import { useSetupCompanies } from '@/hooks/useSetupCompanies';
 import { format } from 'date-fns';
 
 const InsuranceClaims = () => {
   const { claims, loading, addClaim, deleteClaim } = useInsuranceClaims();
   const { vessels } = useVessels();
+  const { claimTypes } = useSetupClaimTypes();
+  const insurerCompanies = useSetupCompanies('insurer' as any);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     vessel_id: '',
@@ -115,14 +119,9 @@ const InsuranceClaims = () => {
                     <SelectValue placeholder="Select claim type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Hull Damage">Hull Damage</SelectItem>
-                    <SelectItem value="Cargo Loss">Cargo Loss</SelectItem>
-                    <SelectItem value="Equipment Failure">Equipment Failure</SelectItem>
-                    <SelectItem value="Collision">Collision</SelectItem>
-                    <SelectItem value="Third Party Liability">Third Party Liability</SelectItem>
-                    <SelectItem value="Crew Injury">Crew Injury</SelectItem>
-                    <SelectItem value="Environmental">Environmental</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    {claimTypes.map(ct => (
+                      <SelectItem key={ct.id} value={ct.name}>{ct.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -155,10 +154,9 @@ const InsuranceClaims = () => {
                       <SelectValue placeholder="Select Insurer" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Gard">Gard P&I</SelectItem>
-                      <SelectItem value="Skuld">Skuld</SelectItem>
-                      <SelectItem value="Allianz">Allianz Global Corporate</SelectItem>
-                      <SelectItem value="Britannia">Britannia P&I</SelectItem>
+                      {insurerCompanies.companies.map(c => (
+                        <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
