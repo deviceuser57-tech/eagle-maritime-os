@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string | null
+          actor_id: string | null
+          created_at: string
+          curr_hash: string | null
+          id: number
+          org_id: string | null
+          payload: Json | null
+          prev_hash: string | null
+        }
+        Insert: {
+          action?: string | null
+          actor_id?: string | null
+          created_at?: string
+          curr_hash?: string | null
+          id?: number
+          org_id?: string | null
+          payload?: Json | null
+          prev_hash?: string | null
+        }
+        Update: {
+          action?: string | null
+          actor_id?: string | null
+          created_at?: string
+          curr_hash?: string | null
+          id?: number
+          org_id?: string | null
+          payload?: Json | null
+          prev_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_findings: {
         Row: {
           audit_id: string | null
@@ -707,6 +748,133 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "custom_regulations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dynamic_setup_entities: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          org_id: string
+          schema: Json
+          table_name: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          org_id: string
+          schema?: Json
+          table_name: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          org_id?: string
+          schema?: Json
+          table_name?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dynamic_setup_entities_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dynamic_setup_records: {
+        Row: {
+          created_at: string
+          data: Json
+          entity_id: string
+          id: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          entity_id: string
+          id?: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          entity_id?: string
+          id?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dynamic_setup_records_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "dynamic_setup_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dynamic_setup_records_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enterprise_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          detail: Json | null
+          id: string
+          org_id: string | null
+          outcome: string | null
+          resource_id: string | null
+          resource_type: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          org_id?: string | null
+          outcome?: string | null
+          resource_id?: string | null
+          resource_type?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          org_id?: string | null
+          outcome?: string | null
+          resource_id?: string | null
+          resource_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enterprise_audit_log_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -1614,6 +1782,33 @@ export type Database = {
           },
         ]
       }
+      security_scan_results: {
+        Row: {
+          detail: Json | null
+          environment: string
+          id: string
+          scan_type: string
+          scanned_at: string
+          status: string
+        }
+        Insert: {
+          detail?: Json | null
+          environment?: string
+          id?: string
+          scan_type: string
+          scanned_at?: string
+          status: string
+        }
+        Update: {
+          detail?: Json | null
+          environment?: string
+          id?: string
+          scan_type?: string
+          scanned_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       setup_audit_types: {
         Row: {
           audit_type_name: string
@@ -1704,6 +1899,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "setup_certificate_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_claim_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_claim_types_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -2087,6 +2320,44 @@ export type Database = {
           },
         ]
       }
+      setup_incident_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_incident_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       setup_nationalities: {
         Row: {
           country_code: string | null
@@ -2121,6 +2392,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "setup_nationalities_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_project_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_project_types_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
