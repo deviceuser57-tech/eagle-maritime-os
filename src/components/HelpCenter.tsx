@@ -59,6 +59,22 @@ const HelpCenter = () => {
         </a>
 
         <Link
+          to="/connect"
+          className="group flex items-start gap-4 p-6 rounded-2xl border border-border bg-card hover:border-primary hover:shadow-lg transition-all"
+        >
+          <div className="p-3 rounded-xl bg-primary/10 text-primary">
+            <LifeBuoy className="h-6 w-6" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-foreground">Connect an AI assistant</h3>
+            <p className="text-sm text-muted-foreground mt-1">Link ChatGPT, Claude, or Claude Code to your fleet data via MCP.</p>
+            <span className="inline-block mt-3 text-xs font-bold uppercase tracking-widest text-primary group-hover:underline">
+              Connect →
+            </span>
+          </div>
+        </Link>
+
+        <Link
           to="/mcp-api"
           className="group flex items-start gap-4 p-6 rounded-2xl border border-border bg-card hover:border-primary hover:shadow-lg transition-all sm:col-span-2 md:col-span-1"
         >
