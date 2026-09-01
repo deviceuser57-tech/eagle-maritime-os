@@ -8,6 +8,7 @@ import PublicVerify from "./pages/PublicVerify";
 import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 import McpApi from "./pages/McpApi";
+import Connect from "./pages/Connect";
 
 const queryClient = new QueryClient();
 
