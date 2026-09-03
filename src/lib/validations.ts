@@ -98,8 +98,14 @@ export const regulationSchema = z.object({
 
 // ── Setup Company ──
 export const companySchema = z.object({
-  company_type: z.enum(['owner', 'operator', 'technical', 'ism', 'doc'], { error: 'Company type is required' }),
   name: safeString(200).pipe(z.string().min(1, 'Company name is required')),
+  company_type: z.string().optional().nullable(),
+  is_owner: z.boolean().optional().default(false),
+  is_operator: z.boolean().optional().default(false),
+  is_technical_manager: z.boolean().optional().default(false),
+  is_ism_manager: z.boolean().optional().default(false),
+  is_doc_issuer: z.boolean().optional().default(false),
+  is_insurer: z.boolean().optional().default(false),
   contact_person: optionalSafeString(150),
   title: optionalSafeString(100),
   phone: optionalSafeString(30),

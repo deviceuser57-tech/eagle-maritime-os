@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,11 @@ const InsuranceClaims = () => {
   const { claims, loading, addClaim, deleteClaim } = useInsuranceClaims();
   const { vessels } = useVessels();
   const { claimTypes } = useSetupClaimTypes();
-  const insurerCompanies = useSetupCompanies('insurer' as any);
+  const { companies: allCompanies } = useSetupCompanies();
+  const insurerCompanies = useMemo(
+    () => allCompanies.filter(c => Boolean(c.is_insurer) || c.company_type === 'insurer'),
+    [allCompanies]
+  );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     vessel_id: '',
@@ -154,7 +158,7 @@ const InsuranceClaims = () => {
                       <SelectValue placeholder="Select Insurer" />
                     </SelectTrigger>
                     <SelectContent>
-                      {insurerCompanies.companies.map(c => (
+                      {insurerCompanies.map(c => (
                         <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
                       ))}
                     </SelectContent>

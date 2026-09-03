@@ -57,5 +57,39 @@ export const useSetupIncidentTypes = () => {
     },
   });
 
-  return { incidentTypes, isLoading, error, addIncidentType };
+  const updateIncidentType = useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<SetupIncidentType> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('setup_incident_types')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['setup_incident_types'] });
+      toast({ title: 'Success', description: 'Incident type updated successfully' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const deleteIncidentType = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('setup_incident_types').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['setup_incident_types'] });
+      toast({ title: 'Success', description: 'Incident type deleted successfully' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  return { incidentTypes, isLoading, error, addIncidentType, updateIncidentType, deleteIncidentType };
 };

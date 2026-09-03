@@ -9,6 +9,9 @@ import { useCrewRanks, useNationalities, useContractTypes, useCurrencies } from 
 import { useAuditTypes, useFindingTypes, useFindingStatuses, useRootCauses } from '@/hooks/useSetupAuditConfig';
 import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
 import { useCertificateTypes } from '@/hooks/useSetupCertificates';
+import { useSetupIncidentTypes } from '@/hooks/useSetupIncidentTypes';
+import { useSetupProjectTypes } from '@/hooks/useSetupProjectTypes';
+import { useSetupClaimTypes } from '@/hooks/useSetupClaimTypes';
 import RegulatoryManager from '@/components/RegulatoryManager';
 import { CsvUploader } from '@/components/CsvUploader';
 import Papa from 'papaparse';
@@ -196,6 +199,11 @@ const SetupPage = () => {
   const statutoryCerts = useCertificateTypes('statutory');
   const crewCerts = useCertificateTypes('crew');
 
+  // Operational master data hooks
+  const incidentTypes = useSetupIncidentTypes();
+  const projectTypes = useSetupProjectTypes();
+  const claimTypes = useSetupClaimTypes();
+
   const setupConfigs: Record<string, SetupCardConfig & { data: any[]; isLoading: boolean; add: any; update: any; delete: any; }> = {
     companies: {
       type: 'companies', title: 'Company',
@@ -326,6 +334,36 @@ const SetupPage = () => {
       add: (data: any) => crewCerts.addCertificateType.mutateAsync({ ...data, certificate_category: 'crew' }),
       update: (data: any) => crewCerts.updateCertificateType.mutate(data),
       delete: (id: string) => crewCerts.deleteCertificateType.mutate(id)
+    },
+    incidentTypes: {
+      type: 'incidentTypes', title: 'Incident Type',
+      headers: ['name', 'description'],
+      labels: ['Incident Type', 'Description'],
+      dbFields: ['name', 'description'],
+      data: incidentTypes.incidentTypes, isLoading: incidentTypes.isLoading,
+      add: (data: any) => incidentTypes.addIncidentType.mutateAsync(data),
+      update: (data: any) => incidentTypes.updateIncidentType.mutate(data),
+      delete: (id: string) => incidentTypes.deleteIncidentType.mutate(id)
+    },
+    projectTypes: {
+      type: 'projectTypes', title: 'Project Type',
+      headers: ['name', 'description'],
+      labels: ['Project Type', 'Description'],
+      dbFields: ['name', 'description'],
+      data: projectTypes.projectTypes, isLoading: projectTypes.isLoading,
+      add: (data: any) => projectTypes.addProjectType.mutateAsync(data),
+      update: (data: any) => projectTypes.updateProjectType.mutate(data),
+      delete: (id: string) => projectTypes.deleteProjectType.mutate(id)
+    },
+    claimTypes: {
+      type: 'claimTypes', title: 'Insurance Claim Type',
+      headers: ['name', 'description'],
+      labels: ['Claim Type', 'Description'],
+      dbFields: ['name', 'description'],
+      data: claimTypes.claimTypes, isLoading: claimTypes.isLoading,
+      add: (data: any) => claimTypes.addClaimType.mutateAsync(data),
+      update: (data: any) => claimTypes.updateClaimType.mutate(data),
+      delete: (id: string) => claimTypes.deleteClaimType.mutate(id)
     }
   };
 
@@ -494,14 +532,91 @@ const SetupPage = () => {
                         )}
                         {configKey === 'companies' && (
                           <td className="py-4 px-4 text-sm font-medium text-foreground">
-                            <div className="flex gap-1 flex-wrap max-w-[150px]">
-                              {item.is_owner && <Badge variant="outline" className="text-[10px]">Owner</Badge>}
-                              {item.is_operator && <Badge variant="outline" className="text-[10px]">Operator</Badge>}
-                              {item.is_technical_manager && <Badge variant="outline" className="text-[10px]">Technical</Badge>}
-                              {item.is_ism_manager && <Badge variant="outline" className="text-[10px]">ISM</Badge>}
-                              {item.is_doc_issuer && <Badge variant="outline" className="text-[10px]">DOC</Badge>}
-                              {item.is_insurer && <Badge variant="outline" className="text-[10px]">Insurer</Badge>}
-                            </div>
+                            {editingItem?.type === configKey && editingItem?.id === item.id ? (
+                              <div className="grid grid-cols-2 gap-1.5 text-xs">
+                                <label className="flex items-center space-x-1 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={Boolean(editingItem.data.is_owner)}
+                                    onChange={(e) => setEditingItem({
+                                      ...editingItem,
+                                      data: { ...editingItem.data, is_owner: e.target.checked }
+                                    })}
+                                    className="rounded border-gray-300 h-3.5 w-3.5"
+                                  />
+                                  <span className="text-[11px]">Owner</span>
+                                </label>
+                                <label className="flex items-center space-x-1 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={Boolean(editingItem.data.is_operator)}
+                                    onChange={(e) => setEditingItem({
+                                      ...editingItem,
+                                      data: { ...editingItem.data, is_operator: e.target.checked }
+                                    })}
+                                    className="rounded border-gray-300 h-3.5 w-3.5"
+                                  />
+                                  <span className="text-[11px]">Operator</span>
+                                </label>
+                                <label className="flex items-center space-x-1 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={Boolean(editingItem.data.is_technical_manager)}
+                                    onChange={(e) => setEditingItem({
+                                      ...editingItem,
+                                      data: { ...editingItem.data, is_technical_manager: e.target.checked }
+                                    })}
+                                    className="rounded border-gray-300 h-3.5 w-3.5"
+                                  />
+                                  <span className="text-[11px]">Technical</span>
+                                </label>
+                                <label className="flex items-center space-x-1 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={Boolean(editingItem.data.is_ism_manager)}
+                                    onChange={(e) => setEditingItem({
+                                      ...editingItem,
+                                      data: { ...editingItem.data, is_ism_manager: e.target.checked }
+                                    })}
+                                    className="rounded border-gray-300 h-3.5 w-3.5"
+                                  />
+                                  <span className="text-[11px]">ISM</span>
+                                </label>
+                                <label className="flex items-center space-x-1 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={Boolean(editingItem.data.is_doc_issuer)}
+                                    onChange={(e) => setEditingItem({
+                                      ...editingItem,
+                                      data: { ...editingItem.data, is_doc_issuer: e.target.checked }
+                                    })}
+                                    className="rounded border-gray-300 h-3.5 w-3.5"
+                                  />
+                                  <span className="text-[11px]">DOC</span>
+                                </label>
+                                <label className="flex items-center space-x-1 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={Boolean(editingItem.data.is_insurer)}
+                                    onChange={(e) => setEditingItem({
+                                      ...editingItem,
+                                      data: { ...editingItem.data, is_insurer: e.target.checked }
+                                    })}
+                                    className="rounded border-gray-300 h-3.5 w-3.5"
+                                  />
+                                  <span className="text-[11px]">Insurer</span>
+                                </label>
+                              </div>
+                            ) : (
+                              <div className="flex gap-1 flex-wrap max-w-[150px]">
+                                {item.is_owner && <Badge variant="outline" className="text-[10px]">Owner</Badge>}
+                                {item.is_operator && <Badge variant="outline" className="text-[10px]">Operator</Badge>}
+                                {item.is_technical_manager && <Badge variant="outline" className="text-[10px]">Technical</Badge>}
+                                {item.is_ism_manager && <Badge variant="outline" className="text-[10px]">ISM</Badge>}
+                                {item.is_doc_issuer && <Badge variant="outline" className="text-[10px]">DOC</Badge>}
+                                {item.is_insurer && <Badge variant="outline" className="text-[10px]">Insurer</Badge>}
+                              </div>
+                            )}
                           </td>
                         )}
                         <td className="py-4 px-4 text-right rounded-r-2xl">
@@ -740,6 +855,18 @@ const SetupPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {renderDataTable('statutoryCertificates')}
             {renderDataTable('crewCertificates')}
+          </div>
+        </div>
+
+        {/* Operations, Incidents & Claims */}
+        <div className="space-y-6 lg:col-span-3">
+          <div className="px-1 border-b border-border pb-3 mb-4">
+            <h3 className="text-base font-black uppercase tracking-tight">Operations, Incidents & Insurance Claims Master Data</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {renderDataTable('incidentTypes')}
+            {renderDataTable('projectTypes')}
+            {renderDataTable('claimTypes')}
           </div>
         </div>
 

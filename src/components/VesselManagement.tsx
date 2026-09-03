@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -224,19 +224,30 @@ const VesselManagement = () => {
 
 
 
-  // Setup data
-  const ownerCompanies = useSetupCompanies('owner');
-  const operatorCompanies = useSetupCompanies('operator');
-  const technicalManagers = useSetupCompanies('technical');
-  const ismManagers = useSetupCompanies('ism');
+  // Setup data - Unified company master dataset
+  const { companies: allCompanies } = useSetupCompanies();
+  const ownerCompanies = useMemo(
+    () => allCompanies.filter(c => Boolean(c.is_owner) || c.company_type === 'owner'),
+    [allCompanies]
+  );
+  const operatorCompanies = useMemo(
+    () => allCompanies.filter(c => Boolean(c.is_operator) || c.company_type === 'operator'),
+    [allCompanies]
+  );
+  const technicalManagers = useMemo(
+    () => allCompanies.filter(c => Boolean(c.is_technical_manager) || c.company_type === 'technical'),
+    [allCompanies]
+  );
+  const ismManagers = useMemo(
+    () => allCompanies.filter(c => Boolean(c.is_ism_manager) || c.company_type === 'ism'),
+    [allCompanies]
+  );
   const classificationSocieties = useClassificationSocieties();
   const flagStatesHook = useFlagStates();
 
   // Dynamically load currencies from system setup
   const crewConfigCurrencies = useCurrencies();
-  const currencies = crewConfigCurrencies.currencies.length > 0
-    ? crewConfigCurrencies.currencies.map(c => c.currency_code)
-    : ['USD', 'EUR', 'GBP', 'SGD', 'NOK', 'JPY'];
+  const currencies = crewConfigCurrencies.currencies.map(c => c.currency_code);
 
   // Dynamically load vessel types from statutory certificate types or general categories if needed
   const vesselTypes = [
@@ -662,11 +673,11 @@ const VesselManagement = () => {
         columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55 } },
       });
 
-      // ═══ 9. MANAGEMENT COMPANIES ═══
-      const ownerName = ownerCompanies.companies.find(c => c.id === formData.owner_company_id)?.name;
-      const operatorName = operatorCompanies.companies.find(c => c.id === formData.operator_company_id)?.name;
-      const techMgrName = technicalManagers.companies.find(c => c.id === formData.technical_manager_id)?.name;
-      const ismMgrName = ismManagers.companies.find(c => c.id === formData.ism_manager_id)?.name;
+      // ═══ 9. MANAGEMENT COMPANIES (Unified company master resolution) ═══
+      const ownerName = allCompanies.find(c => c.id === formData.owner_company_id)?.name;
+      const operatorName = allCompanies.find(c => c.id === formData.operator_company_id)?.name;
+      const techMgrName = allCompanies.find(c => c.id === formData.technical_manager_id)?.name;
+      const ismMgrName = allCompanies.find(c => c.id === formData.ism_manager_id)?.name;
 
       startY = addSectionHeader('MANAGEMENT & OWNERSHIP', 9);
 
@@ -1344,16 +1355,16 @@ const VesselManagement = () => {
                   <TabsContent value="management" className="space-y-5 mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       {renderSelectField('owner_company_id', 'Owner', formData.owner_company_id, (v) => setFormData({ ...formData, owner_company_id: v }),
-                        ownerCompanies.companies.map(c => ({ value: c.id, label: c.name }))
+                        ownerCompanies.map(c => ({ value: c.id, label: c.name }))
                       )}
                       {renderSelectField('operator_company_id', 'Operator', formData.operator_company_id, (v) => setFormData({ ...formData, operator_company_id: v }),
-                        operatorCompanies.companies.map(c => ({ value: c.id, label: c.name }))
+                        operatorCompanies.map(c => ({ value: c.id, label: c.name }))
                       )}
                       {renderSelectField('technical_manager_id', 'Technical Manager', formData.technical_manager_id, (v) => setFormData({ ...formData, technical_manager_id: v }),
-                        technicalManagers.companies.map(c => ({ value: c.id, label: c.name }))
+                        technicalManagers.map(c => ({ value: c.id, label: c.name }))
                       )}
                       {renderSelectField('ism_manager_id', 'ISM Manager', formData.ism_manager_id, (v) => setFormData({ ...formData, ism_manager_id: v }),
-                        ismManagers.companies.map(c => ({ value: c.id, label: c.name }))
+                        ismManagers.map(c => ({ value: c.id, label: c.name }))
                       )}
                     </div>
                     <div className="space-y-2">

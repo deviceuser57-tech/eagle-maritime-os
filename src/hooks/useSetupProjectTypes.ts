@@ -57,5 +57,39 @@ export const useSetupProjectTypes = () => {
     },
   });
 
-  return { projectTypes, isLoading, error, addProjectType };
+  const updateProjectType = useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<SetupProjectType> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('setup_project_types')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['setup_project_types'] });
+      toast({ title: 'Success', description: 'Project type updated successfully' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const deleteProjectType = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('setup_project_types').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['setup_project_types'] });
+      toast({ title: 'Success', description: 'Project type deleted successfully' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  return { projectTypes, isLoading, error, addProjectType, updateProjectType, deleteProjectType };
 };

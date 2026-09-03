@@ -176,36 +176,16 @@ const CrewManagement = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="rank">Rank *</Label>
-                  {ranks.length > 0 ? (
-                    <Select value={formData.rank} onValueChange={(v) => setFormData({ ...formData, rank: v })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select rank" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ranks.map((r) => (
-                          <SelectItem key={r.id} value={r.rank_name}>{r.rank_name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Select value={formData.rank} onValueChange={(v) => setFormData({ ...formData, rank: v })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select rank" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Master">Master</SelectItem>
-                        <SelectItem value="Chief Officer">Chief Officer</SelectItem>
-                        <SelectItem value="Second Officer">Second Officer</SelectItem>
-                        <SelectItem value="Third Officer">Third Officer</SelectItem>
-                        <SelectItem value="Chief Engineer">Chief Engineer</SelectItem>
-                        <SelectItem value="Second Engineer">Second Engineer</SelectItem>
-                        <SelectItem value="Able Seaman">Able Seaman</SelectItem>
-                        <SelectItem value="Ordinary Seaman">Ordinary Seaman</SelectItem>
-                        <SelectItem value="Bosun">Bosun</SelectItem>
-                        <SelectItem value="Cook">Cook</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
+                  <Select value={formData.rank} onValueChange={(v) => setFormData({ ...formData, rank: v })}>
+                    <SelectTrigger id="rank">
+                      <SelectValue placeholder="Select rank" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ranks.map((r) => (
+                        <SelectItem key={r.id} value={r.rank_name}>{r.rank_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="vessel_id">Vessel</Label>

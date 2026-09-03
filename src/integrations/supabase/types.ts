@@ -1997,6 +1997,12 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean | null
+          is_doc_issuer: boolean | null
+          is_insurer: boolean | null
+          is_ism_manager: boolean | null
+          is_operator: boolean | null
+          is_owner: boolean | null
+          is_technical_manager: boolean | null
           name: string
           org_id: string | null
           phone: string | null
@@ -2007,19 +2013,25 @@ export type Database = {
         }
         Insert: {
           address?: string | null
-          company_type: string
+          company_type?: string
           contact_person?: string | null
           created_at?: string
           email?: string | null
           id?: string
           is_active?: boolean | null
+          is_doc_issuer?: boolean | null
+          is_insurer?: boolean | null
+          is_ism_manager?: boolean | null
+          is_operator?: boolean | null
+          is_owner?: boolean | null
+          is_technical_manager?: boolean | null
           name: string
           org_id?: string | null
           phone?: string | null
           remarks?: string | null
           title?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string
         }
         Update: {
           address?: string | null
@@ -2029,6 +2041,12 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean | null
+          is_doc_issuer?: boolean | null
+          is_insurer?: boolean | null
+          is_ism_manager?: boolean | null
+          is_operator?: boolean | null
+          is_owner?: boolean | null
+          is_technical_manager?: boolean | null
           name?: string
           org_id?: string | null
           phone?: string | null

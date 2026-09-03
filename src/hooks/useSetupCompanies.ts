@@ -77,6 +77,15 @@ export const useSetupCompanies = (companyType?: CompanyRole) => {
       const { error: validationError } = validate(companySchema, company);
       if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
 
+      const legacyCompanyType = company.company_type || (
+        company.is_owner ? 'owner' :
+        company.is_operator ? 'operator' :
+        company.is_technical_manager ? 'technical' :
+        company.is_ism_manager ? 'ism' :
+        company.is_doc_issuer ? 'doc' :
+        'owner'
+      );
+
       // Check if company already exists by name
       const { data: existing, error: lookupError } = await supabase
         .from('setup_companies')
@@ -92,7 +101,11 @@ export const useSetupCompanies = (companyType?: CompanyRole) => {
         // Update existing company with new roles or details
         const { data, error } = await supabase
           .from('setup_companies')
-          .update(company)
+          .update({
+            ...company,
+            name: company.name.trim(),
+            company_type: legacyCompanyType,
+          })
           .eq('id', existing.id)
           .select()
           .single();
@@ -103,7 +116,13 @@ export const useSetupCompanies = (companyType?: CompanyRole) => {
       // Insert new company
       const { data, error } = await supabase
         .from('setup_companies')
-        .insert({ ...company, user_id: user.id, org_id: orgId })
+        .insert({
+          ...company,
+          name: company.name.trim(),
+          company_type: legacyCompanyType,
+          user_id: user.id,
+          org_id: orgId,
+        })
         .select()
         .single();
 
