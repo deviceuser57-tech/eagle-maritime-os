@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 export interface AuditEventPayload {
   actor_id?: string | null;
@@ -7,7 +8,7 @@ export interface AuditEventPayload {
   resource_type?: string | null;
   resource_id?: string | null;
   outcome?: 'success' | 'failure' | 'denied';
-  detail?: Record<string, unknown> | null;
+  detail?: Json | null;
 }
 
 /**
@@ -42,20 +43,20 @@ export const auditService = {
     logAuditEvent({ actor_id: actorId, org_id: orgId, action: 'auth.login', outcome: 'success' }),
 
   /** Record a failed login attempt */
-  loginFailure: (detail?: Record<string, unknown>) =>
+  loginFailure: (detail?: Json) =>
     logAuditEvent({ action: 'auth.login', outcome: 'failure', detail }),
 
   /** Record CRUD operations */
   create: (actorId: string, resourceType: string, resourceId: string, orgId?: string | null) =>
     logAuditEvent({ actor_id: actorId, org_id: orgId, action: `${resourceType}.create`, resource_type: resourceType, resource_id: resourceId, outcome: 'success' }),
 
-  update: (actorId: string, resourceType: string, resourceId: string, orgId?: string | null, detail?: Record<string, unknown>) =>
+  update: (actorId: string, resourceType: string, resourceId: string, orgId?: string | null, detail?: Json) =>
     logAuditEvent({ actor_id: actorId, org_id: orgId, action: `${resourceType}.update`, resource_type: resourceType, resource_id: resourceId, outcome: 'success', detail }),
 
   delete: (actorId: string, resourceType: string, resourceId: string, orgId?: string | null) =>
     logAuditEvent({ actor_id: actorId, org_id: orgId, action: `${resourceType}.delete`, resource_type: resourceType, resource_id: resourceId, outcome: 'success' }),
 
   /** Record a denied/unauthorized access attempt */
-  denied: (actorId: string | null, action: string, orgId?: string | null, detail?: Record<string, unknown>) =>
+  denied: (actorId: string | null, action: string, orgId?: string | null, detail?: Json) =>
     logAuditEvent({ actor_id: actorId, org_id: orgId, action, outcome: 'denied', detail }),
 };
