@@ -17,13 +17,10 @@ const CorrectiveAction = () => {
   const { findingStatuses } = useFindingStatuses();
   const { rootCauses }      = useRootCauses();
 
-  const statusOptions   = findingStatuses.length > 0
-    ? findingStatuses.map(s => ({ value: s.status_name.toLowerCase().replace(/ /g, '_'), label: s.status_name }))
-    : [
-        { value: 'open', label: 'Open' },
-        { value: 'in_progress', label: 'In Progress' },
-        { value: 'completed', label: 'Completed' },
-      ];
+  const statusOptions = findingStatuses.map(s => ({
+    value: s.status_name.toLowerCase().replace(/ /g, '_'),
+    label: s.status_name,
+  }));
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     action_description: '',
