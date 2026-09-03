@@ -181,39 +181,16 @@ const VesselsCertification = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <Label htmlFor="certificate_type" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Classification *</Label>
-                      {certificateTypes.length > 0 ? (
-                        <Select value={formData.certificate_type} onValueChange={(v) => setFormData({ ...formData, certificate_type: v })}>
-                          <SelectTrigger className="rounded-xl border-border bg-background/50 h-12">
-                            <SelectValue placeholder="Select classification" />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
-                            {certificateTypes.map((c) => (
-                              <SelectItem key={c.id} value={c.certificate_name}>{c.certificate_name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Select value={formData.certificate_type} onValueChange={(v) => setFormData({ ...formData, certificate_type: v })}>
-                          <SelectTrigger className="rounded-xl border-border bg-background/50 h-12">
-                            <SelectValue placeholder="Select classification" />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
-                            <SelectItem value="SMC">Safety Management Certificate</SelectItem>
-                            <SelectItem value="DOC">Document of Compliance</SelectItem>
-                            <SelectItem value="ISPS">ISPS Certificate</SelectItem>
-                            <SelectItem value="Class">Classification Certificate</SelectItem>
-                            <SelectItem value="Load Line">Load Line Certificate</SelectItem>
-                            <SelectItem value="IOPP">IOPP Certificate</SelectItem>
-                            <SelectItem value="IAPP">IAPP Certificate</SelectItem>
-                            <SelectItem value="MLC">MLC Certificate</SelectItem>
-                            <SelectItem value="SOLAS">SOLAS Certificates</SelectItem>
-                            <SelectItem value="Tonnage">Tonnage Certificate</SelectItem>
-                            <SelectItem value="Registry">Registry Certificate</SelectItem>
-                            <SelectItem value="Radio">Radio License</SelectItem>
-                            <SelectItem value="Other">Other Statutory Doc</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
+                      <Select value={formData.certificate_type} onValueChange={(v) => setFormData({ ...formData, certificate_type: v })}>
+                        <SelectTrigger className="rounded-xl border-border bg-background/50 h-12">
+                          <SelectValue placeholder="Select classification" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
+                          {certificateTypes.map((c) => (
+                            <SelectItem key={c.id} value={c.certificate_name}>{c.certificate_name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="vessel_id" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Associated Vessel</Label>

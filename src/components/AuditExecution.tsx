@@ -14,16 +14,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuditTypes } from '@/hooks/useSetupAuditConfig';
 import { format } from 'date-fns';
 
-const FALLBACK_AUDIT_TYPES = ['ISM', 'ISPS', 'MLC', 'PSC', 'Flag State', 'Class', 'Internal', 'Vetting'];
-
 const AuditExecution = () => {
   const { toast } = useToast();
   const { audits, isLoading, createAudit, updateAudit, deleteAudit } = useAudits();
   const { vessels } = useVessels();
   const { auditTypes } = useAuditTypes();
-  const auditTypeOptions = auditTypes.length > 0
-    ? auditTypes.map((t) => t.audit_type_name)
-    : FALLBACK_AUDIT_TYPES;
+  const auditTypeOptions = auditTypes.map((t) => t.audit_type_name);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     audit_type: '',
