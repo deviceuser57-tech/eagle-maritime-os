@@ -10,10 +10,51 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string | null
+          actor_id: string | null
+          created_at: string
+          curr_hash: string | null
+          id: number
+          org_id: string | null
+          payload: Json | null
+          prev_hash: string | null
+        }
+        Insert: {
+          action?: string | null
+          actor_id?: string | null
+          created_at?: string
+          curr_hash?: string | null
+          id?: number
+          org_id?: string | null
+          payload?: Json | null
+          prev_hash?: string | null
+        }
+        Update: {
+          action?: string | null
+          actor_id?: string | null
+          created_at?: string
+          curr_hash?: string | null
+          id?: number
+          org_id?: string | null
+          payload?: Json | null
+          prev_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_findings: {
         Row: {
           audit_id: string | null
@@ -22,6 +63,7 @@ export type Database = {
           created_at: string
           description: string
           finding_type: string
+          finding_type_id: string | null
           id: string
           org_id: string | null
           severity: string
@@ -36,6 +78,7 @@ export type Database = {
           created_at?: string
           description: string
           finding_type: string
+          finding_type_id?: string | null
           id?: string
           org_id?: string | null
           severity?: string
@@ -50,6 +93,7 @@ export type Database = {
           created_at?: string
           description?: string
           finding_type?: string
+          finding_type_id?: string | null
           id?: string
           org_id?: string | null
           severity?: string
@@ -63,6 +107,20 @@ export type Database = {
             columns: ["audit_id"]
             isOneToOne: false
             referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_findings_finding_type_id_fkey"
+            columns: ["finding_type_id"]
+            isOneToOne: false
+            referencedRelation: "dropdown_finding_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_findings_finding_type_id_fkey"
+            columns: ["finding_type_id"]
+            isOneToOne: false
+            referencedRelation: "setup_finding_types"
             referencedColumns: ["id"]
           },
           {
@@ -100,6 +158,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "audit_regulations_audit_type_id_fkey"
+            columns: ["audit_type_id"]
+            isOneToOne: false
+            referencedRelation: "dropdown_audit_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "audit_regulations_audit_type_id_fkey"
             columns: ["audit_type_id"]
@@ -182,6 +247,7 @@ export type Database = {
       audits: {
         Row: {
           audit_type: string
+          audit_type_id: string | null
           auditor_name: string | null
           completed_date: string | null
           created_at: string
@@ -199,6 +265,7 @@ export type Database = {
         }
         Insert: {
           audit_type: string
+          audit_type_id?: string | null
           auditor_name?: string | null
           completed_date?: string | null
           created_at?: string
@@ -216,6 +283,7 @@ export type Database = {
         }
         Update: {
           audit_type?: string
+          audit_type_id?: string | null
           auditor_name?: string | null
           completed_date?: string | null
           created_at?: string
@@ -232,6 +300,20 @@ export type Database = {
           vessel_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "audits_audit_type_id_fkey"
+            columns: ["audit_type_id"]
+            isOneToOne: false
+            referencedRelation: "dropdown_audit_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audits_audit_type_id_fkey"
+            columns: ["audit_type_id"]
+            isOneToOne: false
+            referencedRelation: "setup_audit_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "audits_org_id_fkey"
             columns: ["org_id"]
@@ -280,6 +362,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "certificate_regulations_certificate_type_id_fkey"
+            columns: ["certificate_type_id"]
+            isOneToOne: false
+            referencedRelation: "dropdown_certificate_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "certificate_regulations_certificate_type_id_fkey"
             columns: ["certificate_type_id"]
@@ -507,10 +596,12 @@ export type Database = {
           id: string
           last_name: string
           nationality: string | null
+          nationality_id: string | null
           org_id: string | null
           phone: string | null
           photo_url: string | null
           rank: string
+          rank_id: string | null
           status: string | null
           updated_at: string
           user_id: string | null
@@ -527,10 +618,12 @@ export type Database = {
           id?: string
           last_name: string
           nationality?: string | null
+          nationality_id?: string | null
           org_id?: string | null
           phone?: string | null
           photo_url?: string | null
           rank: string
+          rank_id?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string | null
@@ -547,10 +640,12 @@ export type Database = {
           id?: string
           last_name?: string
           nationality?: string | null
+          nationality_id?: string | null
           org_id?: string | null
           phone?: string | null
           photo_url?: string | null
           rank?: string
+          rank_id?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string | null
@@ -558,10 +653,38 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "crew_members_nationality_id_fkey"
+            columns: ["nationality_id"]
+            isOneToOne: false
+            referencedRelation: "dropdown_nationalities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_members_nationality_id_fkey"
+            columns: ["nationality_id"]
+            isOneToOne: false
+            referencedRelation: "setup_nationalities"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "crew_members_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_members_rank_id_fkey"
+            columns: ["rank_id"]
+            isOneToOne: false
+            referencedRelation: "dropdown_crew_ranks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_members_rank_id_fkey"
+            columns: ["rank_id"]
+            isOneToOne: false
+            referencedRelation: "setup_crew_ranks"
             referencedColumns: ["id"]
           },
           {
@@ -625,6 +748,133 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "custom_regulations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dynamic_setup_entities: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          org_id: string
+          schema: Json
+          table_name: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          org_id: string
+          schema?: Json
+          table_name: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          org_id?: string
+          schema?: Json
+          table_name?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dynamic_setup_entities_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dynamic_setup_records: {
+        Row: {
+          created_at: string
+          data: Json
+          entity_id: string
+          id: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          entity_id: string
+          id?: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          entity_id?: string
+          id?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dynamic_setup_records_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "dynamic_setup_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dynamic_setup_records_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enterprise_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          detail: Json | null
+          id: string
+          org_id: string | null
+          outcome: string | null
+          resource_id: string | null
+          resource_type: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          org_id?: string | null
+          outcome?: string | null
+          resource_id?: string | null
+          resource_type?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          org_id?: string | null
+          outcome?: string | null
+          resource_id?: string | null
+          resource_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enterprise_audit_log_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -775,6 +1025,7 @@ export type Database = {
           org_id: string | null
           reported_by: string | null
           root_cause: string | null
+          root_cause_id: string | null
           severity: string
           title: string
           updated_at: string
@@ -793,6 +1044,7 @@ export type Database = {
           org_id?: string | null
           reported_by?: string | null
           root_cause?: string | null
+          root_cause_id?: string | null
           severity?: string
           title: string
           updated_at?: string
@@ -811,6 +1063,7 @@ export type Database = {
           org_id?: string | null
           reported_by?: string | null
           root_cause?: string | null
+          root_cause_id?: string | null
           severity?: string
           title?: string
           updated_at?: string
@@ -823,6 +1076,20 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidents_root_cause_id_fkey"
+            columns: ["root_cause_id"]
+            isOneToOne: false
+            referencedRelation: "dropdown_root_causes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidents_root_cause_id_fkey"
+            columns: ["root_cause_id"]
+            isOneToOne: false
+            referencedRelation: "setup_root_causes"
             referencedColumns: ["id"]
           },
           {
@@ -1452,6 +1719,13 @@ export type Database = {
             foreignKeyName: "regulatory_matrix_certificate_type_id_fkey"
             columns: ["certificate_type_id"]
             isOneToOne: false
+            referencedRelation: "dropdown_certificate_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "regulatory_matrix_certificate_type_id_fkey"
+            columns: ["certificate_type_id"]
+            isOneToOne: false
             referencedRelation: "setup_certificate_types"
             referencedColumns: ["id"]
           },
@@ -1508,6 +1782,33 @@ export type Database = {
           },
         ]
       }
+      security_scan_results: {
+        Row: {
+          detail: Json | null
+          environment: string
+          id: string
+          scan_type: string
+          scanned_at: string
+          status: string
+        }
+        Insert: {
+          detail?: Json | null
+          environment?: string
+          id?: string
+          scan_type: string
+          scanned_at?: string
+          status: string
+        }
+        Update: {
+          detail?: Json | null
+          environment?: string
+          id?: string
+          scan_type?: string
+          scanned_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       setup_audit_types: {
         Row: {
           audit_type_name: string
@@ -1515,6 +1816,7 @@ export type Database = {
           description: string | null
           frequency_months: number | null
           id: string
+          is_active: boolean | null
           is_external: boolean | null
           org_id: string | null
           updated_at: string
@@ -1526,6 +1828,7 @@ export type Database = {
           description?: string | null
           frequency_months?: number | null
           id?: string
+          is_active?: boolean | null
           is_external?: boolean | null
           org_id?: string | null
           updated_at?: string
@@ -1537,6 +1840,7 @@ export type Database = {
           description?: string | null
           frequency_months?: number | null
           id?: string
+          is_active?: boolean | null
           is_external?: boolean | null
           org_id?: string | null
           updated_at?: string
@@ -1558,6 +1862,7 @@ export type Database = {
           certificate_name: string
           created_at: string
           id: string
+          is_active: boolean | null
           is_mandatory: boolean | null
           issuing_authority: string | null
           org_id: string | null
@@ -1570,6 +1875,7 @@ export type Database = {
           certificate_name: string
           created_at?: string
           id?: string
+          is_active?: boolean | null
           is_mandatory?: boolean | null
           issuing_authority?: string | null
           org_id?: string | null
@@ -1582,6 +1888,7 @@ export type Database = {
           certificate_name?: string
           created_at?: string
           id?: string
+          is_active?: boolean | null
           is_mandatory?: boolean | null
           issuing_authority?: string | null
           org_id?: string | null
@@ -1599,11 +1906,50 @@ export type Database = {
           },
         ]
       }
+      setup_claim_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_claim_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       setup_classification_societies: {
         Row: {
           abbreviation: string | null
           created_at: string
           id: string
+          is_active: boolean | null
           org_id: string | null
           society_name: string
           updated_at: string
@@ -1614,6 +1960,7 @@ export type Database = {
           abbreviation?: string | null
           created_at?: string
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           society_name: string
           updated_at?: string
@@ -1624,6 +1971,7 @@ export type Database = {
           abbreviation?: string | null
           created_at?: string
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           society_name?: string
           updated_at?: string
@@ -1648,6 +1996,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_active: boolean | null
           name: string
           org_id: string | null
           phone: string | null
@@ -1663,6 +2012,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_active?: boolean | null
           name: string
           org_id?: string | null
           phone?: string | null
@@ -1678,6 +2028,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_active?: boolean | null
           name?: string
           org_id?: string | null
           phone?: string | null
@@ -1703,6 +2054,7 @@ export type Database = {
           description: string | null
           duration_months: number | null
           id: string
+          is_active: boolean | null
           org_id: string | null
           updated_at: string
           user_id: string
@@ -1713,6 +2065,7 @@ export type Database = {
           description?: string | null
           duration_months?: number | null
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           updated_at?: string
           user_id: string
@@ -1723,6 +2076,7 @@ export type Database = {
           description?: string | null
           duration_months?: number | null
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           updated_at?: string
           user_id?: string
@@ -1742,6 +2096,7 @@ export type Database = {
           created_at: string
           department: string | null
           id: string
+          is_active: boolean | null
           is_officer: boolean | null
           org_id: string | null
           rank_name: string
@@ -1753,6 +2108,7 @@ export type Database = {
           created_at?: string
           department?: string | null
           id?: string
+          is_active?: boolean | null
           is_officer?: boolean | null
           org_id?: string | null
           rank_name: string
@@ -1764,6 +2120,7 @@ export type Database = {
           created_at?: string
           department?: string | null
           id?: string
+          is_active?: boolean | null
           is_officer?: boolean | null
           org_id?: string | null
           rank_name?: string
@@ -1787,6 +2144,7 @@ export type Database = {
           currency_code: string
           currency_name: string
           id: string
+          is_active: boolean | null
           org_id: string | null
           symbol: string | null
           updated_at: string
@@ -1797,6 +2155,7 @@ export type Database = {
           currency_code: string
           currency_name: string
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           symbol?: string | null
           updated_at?: string
@@ -1807,6 +2166,7 @@ export type Database = {
           currency_code?: string
           currency_name?: string
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           symbol?: string | null
           updated_at?: string
@@ -1827,6 +2187,7 @@ export type Database = {
           color: string | null
           created_at: string
           id: string
+          is_active: boolean | null
           is_closed: boolean | null
           org_id: string | null
           status_name: string
@@ -1838,6 +2199,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           id?: string
+          is_active?: boolean | null
           is_closed?: boolean | null
           org_id?: string | null
           status_name: string
@@ -1849,6 +2211,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           id?: string
+          is_active?: boolean | null
           is_closed?: boolean | null
           org_id?: string | null
           status_name?: string
@@ -1873,6 +2236,7 @@ export type Database = {
           description: string | null
           finding_type_name: string
           id: string
+          is_active: boolean | null
           org_id: string | null
           severity: string | null
           updated_at: string
@@ -1884,6 +2248,7 @@ export type Database = {
           description?: string | null
           finding_type_name: string
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           severity?: string | null
           updated_at?: string
@@ -1895,6 +2260,7 @@ export type Database = {
           description?: string | null
           finding_type_name?: string
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           severity?: string | null
           updated_at?: string
@@ -1916,6 +2282,7 @@ export type Database = {
           flag_code: string | null
           flag_name: string
           id: string
+          is_active: boolean | null
           org_id: string | null
           risk_level: string | null
           updated_at: string
@@ -1926,6 +2293,7 @@ export type Database = {
           flag_code?: string | null
           flag_name: string
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           risk_level?: string | null
           updated_at?: string
@@ -1936,6 +2304,7 @@ export type Database = {
           flag_code?: string | null
           flag_name?: string
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           risk_level?: string | null
           updated_at?: string
@@ -1951,12 +2320,51 @@ export type Database = {
           },
         ]
       }
+      setup_incident_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_incident_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       setup_nationalities: {
         Row: {
           country_code: string | null
           country_name: string
           created_at: string
           id: string
+          is_active: boolean | null
           org_id: string | null
           updated_at: string
           user_id: string
@@ -1966,6 +2374,7 @@ export type Database = {
           country_name: string
           created_at?: string
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           updated_at?: string
           user_id: string
@@ -1975,6 +2384,7 @@ export type Database = {
           country_name?: string
           created_at?: string
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           updated_at?: string
           user_id?: string
@@ -1989,6 +2399,44 @@ export type Database = {
           },
         ]
       }
+      setup_project_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_project_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       setup_root_causes: {
         Row: {
           category: string | null
@@ -1996,6 +2444,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_active: boolean | null
           org_id: string | null
           updated_at: string
           user_id: string
@@ -2006,6 +2455,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           updated_at?: string
           user_id: string
@@ -2016,6 +2466,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_active?: boolean | null
           org_id?: string | null
           updated_at?: string
           user_id?: string
@@ -2063,9 +2514,11 @@ export type Database = {
           certificate_name: string
           certificate_number: string | null
           certificate_type: string
+          certificate_type_id: string | null
           cost: number | null
           created_at: string
           currency: string | null
+          currency_id: string | null
           document_url: string | null
           endorsement_details: string | null
           expiry_date: string
@@ -2094,9 +2547,11 @@ export type Database = {
           certificate_name: string
           certificate_number?: string | null
           certificate_type: string
+          certificate_type_id?: string | null
           cost?: number | null
           created_at?: string
           currency?: string | null
+          currency_id?: string | null
           document_url?: string | null
           endorsement_details?: string | null
           expiry_date: string
@@ -2125,9 +2580,11 @@ export type Database = {
           certificate_name?: string
           certificate_number?: string | null
           certificate_type?: string
+          certificate_type_id?: string | null
           cost?: number | null
           created_at?: string
           currency?: string | null
+          currency_id?: string | null
           document_url?: string | null
           endorsement_details?: string | null
           expiry_date?: string
@@ -2152,6 +2609,34 @@ export type Database = {
           vessel_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "vessel_certifications_certificate_type_id_fkey"
+            columns: ["certificate_type_id"]
+            isOneToOne: false
+            referencedRelation: "dropdown_certificate_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vessel_certifications_certificate_type_id_fkey"
+            columns: ["certificate_type_id"]
+            isOneToOne: false
+            referencedRelation: "setup_certificate_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vessel_certifications_currency_id_fkey"
+            columns: ["currency_id"]
+            isOneToOne: false
+            referencedRelation: "dropdown_currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vessel_certifications_currency_id_fkey"
+            columns: ["currency_id"]
+            isOneToOne: false
+            referencedRelation: "setup_currencies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vessel_certifications_org_id_fkey"
             columns: ["org_id"]
@@ -2377,9 +2862,11 @@ export type Database = {
           cargo_capacity: number | null
           class_number: string | null
           classification_society: string | null
+          classification_society_id: string | null
           created_at: string
           crew_capacity: number | null
           currency: string | null
+          currency_id: string | null
           deadweight: number | null
           delivery_date: string | null
           depth: number | null
@@ -2388,6 +2875,7 @@ export type Database = {
           engine_model: string | null
           engine_power: number | null
           flag_state: string | null
+          flag_state_id: string | null
           fuel_consumption: number | null
           fuel_type: string | null
           gross_tonnage: number | null
@@ -2438,9 +2926,11 @@ export type Database = {
           cargo_capacity?: number | null
           class_number?: string | null
           classification_society?: string | null
+          classification_society_id?: string | null
           created_at?: string
           crew_capacity?: number | null
           currency?: string | null
+          currency_id?: string | null
           deadweight?: number | null
           delivery_date?: string | null
           depth?: number | null
@@ -2449,6 +2939,7 @@ export type Database = {
           engine_model?: string | null
           engine_power?: number | null
           flag_state?: string | null
+          flag_state_id?: string | null
           fuel_consumption?: number | null
           fuel_type?: string | null
           gross_tonnage?: number | null
@@ -2499,9 +2990,11 @@ export type Database = {
           cargo_capacity?: number | null
           class_number?: string | null
           classification_society?: string | null
+          classification_society_id?: string | null
           created_at?: string
           crew_capacity?: number | null
           currency?: string | null
+          currency_id?: string | null
           deadweight?: number | null
           delivery_date?: string | null
           depth?: number | null
@@ -2510,6 +3003,7 @@ export type Database = {
           engine_model?: string | null
           engine_power?: number | null
           flag_state?: string | null
+          flag_state_id?: string | null
           fuel_consumption?: number | null
           fuel_type?: string | null
           gross_tonnage?: number | null
@@ -2554,6 +3048,48 @@ export type Database = {
           year_built?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "vessels_classification_society_id_fkey"
+            columns: ["classification_society_id"]
+            isOneToOne: false
+            referencedRelation: "dropdown_classification_societies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vessels_classification_society_id_fkey"
+            columns: ["classification_society_id"]
+            isOneToOne: false
+            referencedRelation: "setup_classification_societies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vessels_currency_id_fkey"
+            columns: ["currency_id"]
+            isOneToOne: false
+            referencedRelation: "dropdown_currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vessels_currency_id_fkey"
+            columns: ["currency_id"]
+            isOneToOne: false
+            referencedRelation: "setup_currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vessels_flag_state_id_fkey"
+            columns: ["flag_state_id"]
+            isOneToOne: false
+            referencedRelation: "dropdown_flag_states"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vessels_flag_state_id_fkey"
+            columns: ["flag_state_id"]
+            isOneToOne: false
+            referencedRelation: "setup_flag_states"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vessels_ism_manager_id_fkey"
             columns: ["ism_manager_id"]
@@ -2726,7 +3262,177 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      active_dropdown_options: {
+        Row: {
+          field: string | null
+          label: string | null
+          org_id: string | null
+          value: string | null
+        }
+        Relationships: []
+      }
+      dropdown_audit_types: {
+        Row: {
+          id: string | null
+          label: string | null
+          org_id: string | null
+          value: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_audit_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dropdown_certificate_types: {
+        Row: {
+          id: string | null
+          label: string | null
+          org_id: string | null
+          value: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_certificate_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dropdown_classification_societies: {
+        Row: {
+          id: string | null
+          label: string | null
+          org_id: string | null
+          value: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_classification_societies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dropdown_crew_ranks: {
+        Row: {
+          id: string | null
+          label: string | null
+          org_id: string | null
+          value: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_crew_ranks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dropdown_currencies: {
+        Row: {
+          id: string | null
+          label: string | null
+          org_id: string | null
+          value: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_currencies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dropdown_finding_types: {
+        Row: {
+          id: string | null
+          label: string | null
+          org_id: string | null
+          value: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_finding_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dropdown_flag_states: {
+        Row: {
+          id: string | null
+          label: string | null
+          org_id: string | null
+          value: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_flag_states_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dropdown_nationalities: {
+        Row: {
+          id: string | null
+          label: string | null
+          org_id: string | null
+          value: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_nationalities_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dropdown_root_causes: {
+        Row: {
+          id: string | null
+          label: string | null
+          org_id: string | null
+          value: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_root_causes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dropdown_setup_sources: {
+        Row: {
+          field: string | null
+          label_column: string | null
+          source_table: string | null
+          value_column: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       create_new_organization: {

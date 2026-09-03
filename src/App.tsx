@@ -8,6 +8,7 @@ import PublicVerify from "./pages/PublicVerify";
 import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 import McpApi from "./pages/McpApi";
+import Connect from "./pages/Connect";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/verify" element={<PublicVerify />} />
           <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="/mcp-api" element={<McpApi />} />
+          <Route path="/connect" element={<Connect />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
