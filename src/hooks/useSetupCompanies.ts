@@ -9,12 +9,13 @@ export interface SetupCompany {
   id: string;
   user_id: string;
   org_id?: string;
-  company_type: 'owner' | 'operator' | 'technical' | 'ism' | 'doc';
-  is_owner?: boolean;
-  is_operator?: boolean;
-  is_technical_manager?: boolean;
-  is_ism_manager?: boolean;
-  is_doc_issuer?: boolean;
+  company_type?: string | null;
+  is_owner?: boolean | null;
+  is_operator?: boolean | null;
+  is_technical_manager?: boolean | null;
+  is_ism_manager?: boolean | null;
+  is_doc_issuer?: boolean | null;
+  is_insurer?: boolean | null;
   name: string;
   contact_person: string | null;
   title: string | null;
@@ -29,15 +30,16 @@ export interface SetupCompany {
 export type CompanyInsert = Omit<SetupCompany, 'id' | 'created_at' | 'updated_at'>;
 export type CompanyUpdate = Partial<CompanyInsert> & { id: string };
 
-type CompanyRole = SetupCompany['company_type'];
-type RoleFlag = 'is_owner' | 'is_operator' | 'is_technical_manager' | 'is_ism_manager' | 'is_doc_issuer';
+export type CompanyRole = 'owner' | 'operator' | 'technical' | 'ism' | 'doc' | 'insurer';
+export type RoleFlag = 'is_owner' | 'is_operator' | 'is_technical_manager' | 'is_ism_manager' | 'is_doc_issuer' | 'is_insurer';
 
-const roleColumn: Record<CompanyRole, RoleFlag> = {
+export const roleColumn: Record<CompanyRole, RoleFlag> = {
   owner: 'is_owner',
   operator: 'is_operator',
   technical: 'is_technical_manager',
   ism: 'is_ism_manager',
   doc: 'is_doc_issuer',
+  insurer: 'is_insurer',
 };
 
 export const useSetupCompanies = (companyType?: CompanyRole) => {
@@ -62,10 +64,8 @@ export const useSetupCompanies = (companyType?: CompanyRole) => {
       const rows = (data || []) as SetupCompany[];
       if (!companyType) return rows;
 
-      // Prefer the new independent role flags. During the migration window,
-      // fall back to the legacy company_type so the UI remains compatible with
-      // databases that have not applied the new migration yet.
       const flag = roleColumn[companyType];
+      // Filter by the specific role flag. Legacy fallback if neither is set but legacy type matches.
       return rows.filter(company => Boolean(company[flag]) || company.company_type === companyType);
     },
     enabled: !!user?.id && !!orgId,
@@ -77,11 +77,7 @@ export const useSetupCompanies = (companyType?: CompanyRole) => {
       const { error: validationError } = validate(companySchema, company);
       if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
 
-      const role = company.company_type;
-      const roleFlag = roleColumn[role];
-
-      // Reuse an existing master record in this organization when the same
-      // company name is entered for another role.
+      // Check if company already exists by name
       const { data: existing, error: lookupError } = await supabase
         .from('setup_companies')
         .select('*')
@@ -93,18 +89,7 @@ export const useSetupCompanies = (companyType?: CompanyRole) => {
       if (lookupError) throw lookupError;
 
       if (existing) {
-        // The role flag is applied when the multi-role migration is available.
-        // If the database is still on the legacy schema, retain the existing
-        // record and do not fail the application because of the new field.
-        const { data: roleUpdated, error: roleUpdateError } = await supabase
-          .from('setup_companies')
-          .update({ [roleFlag]: true })
-          .eq('id', existing.id)
-          .select()
-          .single();
-
-        if (!roleUpdateError) return roleUpdated;
-
+        // Update existing company with new roles or details
         const { data, error } = await supabase
           .from('setup_companies')
           .update(company)
@@ -115,6 +100,7 @@ export const useSetupCompanies = (companyType?: CompanyRole) => {
         return data;
       }
 
+      // Insert new company
       const { data, error } = await supabase
         .from('setup_companies')
         .insert({ ...company, user_id: user.id, org_id: orgId })
@@ -122,22 +108,11 @@ export const useSetupCompanies = (companyType?: CompanyRole) => {
         .single();
 
       if (error) throw error;
-
-      // Apply the additional role after creation. This second write is
-      // intentionally best-effort so old databases remain functional until
-      // the migration is applied.
-      const { data: roleUpdated, error: roleUpdateError } = await supabase
-        .from('setup_companies')
-        .update({ [roleFlag]: true })
-        .eq('id', data.id)
-        .select()
-        .single();
-
-      return roleUpdateError ? data : roleUpdated;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['setup_companies'] });
-      toast({ title: 'Success', description: 'Company added successfully' });
+      toast({ title: 'Success', description: 'Company saved successfully' });
     },
     onError: (error: Error) => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });

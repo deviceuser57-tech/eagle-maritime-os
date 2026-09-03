@@ -174,11 +174,7 @@ const SetupPage = () => {
   const { entities, addEntity } = useDynamicSetupEntities();
 
   // Company hooks
-  const ownerCompanies = useSetupCompanies('owner');
-  const operatorCompanies = useSetupCompanies('operator');
-  const technicalManagers = useSetupCompanies('technical');
-  const ismManagers = useSetupCompanies('ism');
-  const docIssuers = useSetupCompanies('doc');
+  const companies = useSetupCompanies();
 
   // Crew config hooks
   const crewRanks = useCrewRanks();
@@ -201,55 +197,15 @@ const SetupPage = () => {
   const crewCerts = useCertificateTypes('crew');
 
   const setupConfigs: Record<string, SetupCardConfig & { data: any[]; isLoading: boolean; add: any; update: any; delete: any; }> = {
-    ownerCompanies: {
-      type: 'ownerCompanies', title: 'Owner Company',
-      headers: ['name', 'contact_person', 'phone', 'email'],
-      labels: ['Company Name', 'Contact Person', 'Phone', 'Email'],
+    companies: {
+      type: 'companies', title: 'Company',
+      headers: ['name', 'contact_person', 'phone', 'email', 'roles'],
+      labels: ['Company Name', 'Contact Person', 'Phone', 'Email', 'Roles'],
       dbFields: ['name', 'contact_person', 'phone', 'email'],
-      data: ownerCompanies.companies, isLoading: ownerCompanies.isLoading,
-      add: (data: any) => ownerCompanies.addCompany.mutateAsync({ ...data, company_type: 'owner' }),
-      update: (data: any) => ownerCompanies.updateCompany.mutate(data),
-      delete: (id: string) => ownerCompanies.deleteCompany.mutate(id)
-    },
-    operatorCompanies: {
-      type: 'operatorCompanies', title: 'Operator Company',
-      headers: ['name', 'contact_person', 'phone', 'email'],
-      labels: ['Company Name', 'Contact Person', 'Phone', 'Email'],
-      dbFields: ['name', 'contact_person', 'phone', 'email'],
-      data: operatorCompanies.companies, isLoading: operatorCompanies.isLoading,
-      add: (data: any) => operatorCompanies.addCompany.mutateAsync({ ...data, company_type: 'operator' }),
-      update: (data: any) => operatorCompanies.updateCompany.mutate(data),
-      delete: (id: string) => operatorCompanies.deleteCompany.mutate(id)
-    },
-    technicalManagers: {
-      type: 'technicalManagers', title: 'Technical Manager',
-      headers: ['name', 'contact_person', 'phone', 'email'],
-      labels: ['Manager Name', 'Contact Person', 'Phone', 'Email'],
-      dbFields: ['name', 'contact_person', 'phone', 'email'],
-      data: technicalManagers.companies, isLoading: technicalManagers.isLoading,
-      add: (data: any) => technicalManagers.addCompany.mutateAsync({ ...data, company_type: 'technical' }),
-      update: (data: any) => technicalManagers.updateCompany.mutate(data),
-      delete: (id: string) => technicalManagers.deleteCompany.mutate(id)
-    },
-    ismManagers: {
-      type: 'ismManagers', title: 'ISM Manager',
-      headers: ['name', 'contact_person', 'phone', 'email'],
-      labels: ['Manager Name', 'Contact Person', 'Phone', 'Email'],
-      dbFields: ['name', 'contact_person', 'phone', 'email'],
-      data: ismManagers.companies, isLoading: ismManagers.isLoading,
-      add: (data: any) => ismManagers.addCompany.mutateAsync({ ...data, company_type: 'ism' }),
-      update: (data: any) => ismManagers.updateCompany.mutate(data),
-      delete: (id: string) => ismManagers.deleteCompany.mutate(id)
-    },
-    docIssuers: {
-      type: 'docIssuers', title: 'DOC Issuer',
-      headers: ['name', 'contact_person', 'phone', 'email'],
-      labels: ['Issuer Name', 'Contact Person', 'Phone', 'Email'],
-      dbFields: ['name', 'contact_person', 'phone', 'email'],
-      data: docIssuers.companies, isLoading: docIssuers.isLoading,
-      add: (data: any) => docIssuers.addCompany.mutateAsync({ ...data, company_type: 'doc' }),
-      update: (data: any) => docIssuers.updateCompany.mutate(data),
-      delete: (id: string) => docIssuers.deleteCompany.mutate(id)
+      data: companies.companies, isLoading: companies.isLoading,
+      add: (data: any) => companies.addCompany.mutateAsync(data),
+      update: (data: any) => companies.updateCompany.mutate(data),
+      delete: (id: string) => companies.deleteCompany.mutate(id)
     },
     crewRanks: {
       type: 'crewRanks', title: 'Crew Rank',
@@ -523,7 +479,7 @@ const SetupPage = () => {
                     {data.map((item: any) =>
                       <tr key={item.id} className="group/row bg-white/50 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 transition-all duration-300 shadow-sm hover:shadow-md rounded-2xl">
                         {config.dbFields.map((field, fieldIndex) =>
-                          <td key={fieldIndex} className="py-4 px-4 text-sm font-medium text-foreground first:rounded-l-2xl last:rounded-r-2xl">
+                          <td key={fieldIndex} className="py-4 px-4 text-sm font-medium text-foreground first:rounded-l-2xl">
                             {editingItem?.type === configKey && editingItem?.id === item.id ?
                               <Input
                                 value={editingItem.data[field] || ''}
@@ -534,6 +490,18 @@ const SetupPage = () => {
                                 className="h-10 rounded-xl bg-background border-primary/20 focus:ring-primary/40 font-bold" /> :
                               <span className="group-hover/row:text-primary transition-colors">{item[field] || '-'}</span>
                             }
+                          </td>
+                        )}
+                        {configKey === 'companies' && (
+                          <td className="py-4 px-4 text-sm font-medium text-foreground">
+                            <div className="flex gap-1 flex-wrap max-w-[150px]">
+                              {item.is_owner && <Badge variant="outline" className="text-[10px]">Owner</Badge>}
+                              {item.is_operator && <Badge variant="outline" className="text-[10px]">Operator</Badge>}
+                              {item.is_technical_manager && <Badge variant="outline" className="text-[10px]">Technical</Badge>}
+                              {item.is_ism_manager && <Badge variant="outline" className="text-[10px]">ISM</Badge>}
+                              {item.is_doc_issuer && <Badge variant="outline" className="text-[10px]">DOC</Badge>}
+                              {item.is_insurer && <Badge variant="outline" className="text-[10px]">Insurer</Badge>}
+                            </div>
                           </td>
                         )}
                         <td className="py-4 px-4 text-right rounded-r-2xl">
@@ -617,6 +585,38 @@ const SetupPage = () => {
                   required={index === 0} />
               </div>
             )}
+            
+            {showAddForm.type === 'companies' && (
+              <div className="space-y-3 pt-2 border-t mt-4">
+                <Label>Roles</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="flex items-center space-x-2 text-sm">
+                    <input type="checkbox" checked={formData.is_owner || false} onChange={e => setFormData({...formData, is_owner: e.target.checked})} className="rounded border-gray-300" />
+                    <span>Owner</span>
+                  </label>
+                  <label className="flex items-center space-x-2 text-sm">
+                    <input type="checkbox" checked={formData.is_operator || false} onChange={e => setFormData({...formData, is_operator: e.target.checked})} className="rounded border-gray-300" />
+                    <span>Operator</span>
+                  </label>
+                  <label className="flex items-center space-x-2 text-sm">
+                    <input type="checkbox" checked={formData.is_technical_manager || false} onChange={e => setFormData({...formData, is_technical_manager: e.target.checked})} className="rounded border-gray-300" />
+                    <span>Technical Manager</span>
+                  </label>
+                  <label className="flex items-center space-x-2 text-sm">
+                    <input type="checkbox" checked={formData.is_ism_manager || false} onChange={e => setFormData({...formData, is_ism_manager: e.target.checked})} className="rounded border-gray-300" />
+                    <span>ISM Manager</span>
+                  </label>
+                  <label className="flex items-center space-x-2 text-sm">
+                    <input type="checkbox" checked={formData.is_doc_issuer || false} onChange={e => setFormData({...formData, is_doc_issuer: e.target.checked})} className="rounded border-gray-300" />
+                    <span>DOC Issuer</span>
+                  </label>
+                  <label className="flex items-center space-x-2 text-sm">
+                    <input type="checkbox" checked={formData.is_insurer || false} onChange={e => setFormData({...formData, is_insurer: e.target.checked})} className="rounded border-gray-300" />
+                    <span>Insurer</span>
+                  </label>
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-2 pt-4">
               <Button type="submit" className="btn-maritime flex-1">
@@ -686,16 +686,12 @@ const SetupPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
         {/* Company & Vessel Data */}
-        <div className="space-y-6">
+        <div className="space-y-6 lg:col-span-3">
           <div className="px-1 border-b border-border pb-3 mb-4">
-            <h3 className="text-base font-black uppercase tracking-tight">Company & Vessel Data</h3>
+            <h3 className="text-base font-black uppercase tracking-tight">Company Master Data</h3>
           </div>
           <div className="space-y-6">
-            {renderDataTable('ownerCompanies')}
-            {renderDataTable('operatorCompanies')}
-            {renderDataTable('technicalManagers')}
-            {renderDataTable('ismManagers')}
-            {renderDataTable('docIssuers')}
+            {renderDataTable('companies')}
           </div>
         </div>
 
