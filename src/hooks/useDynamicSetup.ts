@@ -48,7 +48,7 @@ export const useDynamicSetupEntities = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as DynamicSetupEntity[];
+        return data as unknown as DynamicSetupEntity[];
     },
     enabled: !!user?.id && !!orgId,
   });
@@ -58,7 +58,7 @@ export const useDynamicSetupEntities = () => {
       if (!user?.id || !orgId) throw new Error('User not authenticated or no active organization');
       const { data, error } = await supabase
         .from('dynamic_setup_entities')
-        .insert({ ...entity, org_id: orgId })
+        .insert({ ...entity, org_id: orgId, schema: entity.schema as unknown as any })
         .select()
         .single();
       if (error) throw error;
