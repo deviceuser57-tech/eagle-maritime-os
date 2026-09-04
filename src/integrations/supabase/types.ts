@@ -1809,6 +1809,41 @@ export type Database = {
         }
         Relationships: []
       }
+      setup_audit_specializations: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_audit_specializations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       setup_audit_types: {
         Row: {
           audit_type_name: string
@@ -1849,6 +1884,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "setup_audit_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_cargo_types: {
+        Row: {
+          created_at: string
+          hazard_class: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hazard_class?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hazard_class?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_cargo_types_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -1997,6 +2070,12 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean | null
+          is_doc_issuer: boolean
+          is_insurer: boolean | null
+          is_ism_manager: boolean
+          is_operator: boolean
+          is_owner: boolean
+          is_technical_manager: boolean
           name: string
           org_id: string | null
           phone: string | null
@@ -2013,6 +2092,12 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean | null
+          is_doc_issuer?: boolean
+          is_insurer?: boolean | null
+          is_ism_manager?: boolean
+          is_operator?: boolean
+          is_owner?: boolean
+          is_technical_manager?: boolean
           name: string
           org_id?: string | null
           phone?: string | null
@@ -2029,6 +2114,12 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean | null
+          is_doc_issuer?: boolean
+          is_insurer?: boolean | null
+          is_ism_manager?: boolean
+          is_operator?: boolean
+          is_owner?: boolean
+          is_technical_manager?: boolean
           name?: string
           org_id?: string | null
           phone?: string | null
@@ -2182,6 +2273,130 @@ export type Database = {
           },
         ]
       }
+      setup_engine_makers: {
+        Row: {
+          country: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          maker_name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          maker_name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          maker_name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_engine_makers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_engine_models: {
+        Row: {
+          created_at: string
+          engine_type: string | null
+          id: string
+          is_active: boolean
+          maker_id: string | null
+          model_name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          engine_type?: string | null
+          id?: string
+          is_active?: boolean
+          maker_id?: string | null
+          model_name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          engine_type?: string | null
+          id?: string
+          is_active?: boolean
+          maker_id?: string | null
+          model_name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_engine_models_maker_id_fkey"
+            columns: ["maker_id"]
+            isOneToOne: false
+            referencedRelation: "setup_engine_makers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "setup_engine_models_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_equipment_categories: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          parent_category: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          parent_category?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          parent_category?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_equipment_categories_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       setup_finding_statuses: {
         Row: {
           color: string | null
@@ -2320,6 +2535,117 @@ export type Database = {
           },
         ]
       }
+      setup_fuel_types: {
+        Row: {
+          abbreviation: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          abbreviation?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          abbreviation?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_fuel_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_hull_coatings: {
+        Row: {
+          coating_type: string
+          created_at: string
+          id: string
+          is_active: boolean
+          manufacturer: string | null
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          coating_type: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          manufacturer?: string | null
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          coating_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          manufacturer?: string | null
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_hull_coatings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_hull_materials: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_hull_materials_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       setup_incident_types: {
         Row: {
           created_at: string
@@ -2351,6 +2677,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "setup_incident_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_maintenance_task_types: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          org_id: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          org_id: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          org_id?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_maintenance_task_types_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -2399,6 +2763,47 @@ export type Database = {
           },
         ]
       }
+      setup_ports: {
+        Row: {
+          country: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          org_id: string
+          port_name: string
+          un_locode: string | null
+          updated_at: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          org_id: string
+          port_name: string
+          un_locode?: string | null
+          updated_at?: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          org_id?: string
+          port_name?: string
+          un_locode?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_ports_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       setup_project_types: {
         Row: {
           created_at: string
@@ -2430,6 +2835,114 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "setup_project_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_propulsion_types: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_propulsion_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_regulation_categories: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_regulation_categories_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_risk_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_risk_categories_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -2474,6 +2987,284 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "setup_root_causes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_severity_levels: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          order_index: number
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          order_index?: number
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          order_index?: number
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_severity_levels_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_shipyards: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          dock_type: string | null
+          id: string
+          is_active: boolean
+          org_id: string
+          updated_at: string
+          yard_name: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          dock_type?: string | null
+          id?: string
+          is_active?: boolean
+          org_id: string
+          updated_at?: string
+          yard_name: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          dock_type?: string | null
+          id?: string
+          is_active?: boolean
+          org_id?: string
+          updated_at?: string
+          yard_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_shipyards_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_survey_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_survey_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_surveyors: {
+        Row: {
+          company: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          license_number: string | null
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          license_number?: string | null
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          license_number?: string | null
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_surveyors_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_trading_areas: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_trading_areas_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_vessel_locations: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          label_ar: string | null
+          label_en: string
+          org_id: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label_ar?: string | null
+          label_en: string
+          org_id: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label_ar?: string | null
+          label_en?: string
+          org_id?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_vessel_locations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_vessel_types: {
+        Row: {
+          abbreviation: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          abbreviation?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          abbreviation?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_vessel_types_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -3462,6 +4253,7 @@ export type Database = {
           org_id: string
         }[]
       }
+      rpc_accept_invitation: { Args: { p_token: string }; Returns: Json }
       rpc_calculate_vessel_compliance: {
         Args: { p_vessel_id: string }
         Returns: Json
@@ -3488,6 +4280,7 @@ export type Database = {
         }
         Returns: Json
       }
+      rpc_preview_invitation: { Args: { p_token: string }; Returns: Json }
       rpc_safe_execute: {
         Args: { p_action: string; p_payload: Json }
         Returns: Json

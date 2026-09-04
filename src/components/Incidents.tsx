@@ -43,6 +43,8 @@ const Incidents = () => {
         { value: 'Commercial',   label: 'Commercial' },
       ];
 
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     title: '',
     incident_type: '',

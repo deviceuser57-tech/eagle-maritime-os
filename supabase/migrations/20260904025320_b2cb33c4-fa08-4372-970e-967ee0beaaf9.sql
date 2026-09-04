@@ -1,0 +1,11 @@
+ALTER VIEW public.dropdown_audit_types SET (security_invoker = true);
+ALTER VIEW public.dropdown_nationalities SET (security_invoker = true);
+ALTER VIEW public.dropdown_crew_ranks SET (security_invoker = true);
+ALTER VIEW public.dropdown_classification_societies SET (security_invoker = true);
+ALTER VIEW public.dropdown_flag_states SET (security_invoker = true);
+ALTER VIEW public.dropdown_currencies SET (security_invoker = true);
+ALTER VIEW public.dropdown_finding_types SET (security_invoker = true);
+ALTER VIEW public.dropdown_root_causes SET (security_invoker = true);
+ALTER VIEW public.dropdown_certificate_types SET (security_invoker = true);
+ALTER VIEW public.dropdown_setup_sources SET (security_invoker = true);
+ALTER VIEW public.active_dropdown_options SET (security_invoker = true);
