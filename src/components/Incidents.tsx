@@ -12,6 +12,7 @@ import { useIncidents } from '@/hooks/useIncidents';
 import { useSetupIncidentTypes } from '@/hooks/useSetupIncidentTypes';
 import { useVessels } from '@/hooks/useVessels';
 import { useRootCauses } from '@/hooks/useSetupAuditConfig';
+import { useSetupSeverityLevels, useSetupRiskCategories } from '@/hooks/useSetupVesselMasterData';
 import { format } from 'date-fns';
 
 const Incidents = () => {
@@ -19,7 +20,29 @@ const Incidents = () => {
   const { vessels } = useVessels();
   const { rootCauses } = useRootCauses();
   const { incidentTypes } = useSetupIncidentTypes();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { items: severityItems } = useSetupSeverityLevels();
+  const { items: riskCatItems }  = useSetupRiskCategories();
+
+  // Fallback defaults if org hasn't seeded setup tables yet
+  const severityOptions = severityItems.length > 0
+    ? severityItems.map(s => ({ value: s.name.toLowerCase(), label: s.name }))
+    : [
+        { value: 'minor',    label: 'Minor' },
+        { value: 'moderate', label: 'Moderate' },
+        { value: 'major',    label: 'Major' },
+        { value: 'critical', label: 'Critical' },
+      ];
+
+  const riskCategoryOptions = riskCatItems.length > 0
+    ? riskCatItems.map(r => ({ value: r.name, label: r.name }))
+    : [
+        { value: 'Operational',  label: 'Operational' },
+        { value: 'Environmental',label: 'Environmental' },
+        { value: 'Safety',       label: 'Technical/Safety' },
+        { value: 'Security',     label: 'Security/ISPS' },
+        { value: 'Commercial',   label: 'Commercial' },
+      ];
+
   const [formData, setFormData] = useState({
     title: '',
     incident_type: '',
@@ -146,10 +169,9 @@ const Incidents = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="minor">Minor</SelectItem>
-                      <SelectItem value="moderate">Moderate</SelectItem>
-                      <SelectItem value="major">Major</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
+                      {severityOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -211,11 +233,9 @@ const Incidents = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Operational">Operational</SelectItem>
-                      <SelectItem value="Environmental">Environmental</SelectItem>
-                      <SelectItem value="Safety">Technical/Safety</SelectItem>
-                      <SelectItem value="Security">Security/ISPS</SelectItem>
-                      <SelectItem value="Commercial">Commercial</SelectItem>
+                      {riskCategoryOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

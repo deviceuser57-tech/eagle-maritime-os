@@ -14,6 +14,17 @@ import { useVessels, Vessel } from '@/hooks/useVessels';
 import { useSetupCompanies } from '@/hooks/useSetupCompanies';
 import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
 import { useCurrencies } from '@/hooks/useSetupCrewConfig';
+import {
+  useSetupVesselTypes,
+  useSetupHullMaterials,
+  useSetupHullCoatings,
+  useSetupPropulsionTypes,
+  useSetupFuelTypes,
+  useSetupTradingAreas,
+  useSetupEngineMakers,
+  useSetupEngineModels,
+  useSetupShipyards,
+} from '@/hooks/useSetupVesselMasterData';
 import { useMaintenanceTasks } from '@/hooks/useMaintenanceTasks';
 import { useVesselRegulatoryPortfolio } from '@/hooks/useRegulations';
 import { useToast } from '@/hooks/use-toast';
@@ -249,18 +260,28 @@ const VesselManagement = () => {
   const crewConfigCurrencies = useCurrencies();
   const currencies = crewConfigCurrencies.currencies.map(c => c.currency_code);
 
-  // Dynamically load vessel types from statutory certificate types or general categories if needed
-  const vesselTypes = [
-    'Bulk Carrier', 'Container Ship', 'Crude Oil Tanker', 'Product Tanker',
-    'Chemical Tanker', 'LNG Carrier', 'LPG Carrier', 'General Cargo',
-    'Passenger Ship', 'RoRo Ship', 'Vehicle Carrier', 'Offshore Supply Vessel',
-    'Tugboat', 'Fishing Vessel', 'Yacht'
-  ];
+  // ── Dynamic master-data hooks (replaces hardcoded arrays) ──────────────
+  const { items: vesselTypeItems }     = useSetupVesselTypes();
+  const { items: hullMaterialItems }   = useSetupHullMaterials();
+  const { hullCoatings }               = useSetupHullCoatings();
+  const { items: propulsionTypeItems } = useSetupPropulsionTypes();
+  const { items: fuelTypeItems }       = useSetupFuelTypes();
+  const { items: tradingAreaItems }    = useSetupTradingAreas();
+  const { items: engineMakerItems }    = useSetupEngineMakers();
+  const { items: engineModelItems }    = useSetupEngineModels();
+  const { shipyards }                  = useSetupShipyards();
 
-  const propulsionTypes = ['Single Screw', 'Twin Screw', 'Diesel Electric', 'LNG Dual Fuel', 'Hybrid'];
-  const fuelTypes = ['HFO', 'VLSFO', 'MGO', 'LNG', 'Methanol', 'Dual Fuel'];
-  const hullMaterials = ['Steel', 'Aluminum', 'Fiberglass', 'Composite'];
-  const tradingAreas = ['Worldwide', 'Coastal', 'Short Sea', 'Inland Waterways', 'Restricted'];
+  // Build plain string arrays with safe fallbacks for orgs that haven't seeded yet
+  const vesselTypes    = vesselTypeItems.length    > 0 ? vesselTypeItems.map(t => t.name)                  : ['Bulk Carrier','Container Ship','Crude Oil Tanker','Product Tanker','Chemical Tanker','LNG Carrier','LPG Carrier','General Cargo','Passenger Ship','RoRo Ship','Vehicle Carrier','Offshore Supply Vessel','Tugboat','Fishing Vessel','Yacht'];
+  const hullMaterials  = hullMaterialItems.length  > 0 ? hullMaterialItems.map(m => m.name)                : ['Steel','Aluminum','Fiberglass','Composite'];
+  const hullCoatingOptions = hullCoatings.length   > 0 ? hullCoatings.map(c => c.coating_type)             : ['Epoxy','Antifouling','Polyurethane','Vinyl'];
+  const propulsionTypes = propulsionTypeItems.length > 0 ? propulsionTypeItems.map(p => p.name)            : ['Single Screw','Twin Screw','Diesel Electric','LNG Dual Fuel','Hybrid'];
+  const fuelTypes      = fuelTypeItems.length      > 0 ? fuelTypeItems.map(f => f.name)                    : ['HFO','VLSFO','MGO','LNG','Methanol','Dual Fuel'];
+  const tradingAreas   = tradingAreaItems.length   > 0 ? tradingAreaItems.map(a => a.name)                 : ['Worldwide','Coastal','Short Sea','Inland Waterways','Restricted'];
+  const engineMakers   = engineMakerItems.length   > 0 ? engineMakerItems.map(m => m.maker_name)           : [];
+  const engineModels   = engineModelItems.length   > 0 ? engineModelItems.map(m => m.model_name)           : [];
+  const shipyardOptions = shipyards.length         > 0 ? shipyards.map(s => s.yard_name)                  : [];
+
   const statusOptions = ['active', 'inactive', 'maintenance', 'drydock', 'laid_up'];
 
 
@@ -1129,14 +1150,20 @@ const VesselManagement = () => {
                       {renderFormField('draft', 'Draft (m)', formData.draft, (v) => setFormData({ ...formData, draft: v }), 'number')}
                       {renderFormField('cargo_capacity', 'Cargo Cap', formData.cargo_capacity, (v) => setFormData({ ...formData, cargo_capacity: v }), 'number')}
                       {renderSelectField('hull_material', 'Hull Mat', formData.hull_material, (v) => setFormData({ ...formData, hull_material: v }), hullMaterials)}
-                      {renderFormField('hull_coating', 'Hull Coating', formData.hull_coating, (v) => setFormData({ ...formData, hull_coating: v }))}
+                      {hullCoatingOptions.length > 0
+                        ? renderSelectField('hull_coating', 'Hull Coating', formData.hull_coating, (v) => setFormData({ ...formData, hull_coating: v }), hullCoatingOptions)
+                        : renderFormField('hull_coating', 'Hull Coating', formData.hull_coating, (v) => setFormData({ ...formData, hull_coating: v }))}
                     </div>
                   </TabsContent>
 
                   <TabsContent value="machinery" className="space-y-5 mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      {renderFormField('engine_make', 'Eng Make', formData.engine_make, (v) => setFormData({ ...formData, engine_make: v }))}
-                      {renderFormField('engine_model', 'Eng Model', formData.engine_model, (v) => setFormData({ ...formData, engine_model: v }))}
+                      {engineMakers.length > 0
+                        ? renderSelectField('engine_make', 'Eng Make', formData.engine_make, (v) => setFormData({ ...formData, engine_make: v }), engineMakers)
+                        : renderFormField('engine_make', 'Eng Make', formData.engine_make, (v) => setFormData({ ...formData, engine_make: v }))}
+                      {engineModels.length > 0
+                        ? renderSelectField('engine_model', 'Eng Model', formData.engine_model, (v) => setFormData({ ...formData, engine_model: v }), engineModels)
+                        : renderFormField('engine_model', 'Eng Model', formData.engine_model, (v) => setFormData({ ...formData, engine_model: v }))}
                       {renderFormField('engine_power', 'Power (kW)', formData.engine_power, (v) => setFormData({ ...formData, engine_power: v }), 'number')}
                       {renderSelectField('propulsion_type', 'Propulsion', formData.propulsion_type, (v) => setFormData({ ...formData, propulsion_type: v }), propulsionTypes)}
                       {renderFormField('max_speed', 'Max (kn)', formData.max_speed, (v) => setFormData({ ...formData, max_speed: v }), 'number')}
@@ -1160,7 +1187,9 @@ const VesselManagement = () => {
                   <TabsContent value="drydock" className="space-y-5 mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       {renderFormField('last_drydock_date', 'Previous DD Date', formData.last_drydock_date, (v) => setFormData({ ...formData, last_drydock_date: v }), 'date')}
-                      {renderFormField('previous_yard', 'Previous DD Yard', formData.previous_yard, (v) => setFormData({ ...formData, previous_yard: v }), 'text', 'Yard name...')}
+                      {shipyardOptions.length > 0
+                        ? renderSelectField('previous_yard', 'Previous DD Yard', formData.previous_yard, (v) => setFormData({ ...formData, previous_yard: v }), shipyardOptions)
+                        : renderFormField('previous_yard', 'Previous DD Yard', formData.previous_yard, (v) => setFormData({ ...formData, previous_yard: v }), 'text', 'Yard name...')}
                       {renderFormField('next_drydock_date', 'Next DD Date', formData.next_drydock_date, (v) => setFormData({ ...formData, next_drydock_date: v }), 'date')}
                     </div>
                     <div className="space-y-2">
