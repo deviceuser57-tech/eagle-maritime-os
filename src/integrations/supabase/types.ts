@@ -4253,6 +4253,7 @@ export type Database = {
           org_id: string
         }[]
       }
+      rpc_accept_invitation: { Args: { p_token: string }; Returns: Json }
       rpc_calculate_vessel_compliance: {
         Args: { p_vessel_id: string }
         Returns: Json
@@ -4279,6 +4280,7 @@ export type Database = {
         }
         Returns: Json
       }
+      rpc_preview_invitation: { Args: { p_token: string }; Returns: Json }
       rpc_safe_execute: {
         Args: { p_action: string; p_payload: Json }
         Returns: Json
