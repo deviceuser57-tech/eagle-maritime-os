@@ -25,7 +25,9 @@ const App = () => (
           <Route path="/verify" element={<PublicVerify />} />
           <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="/mcp-api" element={<McpApi />} />
+          <Route path="/mcp-tools" element={<McpTools />} />
           <Route path="/connect" element={<Connect />} />
+          <Route path="/join" element={<Join />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
