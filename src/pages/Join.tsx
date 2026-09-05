@@ -7,9 +7,9 @@ import { Loader2, ShieldCheck, Building2, AlertTriangle, ArrowRight } from 'luci
 import AuthPage from '@/components/AuthPage';
 
 type Preview = {
-  valid?: boolean;
+  success?: boolean;
   error?: string;
-  organization_name?: string;
+  org_name?: string;
   role?: string;
   email?: string;
   expires_at?: string;
@@ -40,7 +40,7 @@ const JoinInner = () => {
     else {
       const p = data as Preview;
       setPreview(p);
-      if (p && p.valid === false) setError(p.error ?? 'This invitation is no longer valid.');
+      if (p && p.success === false) setError(p.error ?? 'This invitation is no longer valid.');
     }
     setLoading(false);
   }, [token]);
@@ -84,7 +84,7 @@ const JoinInner = () => {
         <div className="max-w-md mx-auto pt-10 px-4 text-center">
           <p className="text-sm text-muted-foreground">
             Sign in or create an account with the invited email to join
-            {preview?.organization_name ? ` ${preview.organization_name}` : ' the organization'}.
+            {preview?.org_name ? ` ${preview.org_name}` : ' the organization'}.
           </p>
         </div>
         <AuthPage />
@@ -112,9 +112,9 @@ const JoinInner = () => {
           </div>
         )}
 
-        {preview?.valid && !accepted && (
+        {preview?.success && !accepted && (
           <div className="space-y-3 text-sm">
-            <Row label="Organization" value={preview.organization_name ?? '—'} />
+            <Row label="Organization" value={preview.org_name ?? '—'} />
             <Row label="Role" value={preview.role ?? 'Member'} />
             <Row label="Invited email" value={preview.email ?? '—'} />
             {preview.email && user.email && preview.email.toLowerCase() !== user.email.toLowerCase() && (
@@ -134,7 +134,7 @@ const JoinInner = () => {
             <div className="flex items-start gap-3 p-4 rounded-xl border border-primary/30 bg-primary/5">
               <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0" />
               <p className="text-sm text-foreground">
-                Your account is now linked to {preview?.organization_name ?? 'the organization'}.
+                Your account is now linked to {preview?.org_name ?? 'the organization'}.
               </p>
             </div>
             {counts && (
