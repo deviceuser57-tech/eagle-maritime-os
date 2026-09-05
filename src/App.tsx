@@ -8,7 +8,9 @@ import PublicVerify from "./pages/PublicVerify";
 import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 import McpApi from "./pages/McpApi";
+import McpTools from "./pages/McpTools";
 import Connect from "./pages/Connect";
+import Join from "./pages/Join";
 
 const queryClient = new QueryClient();
 
