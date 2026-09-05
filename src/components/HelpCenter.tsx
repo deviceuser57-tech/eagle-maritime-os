@@ -1,4 +1,4 @@
-import { FileText, FileDown, HelpCircle, LifeBuoy, BookOpen, MessageSquare, Terminal } from 'lucide-react';
+import { FileText, FileDown, HelpCircle, LifeBuoy, BookOpen, MessageSquare, Terminal, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const GUIDE_PDF = '/guides/Eagle-Maritime-OS-User-Guide.pdf';
@@ -76,7 +76,7 @@ const HelpCenter = () => {
 
         <Link
           to="/mcp-api"
-          className="group flex items-start gap-4 p-6 rounded-2xl border border-border bg-card hover:border-primary hover:shadow-lg transition-all sm:col-span-2 md:col-span-1"
+          className="group flex items-start gap-4 p-6 rounded-2xl border border-border bg-card hover:border-primary hover:shadow-lg transition-all"
         >
           <div className="p-3 rounded-xl bg-purple-500/10 text-purple-500">
             <Terminal className="h-6 w-6" />
@@ -86,6 +86,24 @@ const HelpCenter = () => {
             <p className="text-sm text-muted-foreground mt-1">Test the 7 AI tools locally via HTTP.</p>
             <span className="inline-block mt-3 text-xs font-bold uppercase tracking-widest text-primary group-hover:underline">
               View API →
+            </span>
+          </div>
+        </Link>
+
+        <Link
+          to="/join"
+          className="group flex items-start gap-4 p-6 rounded-2xl border border-border bg-card hover:border-primary hover:shadow-lg transition-all"
+        >
+          <div className="p-3 rounded-xl bg-accent/20 text-accent-foreground">
+            <UserPlus className="h-6 w-6" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-foreground">Join an organization</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Open your invitation link to connect your account to a client organization and see its records.
+            </p>
+            <span className="inline-block mt-3 text-xs font-bold uppercase tracking-widest text-primary group-hover:underline">
+              Link my account →
             </span>
           </div>
         </Link>
