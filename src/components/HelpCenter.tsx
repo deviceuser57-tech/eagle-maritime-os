@@ -1,4 +1,4 @@
-import { FileText, FileDown, HelpCircle, LifeBuoy, BookOpen, MessageSquare, Terminal } from 'lucide-react';
+import { FileText, FileDown, HelpCircle, LifeBuoy, BookOpen, MessageSquare, Terminal, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const GUIDE_PDF = '/guides/Eagle-Maritime-OS-User-Guide.pdf';
