@@ -17,7 +17,48 @@ serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceKey   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const anonKey      = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+  // ──────────────────────────────────────────
+  // Authentication: either an internal cron/service
+  // caller presenting the service-role key, or a
+  // signed-in user who is an admin of some org.
+  // ──────────────────────────────────────────
+  const authHeader = req.headers.get('Authorization') ?? '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+
+  const unauthorized = () =>
+    new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 401,
+    });
+
+  if (!token) return unauthorized();
+
   const sb = createClient(supabaseUrl, serviceKey);
+
+  if (token !== serviceKey) {
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: userData, error: userErr } = await authClient.auth.getUser();
+    if (userErr || !userData?.user) return unauthorized();
+
+    // Must be an admin/super admin of at least one organization
+    const { data: adminRows, error: adminErr } = await sb
+      .from('organization_members')
+      .select('org_id, org_roles!inner(name)')
+      .eq('user_id', userData.user.id)
+      .in('org_roles.name', ['Super Admin', 'Admin'])
+      .limit(1);
+
+    if (adminErr || !adminRows || adminRows.length === 0) {
+      return new Response(JSON.stringify({ ok: false, error: 'Forbidden' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403,
+      });
+    }
+  }
 
   try {
     const payload: ScanPayload = req.method === 'POST'
