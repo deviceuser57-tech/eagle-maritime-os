@@ -82,111 +82,70 @@
     --shadow-maritime: 0 20px 40px -15px rgba(15, 30, 60, 0.1);
     --shadow-glow: 0 0 20px rgba(38, 55, 45, 0.12);
 
-    /* Typography Overrides */
-    --font-sans: 'Lato', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
-    --font-heading: 'Space Grotesk', system-ui, sans-serif;
+    /* Typography Overrides: Title: Outfit, Body: Figtree */
+    --font-sans: 'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Outfit', system-ui, sans-serif;
 
     --spacing: 0.25rem;
 
     --chart-1: 220 60% 40%;
-
     --chart-2: 38 55% 50%;
-
     --chart-3: 220 40% 55%;
-
     --chart-4: 38 40% 40%;
-
     --chart-5: 220 10% 45%;
 
     --sidebar: 220 30% 97%;
-
     --sidebar-foreground: 220 40% 10%;
-
     --sidebar-primary: 220 60% 25%;
-
     --sidebar-primary-foreground: 40 30% 92%;
-
     --sidebar-accent: 38 55% 45%;
-
     --sidebar-accent-foreground: 220 40% 10%;
-
     --sidebar-border: 220 15% 82%;
-
     --sidebar-ring: 220 60% 25%;
 
-    --font-serif: 'EB Garamond', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-
-    --font-mono: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --font-serif: 'EB Garamond', ui-serif, Georgia, serif;
+    --font-mono: 'Fira Code', ui-monospace, SFMono-Regular, monospace;
 
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-
     --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-
     --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-
     --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-
     --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-
     --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-
     --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
-
     --tracking-normal: 0em;
   }
 
   .dark {
-    --background: 220 30% 8%;
-    --foreground: 220 10% 95%;
-    --card: 220 25% 13%;
-    --card-foreground: 220 10% 95%;
-    --popover: 220 20% 18%;
-    --popover-foreground: 220 10% 95%;
-    --primary: 220 50% 55%;
-    --primary-foreground: 220 40% 10%;
-    --secondary: 220 10% 40%;
-    --secondary-foreground: 220 10% 95%;
-    --muted: 220 10% 35%;
-    --muted-foreground: 220 10% 80%;
-    --accent: 38 40% 18%;
-    --accent-foreground: 38 55% 60%;
+    --background: 218 35% 8%;
+    --foreground: 215 25% 95%;
+    --card: 218 30% 12%;
+    --card-foreground: 215 25% 95%;
+    --popover: 218 25% 15%;
+    --popover-foreground: 215 25% 95%;
+    --primary: 196 90% 45%;
+    --primary-foreground: 218 35% 8%;
+    --secondary: 215 20% 30%;
+    --secondary-foreground: 215 25% 95%;
+    --muted: 218 20% 25%;
+    --muted-foreground: 215 15% 75%;
+    --accent: 196 40% 18%;
+    --accent-foreground: 196 90% 60%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 85% 97%;
-    --border: 220 15% 22%;
-    --input: 220 15% 22%;
-    --ring: 220 50% 55%;
+    --border: 218 20% 20%;
+    --input: 218 20% 20%;
+    --ring: 196 90% 45%;
 
-    /* Dark maritime colors */
-    --ocean-blue: 220 50% 60%;
-    --deep-sea: 220 40% 80%;
-    --maritime-accent: 38 55% 55%;
-    --sea-foam: 220 20% 20%;
-    --anchor-gray: 220 10% 50%;
-    --gold: 38 60% 55%;
-    --navy: 220 50% 20%;
-    --chart-1: 220 50% 60%;
-    --chart-2: 38 55% 60%;
-    --chart-3: 220 35% 65%;
-    --chart-4: 38 40% 50%;
-    --chart-5: 220 10% 50%;
-    --sidebar: 220 25% 12%;
-    --sidebar-foreground: 220 10% 95%;
-    --sidebar-primary: 220 50% 55%;
-    --sidebar-primary-foreground: 220 40% 10%;
-    --sidebar-accent: 38 55% 55%;
-    --sidebar-accent-foreground: 220 10% 95%;
-    --sidebar-border: 220 15% 22%;
-    --sidebar-ring: 220 50% 55%;
-    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+    /* Dark maritime Sea Glass palette */
+    --ocean-blue: 196 85% 50%;
+    --deep-sea: 218 40% 85%;
+    --maritime-accent: 180 80% 45%;
+    --sea-foam: 218 20% 16%;
+    --anchor-gray: 218 10% 50%;
+    --gold: 38 75% 55%;
+    --navy: 218 50% 15%;
   }
 }
 
@@ -195,95 +154,89 @@
     @apply border-border;
   }
 
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', var(--font-heading), sans-serif;
+  }
+
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: var(--font-sans);
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Figtree', var(--font-sans), sans-serif;
     background: hsl(var(--background));
   }
 }
 
 @layer components {
 
-  /* Maritime Navigation Styles - Translucent & Elegant */
-  .maritime-sidebar {
-    @apply border-r border-border backdrop-blur-3xl transition-all duration-500 ease-in-out;
-    background: hsl(var(--card));
+  /* Sea Colorful Glassmorphism Styles */
+  .sea-glass-card {
+    @apply rounded-2xl border border-cyan-500/20 bg-background/60 backdrop-blur-2xl transition-all duration-300 shadow-xl hover:shadow-cyan-500/10 hover:border-cyan-400/40 relative overflow-hidden;
   }
 
-  .dark .maritime-sidebar {
+  .sea-vivid-gradient {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(14, 165, 233, 0.1) 50%, rgba(59, 130, 246, 0.05) 100%);
+  }
+
+  .dense-modular-zone {
+    @apply p-5 rounded-2xl border border-border/80 bg-card/70 backdrop-blur-xl space-y-4 hover:border-primary/30 transition-all;
+  }
+
+  /* Maritime Navigation Styles */
+  .maritime-sidebar {
+    @apply border-r border-border/60 backdrop-blur-3xl transition-all duration-500 ease-in-out;
     background: hsl(var(--card));
-    @apply border-border;
   }
 
   .maritime-nav-link {
-    @apply flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-300 relative truncate;
+    @apply flex items-center px-4 py-3 text-xs font-semibold rounded-xl transition-all duration-300 relative truncate tracking-wider uppercase;
+    font-family: 'Outfit', sans-serif;
     color: hsl(var(--muted-foreground));
   }
 
   .maritime-nav-link:hover {
-    @apply bg-primary/5 text-primary scale-[1.01];
+    @apply bg-primary/10 text-primary scale-[1.01];
   }
 
   .maritime-nav-link.active {
-    @apply bg-primary/10 text-primary font-bold shadow-sm border-l-2 border-primary;
+    @apply bg-primary/15 text-primary font-black shadow-sm border-l-4 border-primary;
   }
 
-  .dark .maritime-nav-link.active {
-    @apply bg-primary/20 text-white border-primary shadow-sm;
-  }
-
-  /* Maritime Cards - Sophisticated Depth */
+  /* Maritime Cards */
   .maritime-card {
-    @apply rounded-2xl border border-border bg-card text-card-foreground transition-all duration-500 shadow-sm relative overflow-hidden;
+    @apply rounded-2xl border border-border/70 bg-card/80 backdrop-blur-xl text-card-foreground transition-all duration-500 shadow-sm relative overflow-hidden;
   }
 
   .maritime-card:hover {
-    @apply transform -translate-y-1 border-primary/20;
-    box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.1);
+    @apply transform -translate-y-0.5 border-primary/30 shadow-lg;
   }
 
-  .dark .maritime-card {
-    @apply bg-card border-border shadow-none;
-  }
-
-  /* Status Badges - Vivid & Precise */
+  /* Status Badges */
   .status-valid {
-    @apply bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 font-bold px-3 py-0.5 rounded-full text-[11px];
+    @apply bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300 font-bold px-3 py-0.5 rounded-full text-[11px] uppercase tracking-wider;
   }
 
   .status-warning {
-    @apply bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 font-bold px-3 py-0.5 rounded-full text-[11px];
+    @apply bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 font-bold px-3 py-0.5 rounded-full text-[11px] uppercase tracking-wider;
   }
 
   .status-expired {
-    @apply bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 font-bold px-3 py-0.5 rounded-full text-[11px];
+    @apply bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300 font-bold px-3 py-0.5 rounded-full text-[11px] uppercase tracking-wider;
   }
 
   .status-critical {
-    @apply bg-red-600 text-white dark:bg-red-500 dark:text-white font-bold px-3 py-1 rounded-full shadow-md text-[11px] tracking-wide;
+    @apply bg-red-600 text-white dark:bg-red-500 dark:text-white font-black px-3 py-1 rounded-full shadow-md text-[11px] tracking-widest uppercase;
   }
 
-  /* Maritime Button Variants */
+  /* Maritime Buttons */
   .btn-maritime {
-    @apply text-white font-semibold transition-all duration-300 shadow-md shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] rounded-xl;
-    background: var(--gradient-primary);
+    @apply text-white font-bold transition-all duration-300 shadow-md shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.01] active:scale-[0.99] rounded-xl tracking-wider uppercase text-xs;
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
   }
 
   .btn-ocean {
-    @apply border border-primary/20 text-primary hover:bg-primary hover:text-white transition-all duration-300 rounded-xl font-semibold px-5;
-  }
-
-  /* Modern Utilities */
-  .preserve-3d {
-    transform-style: preserve-3d;
-  }
-
-  .perspective-1200 {
-    perspective: 1200px;
+    @apply border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/10 transition-all duration-300 rounded-xl font-bold px-5 uppercase tracking-wider text-xs;
   }
 
   .glass-panel {
-    @apply backdrop-blur-md border border-white/20 dark:border-white/10;
-    background: rgba(255, 255, 255, 0.03);
+    @apply backdrop-blur-xl border border-cyan-500/20 bg-cyan-950/20 dark:bg-cyan-950/40;
   }
 }

@@ -14,6 +14,7 @@ import { useVessels } from '@/hooks/useVessels';
 import { useCurrencies } from '@/hooks/useSetupCrewConfig';
 import { useCertificateTypes } from '@/hooks/useSetupCertificates';
 import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
+import { useSetupSurveyTypes, useSetupSurveyors } from '@/hooks/useSetupVesselMasterData';
 import {
   DEFAULT_STATUTORY_CERTIFICATES,
   DEFAULT_DOC_ISSUERS,
@@ -32,6 +33,12 @@ const VesselsCertification = () => {
   const { certificateTypes } = useCertificateTypes();
   const { societies } = useClassificationSocieties();
   const { flagStates } = useFlagStates();
+  const { items: dbSurveyTypes } = useSetupSurveyTypes();
+  const { surveyors: dbSurveyors } = useSetupSurveyors();
+
+  const surveyTypeOptions = dbSurveyTypes.length > 0
+    ? dbSurveyTypes.map(s => s.name)
+    : ['Initial', 'Annual', 'Intermediate', 'Renewal', 'Special', 'Additional'];
 
   const certTypeOptions = certificateTypes.length > 0
     ? certificateTypes.map(c => c.certificate_name)
@@ -292,24 +299,34 @@ const VesselsCertification = () => {
                           <SelectValue placeholder="Select survey type" />
                         </SelectTrigger>
                         <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
-                          <SelectItem value="Initial">Initial Survey</SelectItem>
-                          <SelectItem value="Annual">Annual Survey</SelectItem>
-                          <SelectItem value="Intermediate">Intermediate Survey</SelectItem>
-                          <SelectItem value="Renewal">Renewal Survey</SelectItem>
-                          <SelectItem value="Special">Special Survey</SelectItem>
-                          <SelectItem value="Additional">Additional Survey</SelectItem>
+                          {surveyTypeOptions.map((st) => (
+                            <SelectItem key={st} value={st}>{st} Survey</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="surveyor_name" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Surveyor Name</Label>
-                      <Input
-                        id="surveyor_name"
-                        value={formData.surveyor_name}
-                        onChange={(e) => setFormData({ ...formData, surveyor_name: e.target.value })}
-                        placeholder="e.g., John Smith"
-                        className="rounded-xl border-border bg-background/50 h-12"
-                      />
+                      {dbSurveyors.length > 0 ? (
+                        <Select value={formData.surveyor_name} onValueChange={(v) => setFormData({ ...formData, surveyor_name: v })}>
+                          <SelectTrigger className="rounded-xl border-border bg-background/50 h-12">
+                            <SelectValue placeholder="Select surveyor" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
+                            {dbSurveyors.map(s => (
+                              <SelectItem key={s.id} value={s.name}>{s.name} {s.company ? `(${s.company})` : ''}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id="surveyor_name"
+                          value={formData.surveyor_name}
+                          onChange={(e) => setFormData({ ...formData, surveyor_name: e.target.value })}
+                          placeholder="e.g., John Smith"
+                          className="rounded-xl border-border bg-background/50 h-12"
+                        />
+                      )}
                     </div>
                   </div>
 

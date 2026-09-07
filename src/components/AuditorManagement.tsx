@@ -9,12 +9,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { UserCheck, ClipboardCheck, Star, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useAuditors } from '@/hooks/useAuditors';
 import { useAudits } from '@/hooks/useAudits';
+import { useSetupAuditSpecializations } from '@/hooks/useSetupVesselMasterData';
 import { useToast } from '@/hooks/use-toast';
 
 const AuditorManagement = () => {
   const { toast } = useToast();
   const { auditors, loading, addAuditor, deleteAuditor } = useAuditors();
   const { audits } = useAudits();
+  const { items: dbSpecs } = useSetupAuditSpecializations();
+
+  const specializationOptions = dbSpecs.length > 0
+    ? dbSpecs.map(s => s.name)
+    : ['ISM/ISPS', 'Environmental', 'Safety Management', 'Technical', 'MLC', 'Vetting'];
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -123,12 +129,9 @@ const AuditorManagement = () => {
                     <SelectValue placeholder="Select specialization" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ISM/ISPS">ISM/ISPS</SelectItem>
-                    <SelectItem value="Environmental">Environmental</SelectItem>
-                    <SelectItem value="Safety Management">Safety Management</SelectItem>
-                    <SelectItem value="Technical">Technical</SelectItem>
-                    <SelectItem value="MLC">MLC</SelectItem>
-                    <SelectItem value="Vetting">Vetting</SelectItem>
+                    {specializationOptions.map(spec => (
+                      <SelectItem key={spec} value={spec}>{spec}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
