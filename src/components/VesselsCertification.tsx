@@ -14,6 +14,11 @@ import { useVessels } from '@/hooks/useVessels';
 import { useCurrencies } from '@/hooks/useSetupCrewConfig';
 import { useCertificateTypes } from '@/hooks/useSetupCertificates';
 import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
+import {
+  DEFAULT_STATUTORY_CERTIFICATES,
+  DEFAULT_DOC_ISSUERS,
+  DEFAULT_CURRENCIES,
+} from '@/constants/dropdownOptions';
 import { useToast } from '@/hooks/use-toast';
 import { format, differenceInDays } from 'date-fns';
 import { VerificationQR } from './compliance/VerificationQR';
@@ -28,12 +33,22 @@ const VesselsCertification = () => {
   const { societies } = useClassificationSocieties();
   const { flagStates } = useFlagStates();
 
-  const authorityOptions = Array.from(new Set([
+  const certTypeOptions = certificateTypes.length > 0
+    ? certificateTypes.map(c => c.certificate_name)
+    : DEFAULT_STATUTORY_CERTIFICATES;
+
+  const rawAuthorityOptions = Array.from(new Set([
     ...societies.map(s => s.society_name),
     ...flagStates.map(f => f.flag_name)
   ].filter(Boolean)));
 
-  const currencyOptions = currencies.map((c) => ({ code: c.currency_code, label: `${c.currency_code} - ${c.currency_name}` }));
+  const authorityOptions = rawAuthorityOptions.length > 0
+    ? rawAuthorityOptions
+    : DEFAULT_DOC_ISSUERS;
+
+  const currencyOptions = currencies.length > 0
+    ? currencies.map((c) => ({ code: c.currency_code, label: `${c.currency_code} - ${c.currency_name}` }))
+    : DEFAULT_CURRENCIES.map((c) => ({ code: c.code, label: `${c.code} - ${c.name}` }));
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     vessel_id: '',
@@ -186,8 +201,8 @@ const VesselsCertification = () => {
                           <SelectValue placeholder="Select classification" />
                         </SelectTrigger>
                         <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
-                          {certificateTypes.map((c) => (
-                            <SelectItem key={c.id} value={c.certificate_name}>{c.certificate_name}</SelectItem>
+                          {certTypeOptions.map((name) => (
+                            <SelectItem key={name} value={name}>{name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

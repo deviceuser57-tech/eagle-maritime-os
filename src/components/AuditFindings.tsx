@@ -11,6 +11,11 @@ import { AlertTriangle, AlertCircle, Info, Plus, Loader2, Trash2 } from 'lucide-
 import { useCorrectiveActions } from '@/hooks/useCorrectiveActions';
 import { useAudits } from '@/hooks/useAudits';
 import { useFindingTypes, useFindingStatuses, useRootCauses } from '@/hooks/useSetupAuditConfig';
+import {
+  DEFAULT_FINDING_TYPES,
+  DEFAULT_FINDING_STATUSES,
+  DEFAULT_ROOT_CAUSES,
+} from '@/constants/dropdownOptions';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -27,9 +32,17 @@ const AuditFindings = () => {
   const [filter, setFilter] = useState('all');
 
   // Operational reference options are sourced exclusively from Setup Metadata.
-  const findingTypeOptions   = findingTypes.map(t => t.finding_type_name);
-  const findingStatusOptions = findingStatuses.map(s => s.status_name);
-  const rootCauseOptions     = rootCauses.map(r => r.cause_name);
+  const findingTypeOptions = findingTypes.length > 0
+    ? findingTypes.map(t => t.finding_type_name)
+    : DEFAULT_FINDING_TYPES;
+
+  const findingStatusOptions = findingStatuses.length > 0
+    ? findingStatuses.map(s => s.status_name)
+    : DEFAULT_FINDING_STATUSES;
+
+  const rootCauseOptions = rootCauses.length > 0
+    ? rootCauses.map(r => r.cause_name)
+    : DEFAULT_ROOT_CAUSES;
 
   // Stats
   const criticalCount = correctiveActions.filter(a => a.status === 'open' && a.due_date && new Date(a.due_date) < new Date()).length;

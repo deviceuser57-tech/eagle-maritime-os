@@ -11,6 +11,7 @@ import { useAudits } from '@/hooks/useAudits';
 import { useVessels } from '@/hooks/useVessels';
 import { useAuditors } from '@/hooks/useAuditors';
 import { useAuditTypes } from '@/hooks/useSetupAuditConfig';
+import { DEFAULT_AUDIT_TYPES } from '@/constants/dropdownOptions';
 import { format, isAfter, startOfMonth, endOfMonth } from 'date-fns';
 
 
@@ -19,7 +20,9 @@ const AuditPlan = () => {
   const { vessels } = useVessels();
   const { auditors } = useAuditors();
   const { auditTypes } = useAuditTypes();
-  const auditTypeOptions = auditTypes.map((t) => t.audit_type_name);
+  const auditTypeOptions = auditTypes.length > 0
+    ? auditTypes.map((t) => t.audit_type_name)
+    : DEFAULT_AUDIT_TYPES;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     audit_type: '',

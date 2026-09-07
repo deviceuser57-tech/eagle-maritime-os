@@ -12,6 +12,7 @@ import { Users, Award, Stethoscope, Plus, Loader2, Trash2, Camera } from 'lucide
 import { useCrewMembers } from '@/hooks/useCrewMembers';
 import { useVessels } from '@/hooks/useVessels';
 import { useNationalities, useCrewRanks } from '@/hooks/useSetupCrewConfig';
+import { DEFAULT_CREW_RANKS, DEFAULT_NATIONALITIES } from '@/constants/dropdownOptions';
 import { format } from 'date-fns';
 
 const CrewManagement = () => {
@@ -19,6 +20,9 @@ const CrewManagement = () => {
   const { vessels } = useVessels();
   const { nationalities } = useNationalities();
   const { ranks } = useCrewRanks();
+
+  const rankOptions = ranks.length > 0 ? ranks.map(r => r.rank_name) : DEFAULT_CREW_RANKS;
+  const nationalityOptions = nationalities.length > 0 ? nationalities.map(n => n.country_name) : DEFAULT_NATIONALITIES;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -181,8 +185,8 @@ const CrewManagement = () => {
                       <SelectValue placeholder="Select rank" />
                     </SelectTrigger>
                     <SelectContent>
-                      {ranks.map((r) => (
-                        <SelectItem key={r.id} value={r.rank_name}>{r.rank_name}</SelectItem>
+                      {rankOptions.map((r) => (
+                        <SelectItem key={r} value={r}>{r}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -219,27 +223,19 @@ const CrewManagement = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="nationality">Nationality</Label>
-                  {nationalities.length > 0 ? (
-                    <Select
-                      value={formData.nationality}
-                      onValueChange={(v) => setFormData({ ...formData, nationality: v })}
-                    >
-                      <SelectTrigger id="nationality">
-                        <SelectValue placeholder="Select nationality" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {nationalities.map((n) => (
-                          <SelectItem key={n.id} value={n.country_name}>{n.country_name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input
-                      id="nationality"
-                      value={formData.nationality}
-                      onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                    />
-                  )}
+                  <Select
+                    value={formData.nationality}
+                    onValueChange={(v) => setFormData({ ...formData, nationality: v })}
+                  >
+                    <SelectTrigger id="nationality">
+                      <SelectValue placeholder="Select nationality" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {nationalityOptions.map((n) => (
+                        <SelectItem key={n} value={n}>{n}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">

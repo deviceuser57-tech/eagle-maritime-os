@@ -15,6 +15,15 @@ import { useSetupCompanies } from '@/hooks/useSetupCompanies';
 import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
 import { useCurrencies } from '@/hooks/useSetupCrewConfig';
 import {
+  DEFAULT_OWNER_COMPANIES,
+  DEFAULT_OPERATOR_COMPANIES,
+  DEFAULT_TECHNICAL_MANAGERS,
+  DEFAULT_ISM_MANAGERS,
+  DEFAULT_CLASSIFICATION_SOCIETIES,
+  DEFAULT_FLAG_STATES,
+  DEFAULT_CURRENCIES,
+} from '@/constants/dropdownOptions';
+import {
   useSetupVesselTypes,
   useSetupHullMaterials,
   useSetupHullCoatings,
@@ -258,7 +267,25 @@ const VesselManagement = () => {
 
   // Dynamically load currencies from system setup
   const crewConfigCurrencies = useCurrencies();
-  const currencies = crewConfigCurrencies.currencies.map(c => c.currency_code);
+  const currencies = crewConfigCurrencies.currencies.length > 0
+    ? crewConfigCurrencies.currencies.map(c => c.currency_code)
+    : DEFAULT_CURRENCIES.map(c => c.code);
+
+  const ownerCompanyOptions = ownerCompanies.length > 0
+    ? ownerCompanies.map(c => ({ value: c.id, label: c.name }))
+    : DEFAULT_OWNER_COMPANIES.map(name => ({ value: name, label: name }));
+
+  const operatorCompanyOptions = operatorCompanies.length > 0
+    ? operatorCompanies.map(c => ({ value: c.id, label: c.name }))
+    : DEFAULT_OPERATOR_COMPANIES.map(name => ({ value: name, label: name }));
+
+  const technicalManagerOptions = technicalManagers.length > 0
+    ? technicalManagers.map(c => ({ value: c.id, label: c.name }))
+    : DEFAULT_TECHNICAL_MANAGERS.map(name => ({ value: name, label: name }));
+
+  const ismManagerOptions = ismManagers.length > 0
+    ? ismManagers.map(c => ({ value: c.id, label: c.name }))
+    : DEFAULT_ISM_MANAGERS.map(name => ({ value: name, label: name }));
 
   // ── Dynamic master-data hooks (replaces hardcoded arrays) ──────────────
   const { items: vesselTypeItems }     = useSetupVesselTypes();
@@ -1125,14 +1152,14 @@ const VesselManagement = () => {
                       {renderSelectField('flag_state', 'Flag', formData.flag_state, (v) => setFormData({ ...formData, flag_state: v }),
                         flagStatesHook.flagStates.length > 0
                           ? flagStatesHook.flagStates.map(f => ({ value: f.flag_name, label: f.flag_name }))
-                          : ['Panama', 'Liberia', 'Marshall Islands', 'Singapore', 'Bahamas', 'Malta']
+                          : DEFAULT_FLAG_STATES.map(f => ({ value: f, label: f }))
                       )}
                       {renderFormField('port_of_registry', 'Port', formData.port_of_registry, (v) => setFormData({ ...formData, port_of_registry: v }))}
                       {renderFormField('year_built', 'Built', formData.year_built, (v) => setFormData({ ...formData, year_built: v }), 'number', '2020')}
                       {renderSelectField('classification_society', 'Class', formData.classification_society, (v) => setFormData({ ...formData, classification_society: v }),
                         classificationSocieties.societies.length > 0
                           ? classificationSocieties.societies.map(s => ({ value: s.society_name, label: `${s.society_name} (${s.abbreviation || ''})` }))
-                          : ['DNV GL', "Lloyd's Register", 'ABS', 'Bureau Veritas']
+                          : DEFAULT_CLASSIFICATION_SOCIETIES.map(s => ({ value: s, label: s }))
                       )}
                       {renderFormField('class_number', 'Class No', formData.class_number, (v) => setFormData({ ...formData, class_number: v }))}
                       {renderSelectField('status', 'Status', formData.status, (v) => setFormData({ ...formData, status: v }), statusOptions)}
@@ -1384,16 +1411,16 @@ const VesselManagement = () => {
                   <TabsContent value="management" className="space-y-5 mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       {renderSelectField('owner_company_id', 'Owner', formData.owner_company_id, (v) => setFormData({ ...formData, owner_company_id: v }),
-                        ownerCompanies.map(c => ({ value: c.id, label: c.name }))
+                        ownerCompanyOptions
                       )}
                       {renderSelectField('operator_company_id', 'Operator', formData.operator_company_id, (v) => setFormData({ ...formData, operator_company_id: v }),
-                        operatorCompanies.map(c => ({ value: c.id, label: c.name }))
+                        operatorCompanyOptions
                       )}
                       {renderSelectField('technical_manager_id', 'Technical Manager', formData.technical_manager_id, (v) => setFormData({ ...formData, technical_manager_id: v }),
-                        technicalManagers.map(c => ({ value: c.id, label: c.name }))
+                        technicalManagerOptions
                       )}
                       {renderSelectField('ism_manager_id', 'ISM Manager', formData.ism_manager_id, (v) => setFormData({ ...formData, ism_manager_id: v }),
-                        ismManagers.map(c => ({ value: c.id, label: c.name }))
+                        ismManagerOptions
                       )}
                     </div>
                     <div className="space-y-2">
