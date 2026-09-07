@@ -126,9 +126,9 @@ const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEma
         {/* Header */}
         <div className="p-8 border-b border-border space-y-6 bg-white/10 dark:bg-white/5 backdrop-blur-md px-[13px] py-[13px] my-0 shadow">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <img src={eagleLogo} alt="Eagle Maritime OS" className="h-10 w-10 object-contain" />
-              <div>
+            <div className="flex min-w-0 items-center gap-3">
+              <img src={eagleLogo} alt="Eagle Maritime OS" className="h-14 w-14 shrink-0 object-contain drop-shadow-md" />
+              <div className="min-w-0">
                 <h1 className="text-xl font-black tracking-tight bg-gradient-to-br from-primary to-accent-foreground bg-clip-text text-transparent">
                   EAGLE MARITIME OS
                 </h1>

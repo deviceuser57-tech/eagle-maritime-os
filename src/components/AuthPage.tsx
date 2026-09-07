@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, User, Anchor } from 'lucide-react';
+import { Mail, Lock, User } from 'lucide-react';
 import { z } from 'zod';
+import eagleLogo from '@/assets/eagle-maritime-logo.png';
 
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -97,10 +98,8 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 rounded-full bg-primary/20 backdrop-blur-sm">
-              <Anchor className="h-10 w-10 text-primary" />
-            </div>
+          <div className="flex items-center justify-center mb-5">
+            <img src={eagleLogo} alt="Eagle Maritime OS" className="h-28 w-28 object-contain drop-shadow-xl" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2 whitespace-pre-wrap">Eagle Maritime OS{"\n"}Compliance Operation System&nbsp;</h1>
           <p className="text-slate-300">Fleet Management & Safety System</p>
