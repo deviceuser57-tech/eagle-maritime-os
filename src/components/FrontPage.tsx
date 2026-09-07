@@ -283,12 +283,12 @@ const FrontPage = ({ onEnterDashboard }: FrontPageProps) => {
           style={{ transformStyle: "preserve-3d" }}>
 
             <div
-              className="relative w-32 h-32 md:w-44 md:h-44 transform-gpu transition-transform duration-500 group-hover:scale-110"
+              className="relative w-40 h-40 md:w-52 md:h-52 transform-gpu transition-transform duration-500 group-hover:scale-105"
               style={{ transformStyle: "preserve-3d" }}>
 
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary via-accent-foreground to-primary blur-2xl opacity-40 group-hover:opacity-60 transition-opacity" />
               <div className="relative h-full w-full rounded-full bg-gradient-to-br from-[hsl(220,40%,13%)] to-[hsl(220,50%,8%)] flex items-center justify-center shadow-3xl border border-white/20 overflow-hidden">
-                <img src={eagleLogo} alt="Eagle Maritime OS" className="w-3/4 h-3/4 object-contain drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]" />
+                <img src={eagleLogo} alt="Eagle Maritime OS" className="h-[88%] w-[88%] object-contain drop-shadow-xl" />
               </div>
               {/* Spinning Ring */}
               <div className="absolute -inset-4 rounded-full border-2 border-white/5 border-t-white/20 animate-[spin_8s_linear_infinite]" />
