@@ -14,19 +14,16 @@ import { useVessels } from '@/hooks/useVessels';
 import { useCurrencies } from '@/hooks/useSetupCrewConfig';
 import { useCertificateTypes } from '@/hooks/useSetupCertificates';
 import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
+import { useSetupSurveyTypes, useSetupSurveyors } from '@/hooks/useSetupVesselMasterData';
+import {
+  DEFAULT_STATUTORY_CERTIFICATES,
+  DEFAULT_DOC_ISSUERS,
+  DEFAULT_CURRENCIES,
+} from '@/constants/dropdownOptions';
 import { useToast } from '@/hooks/use-toast';
 import { format, differenceInDays } from 'date-fns';
 import { VerificationQR } from './compliance/VerificationQR';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-
-const FALLBACK_CURRENCIES = [
-  { code: 'USD', label: 'USD - US Dollar' },
-  { code: 'EUR', label: 'EUR - Euro' },
-  { code: 'GBP', label: 'GBP - British Pound' },
-  { code: 'SGD', label: 'SGD - Singapore Dollar' },
-  { code: 'AED', label: 'AED - UAE Dirham' },
-  { code: 'JPY', label: 'JPY - Japanese Yen' },
-];
 
 const VesselsCertification = () => {
   const { toast } = useToast();
@@ -36,15 +33,29 @@ const VesselsCertification = () => {
   const { certificateTypes } = useCertificateTypes();
   const { societies } = useClassificationSocieties();
   const { flagStates } = useFlagStates();
+  const { items: dbSurveyTypes } = useSetupSurveyTypes();
+  const { items: dbSurveyors } = useSetupSurveyors();
 
-  const authorityOptions = Array.from(new Set([
+  const surveyTypeOptions = dbSurveyTypes.length > 0
+    ? dbSurveyTypes.map(s => s.name)
+    : ['Initial', 'Annual', 'Intermediate', 'Renewal', 'Special', 'Additional'];
+
+  const certTypeOptions = certificateTypes.length > 0
+    ? certificateTypes.map(c => c.certificate_name)
+    : DEFAULT_STATUTORY_CERTIFICATES;
+
+  const rawAuthorityOptions = Array.from(new Set([
     ...societies.map(s => s.society_name),
     ...flagStates.map(f => f.flag_name)
   ].filter(Boolean)));
 
+  const authorityOptions = rawAuthorityOptions.length > 0
+    ? rawAuthorityOptions
+    : DEFAULT_DOC_ISSUERS;
+
   const currencyOptions = currencies.length > 0
     ? currencies.map((c) => ({ code: c.currency_code, label: `${c.currency_code} - ${c.currency_name}` }))
-    : FALLBACK_CURRENCIES;
+    : DEFAULT_CURRENCIES.map((c) => ({ code: c.code, label: `${c.code} - ${c.name}` }));
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     vessel_id: '',
@@ -192,39 +203,16 @@ const VesselsCertification = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <Label htmlFor="certificate_type" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Classification *</Label>
-                      {certificateTypes.length > 0 ? (
-                        <Select value={formData.certificate_type} onValueChange={(v) => setFormData({ ...formData, certificate_type: v })}>
-                          <SelectTrigger className="rounded-xl border-border bg-background/50 h-12">
-                            <SelectValue placeholder="Select classification" />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
-                            {certificateTypes.map((c) => (
-                              <SelectItem key={c.id} value={c.certificate_name}>{c.certificate_name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Select value={formData.certificate_type} onValueChange={(v) => setFormData({ ...formData, certificate_type: v })}>
-                          <SelectTrigger className="rounded-xl border-border bg-background/50 h-12">
-                            <SelectValue placeholder="Select classification" />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
-                            <SelectItem value="SMC">Safety Management Certificate</SelectItem>
-                            <SelectItem value="DOC">Document of Compliance</SelectItem>
-                            <SelectItem value="ISPS">ISPS Certificate</SelectItem>
-                            <SelectItem value="Class">Classification Certificate</SelectItem>
-                            <SelectItem value="Load Line">Load Line Certificate</SelectItem>
-                            <SelectItem value="IOPP">IOPP Certificate</SelectItem>
-                            <SelectItem value="IAPP">IAPP Certificate</SelectItem>
-                            <SelectItem value="MLC">MLC Certificate</SelectItem>
-                            <SelectItem value="SOLAS">SOLAS Certificates</SelectItem>
-                            <SelectItem value="Tonnage">Tonnage Certificate</SelectItem>
-                            <SelectItem value="Registry">Registry Certificate</SelectItem>
-                            <SelectItem value="Radio">Radio License</SelectItem>
-                            <SelectItem value="Other">Other Statutory Doc</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
+                      <Select value={formData.certificate_type} onValueChange={(v) => setFormData({ ...formData, certificate_type: v })}>
+                        <SelectTrigger className="rounded-xl border-border bg-background/50 h-12">
+                          <SelectValue placeholder="Select classification" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
+                          {certTypeOptions.map((name) => (
+                            <SelectItem key={name} value={name}>{name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="vessel_id" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Associated Vessel</Label>
@@ -311,24 +299,34 @@ const VesselsCertification = () => {
                           <SelectValue placeholder="Select survey type" />
                         </SelectTrigger>
                         <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
-                          <SelectItem value="Initial">Initial Survey</SelectItem>
-                          <SelectItem value="Annual">Annual Survey</SelectItem>
-                          <SelectItem value="Intermediate">Intermediate Survey</SelectItem>
-                          <SelectItem value="Renewal">Renewal Survey</SelectItem>
-                          <SelectItem value="Special">Special Survey</SelectItem>
-                          <SelectItem value="Additional">Additional Survey</SelectItem>
+                          {surveyTypeOptions.map((st) => (
+                            <SelectItem key={st} value={st}>{st} Survey</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="surveyor_name" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Surveyor Name</Label>
-                      <Input
-                        id="surveyor_name"
-                        value={formData.surveyor_name}
-                        onChange={(e) => setFormData({ ...formData, surveyor_name: e.target.value })}
-                        placeholder="e.g., John Smith"
-                        className="rounded-xl border-border bg-background/50 h-12"
-                      />
+                      {dbSurveyors.length > 0 ? (
+                        <Select value={formData.surveyor_name} onValueChange={(v) => setFormData({ ...formData, surveyor_name: v })}>
+                          <SelectTrigger className="rounded-xl border-border bg-background/50 h-12">
+                            <SelectValue placeholder="Select surveyor" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-border backdrop-blur-3xl">
+                            {dbSurveyors.map(s => (
+                              <SelectItem key={s.id} value={s.name}>{s.name} {s.company ? `(${s.company})` : ''}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id="surveyor_name"
+                          value={formData.surveyor_name}
+                          onChange={(e) => setFormData({ ...formData, surveyor_name: e.target.value })}
+                          placeholder="e.g., John Smith"
+                          className="rounded-xl border-border bg-background/50 h-12"
+                        />
+                      )}
                     </div>
                   </div>
 

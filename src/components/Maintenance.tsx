@@ -13,6 +13,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useMaintenanceTasks, MaintenanceTask } from '@/hooks/useMaintenanceTasks';
 import { useVessels } from '@/hooks/useVessels';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrencies } from '@/hooks/useSetupCrewConfig';
+import {
+  useSetupMaintenanceTaskTypes,
+  useSetupEquipmentCategories,
+  useSetupVesselLocations,
+} from '@/hooks/useSetupVesselMasterData';
 import { format } from 'date-fns';
 import {
   Wrench, AlertTriangle, CheckCircle, Clock, Plus, CalendarIcon,
@@ -20,36 +26,54 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const TASK_TYPES = [
-  { value: 'preventive', label: 'Preventive Maintenance (PMS)' },
-  { value: 'corrective', label: 'Corrective Maintenance' },
-  { value: 'condition_based', label: 'Condition-Based Maintenance' },
-  { value: 'inspection', label: 'Inspection / Survey' },
-  { value: 'drydock', label: 'Drydock / Overhaul' },
-  { value: 'emergency', label: 'Emergency Repair' },
-  { value: 'class_survey', label: 'Class Survey' },
-  { value: 'regulatory', label: 'Regulatory Compliance' },
-];
-
-const EQUIPMENT_CATEGORIES = [
-  'Main Engine', 'Auxiliary Engine', 'Electrical Systems', 'Navigation Equipment',
-  'Safety Equipment', 'Hull & Structure', 'Deck Machinery', 'HVAC System',
-  'Fuel System', 'Ballast System', 'Steering Gear', 'Communication Equipment',
-  'Cargo Equipment', 'Piping & Valves', 'Propulsion System', 'Other',
-];
-
-const LOCATIONS = [
-  { value: 'engine', label: 'Engine Room (غرفة الماكينات)' },
-  { value: 'accommodation', label: 'Accommodation (الاعاشات)' },
-  { value: 'deck', label: 'Main Deck (دك الوحدة)' },
-  { value: 'hull', label: 'Hull / Exterior (البدن / الخارجي)' },
-  { value: 'bridge', label: 'Bridge / Nav Center (البريدج / Nav Center)' },
-];
 
 const Maintenance = () => {
   const { user } = useAuth();
   const { tasks, loading, addTask, updateTask, deleteTask } = useMaintenanceTasks();
   const { vessels } = useVessels();
+  const { currencies } = useCurrencies();
+  const currencyOptions = currencies.length > 0
+    ? currencies.map(c => c.currency_code)
+    : ['USD', 'EUR', 'GBP', 'AED', 'JPY'];
+
+  // ── Dynamic master data (replaces hardcoded arrays) ───────────────
+  const { taskTypes: dbTaskTypes }           = useSetupMaintenanceTaskTypes();
+  const { equipmentCategories: dbEquipCats } = useSetupEquipmentCategories();
+  const { vesselLocations: dbLocations }     = useSetupVesselLocations();
+
+  // Fallback defaults if org hasn't seeded data yet
+  const TASK_TYPES: { value: string; label: string }[] = dbTaskTypes.length > 0
+    ? dbTaskTypes.map(t => ({ value: t.value, label: t.label }))
+    : [
+        { value: 'preventive',       label: 'Preventive Maintenance (PMS)' },
+        { value: 'corrective',       label: 'Corrective Maintenance' },
+        { value: 'condition_based',  label: 'Condition-Based Maintenance' },
+        { value: 'inspection',       label: 'Inspection / Survey' },
+        { value: 'drydock',          label: 'Drydock / Overhaul' },
+        { value: 'emergency',        label: 'Emergency Repair' },
+        { value: 'class_survey',     label: 'Class Survey' },
+        { value: 'regulatory',       label: 'Regulatory Compliance' },
+      ];
+
+  const EQUIPMENT_CATEGORIES: string[] = dbEquipCats.length > 0
+    ? dbEquipCats.map(c => c.name)
+    : [
+        'Main Engine', 'Auxiliary Engine', 'Electrical Systems', 'Navigation Equipment',
+        'Safety Equipment', 'Hull & Structure', 'Deck Machinery', 'HVAC System',
+        'Fuel System', 'Ballast System', 'Steering Gear', 'Communication Equipment',
+        'Cargo Equipment', 'Piping & Valves', 'Propulsion System', 'Other',
+      ];
+
+  const LOCATIONS: { value: string; label: string }[] = dbLocations.length > 0
+    ? dbLocations.map(l => ({ value: l.value, label: l.label_ar ? `${l.label_en} (${l.label_ar})` : l.label_en }))
+    : [
+        { value: 'engine',        label: 'Engine Room (غرفة الماكينات)' },
+        { value: 'accommodation', label: 'Accommodation (الاعاشات)' },
+        { value: 'deck',          label: 'Main Deck (دك الوحدة)' },
+        { value: 'hull',          label: 'Hull / Exterior (البدن / الخارجي)' },
+        { value: 'bridge',        label: 'Bridge / Nav Center (البريدج / Nav Center)' },
+      ];
+
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -59,7 +83,7 @@ const Maintenance = () => {
   const [formData, setFormData] = useState({
     title: '', description: '', vessel_id: '', task_type: 'preventive',
     priority: 'medium', status: 'scheduled', due_date: new Date(),
-    assigned_to: '', estimated_hours: '', cost_estimate: '', notes: '',
+    assigned_to: '', estimated_hours: '', cost_estimate: '', currency: 'USD', notes: '',
     location: 'engine',
   });
 
@@ -85,7 +109,7 @@ const Maintenance = () => {
     setFormData({
       title: '', description: '', vessel_id: '', task_type: 'preventive',
       priority: 'medium', status: 'scheduled', due_date: new Date(),
-      assigned_to: '', estimated_hours: '', cost_estimate: '', notes: '',
+      assigned_to: '', estimated_hours: '', cost_estimate: '', currency: 'USD', notes: '',
       location: 'engine',
     });
   };
@@ -132,6 +156,7 @@ const Maintenance = () => {
       due_date: new Date(task.due_date), assigned_to: task.assigned_to || '',
       estimated_hours: task.estimated_hours?.toString() || '',
       cost_estimate: task.cost_estimate?.toString() || '',
+      currency: 'USD',
       notes: locNotes.notes,
       location: locNotes.location,
     });
@@ -289,8 +314,14 @@ const Maintenance = () => {
                     <Input type="number" value={formData.estimated_hours} onChange={(e) => setFormData({ ...formData, estimated_hours: e.target.value })} placeholder="0" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Cost Estimate ($)</Label>
-                    <Input type="number" value={formData.cost_estimate} onChange={(e) => setFormData({ ...formData, cost_estimate: e.target.value })} placeholder="0.00" />
+                    <Label>Cost Estimate</Label>
+                    <div className="flex gap-2">
+                      <Select value={formData.currency} onValueChange={(v) => setFormData({ ...formData, currency: v })}>
+                        <SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>{currencyOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                      </Select>
+                      <Input type="number" value={formData.cost_estimate} onChange={(e) => setFormData({ ...formData, cost_estimate: e.target.value })} placeholder="0.00" className="flex-1" />
+                    </div>
                   </div>
                 </div>
               </TabsContent>

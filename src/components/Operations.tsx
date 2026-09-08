@@ -10,11 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Ship, Anchor, Navigation, Activity, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useVoyages } from '@/hooks/useVoyages';
 import { useVessels } from '@/hooks/useVessels';
+import { useSetupPorts } from '@/hooks/useSetupVesselMasterData';
 import { format } from 'date-fns';
 
 const Operations = () => {
   const { voyages, loading, addVoyage, deleteVoyage } = useVoyages();
   const { vessels } = useVessels();
+  const { ports } = useSetupPorts();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     vessel_id: '',
@@ -131,21 +133,39 @@ const Operations = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="departure_port">Departure Port *</Label>
-                  <Input
-                    id="departure_port"
-                    value={formData.departure_port}
-                    onChange={(e) => setFormData({ ...formData, departure_port: e.target.value })}
-                    required
-                  />
+                  {ports.length > 0 ? (
+                    <Select value={formData.departure_port} onValueChange={(v) => setFormData({ ...formData, departure_port: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select departure port" /></SelectTrigger>
+                      <SelectContent>
+                        {ports.map(p => <SelectItem key={p.id} value={p.port_name}>{p.port_name} {p.country ? `(${p.country})` : ''}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="departure_port"
+                      value={formData.departure_port}
+                      onChange={(e) => setFormData({ ...formData, departure_port: e.target.value })}
+                      required
+                    />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="arrival_port">Arrival Port *</Label>
-                  <Input
-                    id="arrival_port"
-                    value={formData.arrival_port}
-                    onChange={(e) => setFormData({ ...formData, arrival_port: e.target.value })}
-                    required
-                  />
+                  {ports.length > 0 ? (
+                    <Select value={formData.arrival_port} onValueChange={(v) => setFormData({ ...formData, arrival_port: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select arrival port" /></SelectTrigger>
+                      <SelectContent>
+                        {ports.map(p => <SelectItem key={p.id} value={p.port_name}>{p.port_name} {p.country ? `(${p.country})` : ''}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="arrival_port"
+                      value={formData.arrival_port}
+                      onChange={(e) => setFormData({ ...formData, arrival_port: e.target.value })}
+                      required
+                    />
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">

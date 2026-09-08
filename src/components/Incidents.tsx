@@ -9,15 +9,42 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle, Activity, TrendingDown, FileText, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useIncidents } from '@/hooks/useIncidents';
+import { useSetupIncidentTypes } from '@/hooks/useSetupIncidentTypes';
 import { useVessels } from '@/hooks/useVessels';
 import { useRootCauses } from '@/hooks/useSetupAuditConfig';
+import { useSetupSeverityLevels, useSetupRiskCategories } from '@/hooks/useSetupVesselMasterData';
 import { format } from 'date-fns';
 
 const Incidents = () => {
   const { incidents, isLoading, createIncident, deleteIncident } = useIncidents();
   const { vessels } = useVessels();
   const { rootCauses } = useRootCauses();
+  const { incidentTypes } = useSetupIncidentTypes();
+  const { items: severityItems } = useSetupSeverityLevels();
+  const { items: riskCatItems }  = useSetupRiskCategories();
+
+  // Fallback defaults if org hasn't seeded setup tables yet
+  const severityOptions = severityItems.length > 0
+    ? severityItems.map(s => ({ value: s.name.toLowerCase(), label: s.name }))
+    : [
+        { value: 'minor',    label: 'Minor' },
+        { value: 'moderate', label: 'Moderate' },
+        { value: 'major',    label: 'Major' },
+        { value: 'critical', label: 'Critical' },
+      ];
+
+  const riskCategoryOptions = riskCatItems.length > 0
+    ? riskCatItems.map(r => ({ value: r.name, label: r.name }))
+    : [
+        { value: 'Operational',  label: 'Operational' },
+        { value: 'Environmental',label: 'Environmental' },
+        { value: 'Safety',       label: 'Technical/Safety' },
+        { value: 'Security',     label: 'Security/ISPS' },
+        { value: 'Commercial',   label: 'Commercial' },
+      ];
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     title: '',
     incident_type: '',
@@ -131,14 +158,9 @@ const Incidents = () => {
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="near_miss">Near Miss</SelectItem>
-                      <SelectItem value="injury">Injury</SelectItem>
-                      <SelectItem value="equipment_failure">Equipment Failure</SelectItem>
-                      <SelectItem value="safety_violation">Safety Violation</SelectItem>
-                      <SelectItem value="environmental">Environmental</SelectItem>
-                      <SelectItem value="security">Security</SelectItem>
-                      <SelectItem value="collision">Collision</SelectItem>
-                      <SelectItem value="grounding">Grounding</SelectItem>
+                    {incidentTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.name}>{type.name}</SelectItem>
+                    ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -149,10 +171,9 @@ const Incidents = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="minor">Minor</SelectItem>
-                      <SelectItem value="moderate">Moderate</SelectItem>
-                      <SelectItem value="major">Major</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
+                      {severityOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -214,11 +235,9 @@ const Incidents = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Operational">Operational</SelectItem>
-                      <SelectItem value="Environmental">Environmental</SelectItem>
-                      <SelectItem value="Safety">Technical/Safety</SelectItem>
-                      <SelectItem value="Security">Security/ISPS</SelectItem>
-                      <SelectItem value="Commercial">Commercial</SelectItem>
+                      {riskCategoryOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

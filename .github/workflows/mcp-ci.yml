@@ -1,0 +1,164 @@
+name: MCP API Build & Verification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/mcp-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/mcp-ci.yml"
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  build-and-verify:
+    name: MCP API Build & Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript and Vite build
+        run: npm run build
+
+      - name: Verify MCP API source
+        shell: bash
+        run: |
+          set -e
+
+          test -f src/components/McpApi.tsx
+          test -f src/App.tsx
+
+          grep -q "McpApi" src/App.tsx
+
+          echo "MCP API source verification passed."
+
+      - name: Verify MCP API route
+        shell: bash
+        run: |
+          set -e
+
+          grep -Eq '(/mcp-api|mcp-api)' src/App.tsx
+
+          echo "MCP API route verification passed."
+
+      - name: Verify MCP API documentation
+        shell: bash
+        run: |
+          set -e
+
+          grep -qiE '(/\.mcp/list-tools|list-tools)' src/components/McpApi.tsx
+          grep -qiE 'JSON-RPC|jsonrpc' src/components/McpApi.tsx
+          grep -qiE 'curl' src/components/McpApi.tsx
+
+          echo "MCP API documentation verification passed."
+
+      - name: Verify Help Center MCP reference
+        shell: bash
+        run: |
+          set -e
+
+          test -f src/components/HelpCenter.tsx
+
+          grep -qiE 'MCP API Reference|MCP API' src/components/HelpCenter.tsx
+
+          echo "Help Center MCP reference verification passed."
+
+  browser-test:
+    name: MCP API Browser Test
+    runs-on: ubuntu-latest
+    needs: build-and-verify
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start application
+        run: |
+          nohup npm run preview -- --host 0.0.0.0 --port 4173 > /tmp/eagle-mcp-preview.log 2>&1 &
+          echo $! > /tmp/eagle-mcp-preview.pid
+
+      - name: Wait for application
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ > /dev/null; then
+              echo "Application is ready."
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Application failed to start."
+          cat /tmp/eagle-mcp-preview.log
+          exit 1
+
+      - name: Create MCP browser test
+        run: |
+          mkdir -p playwright-tests
+
+          cat > playwright-tests/mcp-api.spec.js <<'EOF'
+          const { test, expect } = require('@playwright/test');
+
+          test('MCP API page displays MCP reference content', async ({ page }) => {
+            await page.goto('http://127.0.0.1:4173/mcp-api', {
+              waitUntil: 'networkidle'
+            });
+
+            await expect(page).toHaveURL(/\/mcp-api/);
+
+            const body = await page.locator('body').innerText();
+
+            expect(body).toMatch(/list-tools/i);
+            expect(body).toMatch(/curl/i);
+            expect(body).toMatch(/json-rpc/i);
+          });
+          EOF
+
+      - name: Run MCP browser test
+        run: |
+          npx playwright test playwright-tests/mcp-api.spec.js --reporter=line
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 30

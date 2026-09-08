@@ -12,6 +12,9 @@ import { useProjects } from '@/hooks/useProjects';
 import { useVessels } from '@/hooks/useVessels';
 import { useProjectVessels } from '@/hooks/useProjectVessels';
 import { useAudits } from '@/hooks/useAudits';
+import { useCurrencies } from '@/hooks/useSetupCrewConfig';
+import { useSetupProjectTypes } from '@/hooks/useSetupProjectTypes';
+import { useAuditTypes } from '@/hooks/useSetupAuditConfig';
 import { format } from 'date-fns';
 
 const computeStatus = (startDate: string, endDate: string): string => {
@@ -30,10 +33,14 @@ const Projects = () => {
   const { vessels } = useVessels();
   const { projectVessels, addVesselToProject, removeVesselFromProject } = useProjectVessels();
   const { createAudit } = useAudits();
+  const { currencies } = useCurrencies();
+  const { projectTypes } = useSetupProjectTypes();
+  const { auditTypes } = useAuditTypes();
+  const currencyOptions = currencies.map(c => c.currency_code);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '', description: '', project_type: '', start_date: '', end_date: '',
-    status: 'planning', progress: '0', priority: 'medium', budget: '',
+    status: 'planning', progress: '0', priority: 'medium', budget: '', currency: 'USD',
     project_manager: '', location: '', notes: '',
   });
 
@@ -88,7 +95,7 @@ const Projects = () => {
       }
     }
 
-    setFormData({ name: '', description: '', project_type: '', start_date: '', end_date: '', status: 'planning', progress: '0', priority: 'medium', budget: '', project_manager: '', location: '', notes: '' });
+    setFormData({ name: '', description: '', project_type: '', start_date: '', end_date: '', status: 'planning', progress: '0', priority: 'medium', budget: '', currency: 'USD', project_manager: '', location: '', notes: '' });
     setVesselRows([]);
     setIsDialogOpen(false);
   };
@@ -147,14 +154,9 @@ const Projects = () => {
                   <Select value={formData.project_type} onValueChange={(v) => setFormData({ ...formData, project_type: v })}>
                     <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Annual Audit">Annual Audit</SelectItem>
-                      <SelectItem value="ISPS Renewal">ISPS Renewal</SelectItem>
-                      <SelectItem value="Environmental Compliance">Environmental Compliance</SelectItem>
-                      <SelectItem value="Safety Inspection">Safety Inspection</SelectItem>
-                      <SelectItem value="Fleet Review">Fleet Review</SelectItem>
-                      <SelectItem value="Drydocking">Drydocking</SelectItem>
-                      <SelectItem value="Certification Renewal">Certification Renewal</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      {projectTypes.map(pt => (
+                        <SelectItem key={pt.id} value={pt.name}>{pt.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -195,8 +197,14 @@ const Projects = () => {
                   <Input value={formData.project_manager} onChange={(e) => setFormData({ ...formData, project_manager: e.target.value })} placeholder="Manager name" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Budget ($)</Label>
-                  <Input type="number" value={formData.budget} onChange={(e) => setFormData({ ...formData, budget: e.target.value })} placeholder="0.00" />
+                  <Label>Budget</Label>
+                  <div className="flex gap-2">
+                    <Select value={formData.currency} onValueChange={(v) => setFormData({ ...formData, currency: v })}>
+                      <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>{currencyOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Input type="number" value={formData.budget} onChange={(e) => setFormData({ ...formData, budget: e.target.value })} placeholder="0.00" className="flex-1" />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Location</Label>
@@ -248,13 +256,9 @@ const Projects = () => {
                       <Select value={row.audit_type} onValueChange={(v) => updateVesselRow(idx, 'audit_type', v)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Internal Audit">Internal Audit</SelectItem>
-                          <SelectItem value="ISM Annual">ISM Annual</SelectItem>
-                          <SelectItem value="ISPS Renewal">ISPS Renewal</SelectItem>
-                          <SelectItem value="Environmental">Environmental</SelectItem>
-                          <SelectItem value="PSC">Port State Control</SelectItem>
-                          <SelectItem value="Flag State">Flag State</SelectItem>
-                          <SelectItem value="Vetting">Vetting</SelectItem>
+                          {auditTypes.map(at => (
+                            <SelectItem key={at.id} value={at.audit_type_name}>{at.audit_type_name}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>

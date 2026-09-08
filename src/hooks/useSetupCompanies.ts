@@ -9,7 +9,13 @@ export interface SetupCompany {
   id: string;
   user_id: string;
   org_id?: string;
-  company_type: 'owner' | 'operator' | 'technical' | 'ism' | 'doc';
+  company_type?: string | null;
+  is_owner?: boolean | null;
+  is_operator?: boolean | null;
+  is_technical_manager?: boolean | null;
+  is_ism_manager?: boolean | null;
+  is_doc_issuer?: boolean | null;
+  is_insurer?: boolean | null;
   name: string;
   contact_person: string | null;
   title: string | null;
@@ -24,7 +30,19 @@ export interface SetupCompany {
 export type CompanyInsert = Omit<SetupCompany, 'id' | 'created_at' | 'updated_at'>;
 export type CompanyUpdate = Partial<CompanyInsert> & { id: string };
 
-export const useSetupCompanies = (companyType?: SetupCompany['company_type']) => {
+export type CompanyRole = 'owner' | 'operator' | 'technical' | 'ism' | 'doc' | 'insurer';
+export type RoleFlag = 'is_owner' | 'is_operator' | 'is_technical_manager' | 'is_ism_manager' | 'is_doc_issuer' | 'is_insurer';
+
+export const roleColumn: Record<CompanyRole, RoleFlag> = {
+  owner: 'is_owner',
+  operator: 'is_operator',
+  technical: 'is_technical_manager',
+  ism: 'is_ism_manager',
+  doc: 'is_doc_issuer',
+  insurer: 'is_insurer',
+};
+
+export const useSetupCompanies = (companyType?: CompanyRole) => {
   const { user } = useAuth();
   const { orgId } = useOrganization();
   const { toast } = useToast();
@@ -35,19 +53,20 @@ export const useSetupCompanies = (companyType?: SetupCompany['company_type']) =>
     queryFn: async () => {
       if (!orgId) return [];
 
-      let query = supabase
+      const { data, error } = await supabase
         .from('setup_companies')
         .select('*')
         .eq('org_id', orgId)
         .order('created_at', { ascending: false });
 
-      if (companyType) {
-        query = query.eq('company_type', companyType);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
-      return data as SetupCompany[];
+
+      const rows = (data || []) as SetupCompany[];
+      if (!companyType) return rows;
+
+      const flag = roleColumn[companyType];
+      // Filter by the specific role flag. Legacy fallback if neither is set but legacy type matches.
+      return rows.filter(company => Boolean(company[flag]) || company.company_type === companyType);
     },
     enabled: !!user?.id && !!orgId,
   });
@@ -58,9 +77,52 @@ export const useSetupCompanies = (companyType?: SetupCompany['company_type']) =>
       const { error: validationError } = validate(companySchema, company);
       if (validationError) throw new Error(validationError.issues[0]?.message || 'Invalid input');
 
+      const legacyCompanyType = company.company_type || (
+        company.is_owner ? 'owner' :
+        company.is_operator ? 'operator' :
+        company.is_technical_manager ? 'technical' :
+        company.is_ism_manager ? 'ism' :
+        company.is_doc_issuer ? 'doc' :
+        'owner'
+      );
+
+      // Check if company already exists by name
+      const { data: existing, error: lookupError } = await supabase
+        .from('setup_companies')
+        .select('*')
+        .eq('org_id', orgId)
+        .ilike('name', company.name.trim())
+        .limit(1)
+        .maybeSingle();
+
+      if (lookupError) throw lookupError;
+
+      if (existing) {
+        // Update existing company with new roles or details
+        const { data, error } = await supabase
+          .from('setup_companies')
+          .update({
+            ...company,
+            name: company.name.trim(),
+            company_type: legacyCompanyType,
+          })
+          .eq('id', existing.id)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      }
+
+      // Insert new company
       const { data, error } = await supabase
         .from('setup_companies')
-        .insert({ ...company, user_id: user.id, org_id: orgId })
+        .insert({
+          ...company,
+          name: company.name.trim(),
+          company_type: legacyCompanyType,
+          user_id: user.id,
+          org_id: orgId,
+        })
         .select()
         .single();
 
@@ -69,7 +131,7 @@ export const useSetupCompanies = (companyType?: SetupCompany['company_type']) =>
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['setup_companies'] });
-      toast({ title: 'Success', description: 'Company added successfully' });
+      toast({ title: 'Success', description: 'Company saved successfully' });
     },
     onError: (error: Error) => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });

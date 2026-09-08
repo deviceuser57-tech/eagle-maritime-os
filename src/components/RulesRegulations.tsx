@@ -12,6 +12,7 @@ import { useAudits } from '@/hooks/useAudits';
 import { useVesselCertifications } from '@/hooks/useVesselCertifications';
 import { useCustomRegulations } from '@/hooks/useCustomRegulations';
 import { useVessels } from '@/hooks/useVessels';
+import { useSetupRegulationCategories } from '@/hooks/useSetupVesselMasterData';
 
 const STANDARD_REGULATIONS = [
   { code: 'SOLAS', title: 'Safety of Life at Sea', version: 'Consolidated 2024', category: 'Safety', link: 'https://www.imo.org/en/About/Conventions/Pages/International-Convention-for-the-Safety-of-Life-at-Sea-(SOLAS),-1974.aspx' },
@@ -24,7 +25,7 @@ const STANDARD_REGULATIONS = [
   { code: 'CII/EEXI', title: 'Carbon Intensity Indicator / Energy Efficiency', version: 'MEPC.328(76)', category: 'Environmental', link: 'https://www.imo.org/en/OurWork/Environment/Pages/Technical-and-Operational-Measures.aspx' },
 ];
 
-const CATEGORIES = ['Safety', 'Environmental', 'Management', 'Security', 'Labour', 'Training', 'General', 'Other'];
+
 
 const RulesRegulations = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,6 +36,13 @@ const RulesRegulations = () => {
   const { certifications, loading: certsLoading } = useVesselCertifications();
   const { regulations, regulationVessels, isLoading: regsLoading, createRegulation, deleteRegulation, assignVessel, removeVesselAssignment, uploadFile } = useCustomRegulations();
   const { vessels } = useVessels();
+  const { items: regCatItems } = useSetupRegulationCategories();
+
+  // Fallback defaults if org hasn't seeded regulation categories yet
+  const CATEGORIES = regCatItems.length > 0
+    ? regCatItems.map(c => c.name)
+    : ['Safety', 'Environmental', 'Management', 'Security', 'Labour', 'Training', 'General', 'Other'];
+
 
   const [formData, setFormData] = useState({
     code: '', title: '', description: '', category: 'General', version: '', link: '', notes: '',

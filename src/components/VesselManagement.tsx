@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,27 @@ import { useOrganization as useOrg } from '@/hooks/useOrganization';
 import { useVessels, Vessel } from '@/hooks/useVessels';
 import { useSetupCompanies } from '@/hooks/useSetupCompanies';
 import { useClassificationSocieties, useFlagStates } from '@/hooks/useSetupClassification';
+import { useCurrencies } from '@/hooks/useSetupCrewConfig';
+import {
+  DEFAULT_OWNER_COMPANIES,
+  DEFAULT_OPERATOR_COMPANIES,
+  DEFAULT_TECHNICAL_MANAGERS,
+  DEFAULT_ISM_MANAGERS,
+  DEFAULT_CLASSIFICATION_SOCIETIES,
+  DEFAULT_FLAG_STATES,
+  DEFAULT_CURRENCIES,
+} from '@/constants/dropdownOptions';
+import {
+  useSetupVesselTypes,
+  useSetupHullMaterials,
+  useSetupHullCoatings,
+  useSetupPropulsionTypes,
+  useSetupFuelTypes,
+  useSetupTradingAreas,
+  useSetupEngineMakers,
+  useSetupEngineModels,
+  useSetupShipyards,
+} from '@/hooks/useSetupVesselMasterData';
 import { useMaintenanceTasks } from '@/hooks/useMaintenanceTasks';
 import { useVesselRegulatoryPortfolio } from '@/hooks/useRegulations';
 import { useToast } from '@/hooks/use-toast';
@@ -223,27 +244,73 @@ const VesselManagement = () => {
 
 
 
-  // Setup data
-  const ownerCompanies = useSetupCompanies('owner');
-  const operatorCompanies = useSetupCompanies('operator');
-  const technicalManagers = useSetupCompanies('technical');
-  const ismManagers = useSetupCompanies('ism');
+  // Setup data - Unified company master dataset
+  const { companies: allCompanies } = useSetupCompanies();
+  const ownerCompanies = useMemo(
+    () => allCompanies.filter(c => Boolean(c.is_owner) || c.company_type === 'owner'),
+    [allCompanies]
+  );
+  const operatorCompanies = useMemo(
+    () => allCompanies.filter(c => Boolean(c.is_operator) || c.company_type === 'operator'),
+    [allCompanies]
+  );
+  const technicalManagers = useMemo(
+    () => allCompanies.filter(c => Boolean(c.is_technical_manager) || c.company_type === 'technical'),
+    [allCompanies]
+  );
+  const ismManagers = useMemo(
+    () => allCompanies.filter(c => Boolean(c.is_ism_manager) || c.company_type === 'ism'),
+    [allCompanies]
+  );
   const classificationSocieties = useClassificationSocieties();
   const flagStatesHook = useFlagStates();
 
-  const vesselTypes = [
-    'Bulk Carrier', 'Container Ship', 'Crude Oil Tanker', 'Product Tanker',
-    'Chemical Tanker', 'LNG Carrier', 'LPG Carrier', 'General Cargo',
-    'Passenger Ship', 'RoRo Ship', 'Vehicle Carrier', 'Offshore Supply Vessel',
-    'Tugboat', 'Fishing Vessel', 'Yacht'
-  ];
+  // Dynamically load currencies from system setup
+  const crewConfigCurrencies = useCurrencies();
+  const currencies = crewConfigCurrencies.currencies.length > 0
+    ? crewConfigCurrencies.currencies.map(c => c.currency_code)
+    : DEFAULT_CURRENCIES.map(c => c.code);
 
-  const propulsionTypes = ['Single Screw', 'Twin Screw', 'Diesel Electric', 'LNG Dual Fuel', 'Hybrid'];
-  const fuelTypes = ['HFO', 'VLSFO', 'MGO', 'LNG', 'Methanol', 'Dual Fuel'];
-  const hullMaterials = ['Steel', 'Aluminum', 'Fiberglass', 'Composite'];
-  const tradingAreas = ['Worldwide', 'Coastal', 'Short Sea', 'Inland Waterways', 'Restricted'];
+  const ownerCompanyOptions = ownerCompanies.length > 0
+    ? ownerCompanies.map(c => ({ value: c.id, label: c.name }))
+    : DEFAULT_OWNER_COMPANIES.map(name => ({ value: name, label: name }));
+
+  const operatorCompanyOptions = operatorCompanies.length > 0
+    ? operatorCompanies.map(c => ({ value: c.id, label: c.name }))
+    : DEFAULT_OPERATOR_COMPANIES.map(name => ({ value: name, label: name }));
+
+  const technicalManagerOptions = technicalManagers.length > 0
+    ? technicalManagers.map(c => ({ value: c.id, label: c.name }))
+    : DEFAULT_TECHNICAL_MANAGERS.map(name => ({ value: name, label: name }));
+
+  const ismManagerOptions = ismManagers.length > 0
+    ? ismManagers.map(c => ({ value: c.id, label: c.name }))
+    : DEFAULT_ISM_MANAGERS.map(name => ({ value: name, label: name }));
+
+  // ── Dynamic master-data hooks (replaces hardcoded arrays) ──────────────
+  const { items: vesselTypeItems }     = useSetupVesselTypes();
+  const { items: hullMaterialItems }   = useSetupHullMaterials();
+  const { hullCoatings }               = useSetupHullCoatings();
+  const { items: propulsionTypeItems } = useSetupPropulsionTypes();
+  const { items: fuelTypeItems }       = useSetupFuelTypes();
+  const { items: tradingAreaItems }    = useSetupTradingAreas();
+  const { items: engineMakerItems }    = useSetupEngineMakers();
+  const { items: engineModelItems }    = useSetupEngineModels();
+  const { shipyards }                  = useSetupShipyards();
+
+  // Build plain string arrays with safe fallbacks for orgs that haven't seeded yet
+  const vesselTypes    = vesselTypeItems.length    > 0 ? vesselTypeItems.map(t => t.name)                  : ['Bulk Carrier','Container Ship','Crude Oil Tanker','Product Tanker','Chemical Tanker','LNG Carrier','LPG Carrier','General Cargo','Passenger Ship','RoRo Ship','Vehicle Carrier','Offshore Supply Vessel','Tugboat','Fishing Vessel','Yacht'];
+  const hullMaterials  = hullMaterialItems.length  > 0 ? hullMaterialItems.map(m => m.name)                : ['Steel','Aluminum','Fiberglass','Composite'];
+  const hullCoatingOptions = hullCoatings.length   > 0 ? hullCoatings.map(c => c.coating_type)             : ['Epoxy','Antifouling','Polyurethane','Vinyl'];
+  const propulsionTypes = propulsionTypeItems.length > 0 ? propulsionTypeItems.map(p => p.name)            : ['Single Screw','Twin Screw','Diesel Electric','LNG Dual Fuel','Hybrid'];
+  const fuelTypes      = fuelTypeItems.length      > 0 ? fuelTypeItems.map(f => f.name)                    : ['HFO','VLSFO','MGO','LNG','Methanol','Dual Fuel'];
+  const tradingAreas   = tradingAreaItems.length   > 0 ? tradingAreaItems.map(a => a.name)                 : ['Worldwide','Coastal','Short Sea','Inland Waterways','Restricted'];
+  const engineMakers   = engineMakerItems.length   > 0 ? engineMakerItems.map(m => m.maker_name)           : [];
+  const engineModels   = engineModelItems.length   > 0 ? engineModelItems.map(m => m.model_name)           : [];
+  const shipyardOptions = shipyards.length         > 0 ? shipyards.map(s => s.yard_name)                  : [];
+
   const statusOptions = ['active', 'inactive', 'maintenance', 'drydock', 'laid_up'];
-  const currencies = ['USD', 'EUR', 'GBP', 'SGD', 'NOK', 'JPY'];
+
 
   const handleSmartFill = async (overrideUrl?: string | React.MouseEvent, contentType?: string) => {
     const url = typeof overrideUrl === 'string' ? overrideUrl : formData.vessel_brochure;
@@ -654,11 +721,11 @@ const VesselManagement = () => {
         columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55 } },
       });
 
-      // ═══ 9. MANAGEMENT COMPANIES ═══
-      const ownerName = ownerCompanies.companies.find(c => c.id === formData.owner_company_id)?.name;
-      const operatorName = operatorCompanies.companies.find(c => c.id === formData.operator_company_id)?.name;
-      const techMgrName = technicalManagers.companies.find(c => c.id === formData.technical_manager_id)?.name;
-      const ismMgrName = ismManagers.companies.find(c => c.id === formData.ism_manager_id)?.name;
+      // ═══ 9. MANAGEMENT COMPANIES (Unified company master resolution) ═══
+      const ownerName = allCompanies.find(c => c.id === formData.owner_company_id)?.name;
+      const operatorName = allCompanies.find(c => c.id === formData.operator_company_id)?.name;
+      const techMgrName = allCompanies.find(c => c.id === formData.technical_manager_id)?.name;
+      const ismMgrName = allCompanies.find(c => c.id === formData.ism_manager_id)?.name;
 
       startY = addSectionHeader('MANAGEMENT & OWNERSHIP', 9);
 
@@ -1085,14 +1152,14 @@ const VesselManagement = () => {
                       {renderSelectField('flag_state', 'Flag', formData.flag_state, (v) => setFormData({ ...formData, flag_state: v }),
                         flagStatesHook.flagStates.length > 0
                           ? flagStatesHook.flagStates.map(f => ({ value: f.flag_name, label: f.flag_name }))
-                          : ['Panama', 'Liberia', 'Marshall Islands', 'Singapore', 'Bahamas', 'Malta']
+                          : DEFAULT_FLAG_STATES.map(f => ({ value: f, label: f }))
                       )}
                       {renderFormField('port_of_registry', 'Port', formData.port_of_registry, (v) => setFormData({ ...formData, port_of_registry: v }))}
                       {renderFormField('year_built', 'Built', formData.year_built, (v) => setFormData({ ...formData, year_built: v }), 'number', '2020')}
                       {renderSelectField('classification_society', 'Class', formData.classification_society, (v) => setFormData({ ...formData, classification_society: v }),
                         classificationSocieties.societies.length > 0
                           ? classificationSocieties.societies.map(s => ({ value: s.society_name, label: `${s.society_name} (${s.abbreviation || ''})` }))
-                          : ['DNV GL', "Lloyd's Register", 'ABS', 'Bureau Veritas']
+                          : DEFAULT_CLASSIFICATION_SOCIETIES.map(s => ({ value: s, label: s }))
                       )}
                       {renderFormField('class_number', 'Class No', formData.class_number, (v) => setFormData({ ...formData, class_number: v }))}
                       {renderSelectField('status', 'Status', formData.status, (v) => setFormData({ ...formData, status: v }), statusOptions)}
@@ -1110,14 +1177,20 @@ const VesselManagement = () => {
                       {renderFormField('draft', 'Draft (m)', formData.draft, (v) => setFormData({ ...formData, draft: v }), 'number')}
                       {renderFormField('cargo_capacity', 'Cargo Cap', formData.cargo_capacity, (v) => setFormData({ ...formData, cargo_capacity: v }), 'number')}
                       {renderSelectField('hull_material', 'Hull Mat', formData.hull_material, (v) => setFormData({ ...formData, hull_material: v }), hullMaterials)}
-                      {renderFormField('hull_coating', 'Hull Coating', formData.hull_coating, (v) => setFormData({ ...formData, hull_coating: v }))}
+                      {hullCoatingOptions.length > 0
+                        ? renderSelectField('hull_coating', 'Hull Coating', formData.hull_coating, (v) => setFormData({ ...formData, hull_coating: v }), hullCoatingOptions)
+                        : renderFormField('hull_coating', 'Hull Coating', formData.hull_coating, (v) => setFormData({ ...formData, hull_coating: v }))}
                     </div>
                   </TabsContent>
 
                   <TabsContent value="machinery" className="space-y-5 mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      {renderFormField('engine_make', 'Eng Make', formData.engine_make, (v) => setFormData({ ...formData, engine_make: v }))}
-                      {renderFormField('engine_model', 'Eng Model', formData.engine_model, (v) => setFormData({ ...formData, engine_model: v }))}
+                      {engineMakers.length > 0
+                        ? renderSelectField('engine_make', 'Eng Make', formData.engine_make, (v) => setFormData({ ...formData, engine_make: v }), engineMakers)
+                        : renderFormField('engine_make', 'Eng Make', formData.engine_make, (v) => setFormData({ ...formData, engine_make: v }))}
+                      {engineModels.length > 0
+                        ? renderSelectField('engine_model', 'Eng Model', formData.engine_model, (v) => setFormData({ ...formData, engine_model: v }), engineModels)
+                        : renderFormField('engine_model', 'Eng Model', formData.engine_model, (v) => setFormData({ ...formData, engine_model: v }))}
                       {renderFormField('engine_power', 'Power (kW)', formData.engine_power, (v) => setFormData({ ...formData, engine_power: v }), 'number')}
                       {renderSelectField('propulsion_type', 'Propulsion', formData.propulsion_type, (v) => setFormData({ ...formData, propulsion_type: v }), propulsionTypes)}
                       {renderFormField('max_speed', 'Max (kn)', formData.max_speed, (v) => setFormData({ ...formData, max_speed: v }), 'number')}
@@ -1141,7 +1214,9 @@ const VesselManagement = () => {
                   <TabsContent value="drydock" className="space-y-5 mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       {renderFormField('last_drydock_date', 'Previous DD Date', formData.last_drydock_date, (v) => setFormData({ ...formData, last_drydock_date: v }), 'date')}
-                      {renderFormField('previous_yard', 'Previous DD Yard', formData.previous_yard, (v) => setFormData({ ...formData, previous_yard: v }), 'text', 'Yard name...')}
+                      {shipyardOptions.length > 0
+                        ? renderSelectField('previous_yard', 'Previous DD Yard', formData.previous_yard, (v) => setFormData({ ...formData, previous_yard: v }), shipyardOptions)
+                        : renderFormField('previous_yard', 'Previous DD Yard', formData.previous_yard, (v) => setFormData({ ...formData, previous_yard: v }), 'text', 'Yard name...')}
                       {renderFormField('next_drydock_date', 'Next DD Date', formData.next_drydock_date, (v) => setFormData({ ...formData, next_drydock_date: v }), 'date')}
                     </div>
                     <div className="space-y-2">
@@ -1336,16 +1411,16 @@ const VesselManagement = () => {
                   <TabsContent value="management" className="space-y-5 mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       {renderSelectField('owner_company_id', 'Owner', formData.owner_company_id, (v) => setFormData({ ...formData, owner_company_id: v }),
-                        ownerCompanies.companies.map(c => ({ value: c.id, label: c.name }))
+                        ownerCompanyOptions
                       )}
                       {renderSelectField('operator_company_id', 'Operator', formData.operator_company_id, (v) => setFormData({ ...formData, operator_company_id: v }),
-                        operatorCompanies.companies.map(c => ({ value: c.id, label: c.name }))
+                        operatorCompanyOptions
                       )}
                       {renderSelectField('technical_manager_id', 'Technical Manager', formData.technical_manager_id, (v) => setFormData({ ...formData, technical_manager_id: v }),
-                        technicalManagers.companies.map(c => ({ value: c.id, label: c.name }))
+                        technicalManagerOptions
                       )}
                       {renderSelectField('ism_manager_id', 'ISM Manager', formData.ism_manager_id, (v) => setFormData({ ...formData, ism_manager_id: v }),
-                        ismManagers.companies.map(c => ({ value: c.id, label: c.name }))
+                        ismManagerOptions
                       )}
                     </div>
                     <div className="space-y-2">
