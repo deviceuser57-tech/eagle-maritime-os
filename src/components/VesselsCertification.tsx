@@ -34,7 +34,7 @@ const VesselsCertification = () => {
   const { societies } = useClassificationSocieties();
   const { flagStates } = useFlagStates();
   const { items: dbSurveyTypes } = useSetupSurveyTypes();
-  const { surveyors: dbSurveyors } = useSetupSurveyors();
+  const { items: dbSurveyors } = useSetupSurveyors();
 
   const surveyTypeOptions = dbSurveyTypes.length > 0
     ? dbSurveyTypes.map(s => s.name)
