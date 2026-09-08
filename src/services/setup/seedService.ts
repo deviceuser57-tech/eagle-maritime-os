@@ -245,7 +245,8 @@ export const seedSetupData = async (orgId: string, userId: string) => {
       await supabase.from('setup_certificate_types').insert(
         DEFAULT_STATUTORY_CERTIFICATES.map(certificate_name => ({
           certificate_name,
-          validity_years: 5,
+          certificate_category: 'Statutory',
+          validity_months: 60,
           org_id: orgId,
           user_id: userId,
         }))
