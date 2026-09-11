@@ -215,7 +215,7 @@ const Dashboard = ({ onSectionChange }: DashboardProps) => {
                     labelLine={false}
                     label={({ name, value }) => `${name}: ${value}`}
                     outerRadius={80}
-                    fill="#8884d8"
+                    fill="hsl(var(--primary))"
                     dataKey="value"
                   >
                     {fleetStatusData.map((entry, index) => (
@@ -246,8 +246,8 @@ const Dashboard = ({ onSectionChange }: DashboardProps) => {
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="compliant" stackId="a" fill="#22c55e" />
-                <Bar dataKey="nonCompliant" stackId="a" fill="#ef4444" />
+                <Bar dataKey="compliant" stackId="a" fill="hsl(var(--success-green))" />
+                <Bar dataKey="nonCompliant" stackId="a" fill="hsl(var(--destructive))" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

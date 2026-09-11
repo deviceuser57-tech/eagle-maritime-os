@@ -94,18 +94,18 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/20 to-background p-4">
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-5">
             <img src={eagleLogo} alt="Eagle Maritime OS" className="h-28 w-28 object-contain drop-shadow-xl" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2 whitespace-pre-wrap">Eagle Maritime OS{"\n"}Compliance Operation System&nbsp;</h1>
-          <p className="text-slate-300">Fleet Management & Safety System</p>
+          <h1 className="text-3xl font-black tracking-tight text-foreground mb-2 whitespace-pre-wrap">Eagle Maritime OS{"\n"}Compliance Operation System&nbsp;</h1>
+          <p className="text-muted-foreground">Fleet Management & Safety System</p>
         </div>
 
-        <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+        <Card className="maritime-card border-border bg-card/70 backdrop-blur-xl">
           <CardContent className="p-6">
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
@@ -116,32 +116,32 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email" className="text-slate-200">Email</Label>
+                    <Label htmlFor="login-email" className="text-foreground">Email</Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="login-email"
                         type="email"
                         placeholder="you@example.com"
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
-                        className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                        className="pl-10 bg-background/60 border-border text-foreground placeholder:text-muted-foreground"
                         required
                       />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="login-password" className="text-slate-200">Password</Label>
+                    <Label htmlFor="login-password" className="text-foreground">Password</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="login-password"
                         type="password"
                         placeholder="••••••••"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
-                        className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                        className="pl-10 bg-background/60 border-border text-foreground placeholder:text-muted-foreground"
                         required
                       />
                     </div>
@@ -156,63 +156,63 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
               <TabsContent value="signup">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="display-name" className="text-slate-200">Display Name</Label>
+                    <Label htmlFor="display-name" className="text-foreground">Display Name</Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="display-name"
                         type="text"
                         placeholder="John Doe"
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
-                        className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                        className="pl-10 bg-background/60 border-border text-foreground placeholder:text-muted-foreground"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email" className="text-slate-200">Email</Label>
+                    <Label htmlFor="signup-email" className="text-foreground">Email</Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signup-email"
                         type="email"
                         placeholder="you@example.com"
                         value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)}
-                        className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                        className="pl-10 bg-background/60 border-border text-foreground placeholder:text-muted-foreground"
                         required
                       />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password" className="text-slate-200">Password</Label>
+                    <Label htmlFor="signup-password" className="text-foreground">Password</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signup-password"
                         type="password"
                         placeholder="••••••••"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
-                        className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                        className="pl-10 bg-background/60 border-border text-foreground placeholder:text-muted-foreground"
                         required
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirm-password" className="text-slate-200">Confirm Password</Label>
+                    <Label htmlFor="confirm-password" className="text-foreground">Confirm Password</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="confirm-password"
                         type="password"
                         placeholder="••••••••"
                         value={signupConfirmPassword}
                         onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                        className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                        className="pl-10 bg-background/60 border-border text-foreground placeholder:text-muted-foreground"
                         required
                       />
                     </div>
@@ -227,7 +227,7 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
           </CardContent>
         </Card>
 
-        <p className="text-center text-slate-400 text-sm mt-6 whitespace-pre-wrap">
+        <p className="text-center text-muted-foreground text-sm mt-6 whitespace-pre-wrap">
           Secure maritime fleet management powered by Lovable Cloud{"\n"}{"\n"}Elhamy Sobhy&nbsp; 2025-2026
         </p>
       </div>

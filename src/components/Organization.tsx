@@ -180,7 +180,7 @@ const Organization = () => {
                 <Card className="maritime-card overflow-hidden group">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
                         <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Organization Name</CardTitle>
-                        <div className="p-2 rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                        <div className="p-2 rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                             <Building className="h-4 w-4" />
                         </div>
                     </CardHeader>
@@ -196,7 +196,7 @@ const Organization = () => {
                 <Card className="maritime-card overflow-hidden group">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
                         <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Subscription Plan</CardTitle>
-                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500 transition-colors group-hover:bg-blue-500 group-hover:text-white">
+                        <div className="p-2 rounded-xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-accent-foreground">
                             <ShieldCheck className="h-4 w-4" />
                         </div>
                     </CardHeader>
@@ -212,7 +212,7 @@ const Organization = () => {
                 <Card className="maritime-card overflow-hidden group sm:col-span-2 lg:col-span-1">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
                         <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Fleet Personnel</CardTitle>
-                        <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 transition-colors group-hover:bg-emerald-500 group-hover:text-white">
+                        <div className="p-2 rounded-xl bg-[hsl(var(--success-green))]/10 text-[hsl(var(--success-green))] transition-colors group-hover:bg-[hsl(var(--success-green))] group-hover:text-primary-foreground">
                             <Users className="h-4 w-4" />
                         </div>
                     </CardHeader>

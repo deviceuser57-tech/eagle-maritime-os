@@ -1131,7 +1131,7 @@ const VesselManagement = () => {
                           size="sm"
                           disabled={isUploading === 'brochure'}
                           onClick={() => brochureInputRef.current?.click()}
-                          className="rounded-xl h-10 px-4 border-primary/30 hover:bg-primary hover:text-white transition-all font-bold text-xs"
+                          className="rounded-xl h-10 px-4 border-primary/30 hover:bg-primary hover:text-primary-foreground transition-all font-bold text-xs"
                         >
                           {isUploading === 'brochure' ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -1397,7 +1397,7 @@ const VesselManagement = () => {
                             variant="outline"
                             size="sm"
                             disabled={viewMode || isUploading === 'brochure'}
-                            className="rounded-xl h-9 hover:bg-primary hover:text-white transition-all"
+                            className="rounded-xl h-9 hover:bg-primary hover:text-primary-foreground transition-all"
                             onClick={() => brochureInputRef.current?.click()}
                           >
                             <Upload className="h-3.5 w-3.5 mr-2" /> Upload
@@ -1517,7 +1517,7 @@ const VesselManagement = () => {
                         <div className="mt-3 flex gap-2">
                           <Button
                             variant="ghost"
-                            className="h-7 px-3 text-[10px] font-bold text-primary hover:text-white hover:bg-primary rounded-full border border-primary/30 uppercase"
+                            className="h-7 px-3 text-[10px] font-bold text-primary hover:text-primary-foreground hover:bg-primary rounded-full border border-primary/30 uppercase"
                             onClick={() => handleSmartFill()}
                             disabled={isAiGenerating || !formData.vessel_brochure}
                           >
