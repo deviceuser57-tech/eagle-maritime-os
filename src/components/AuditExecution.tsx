@@ -63,7 +63,7 @@ const AuditExecution = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-foreground mb-2">✍️ Audit Execution</h2>
+          <h2 className="text-3xl font-black tracking-tighter uppercase text-foreground mb-2">Audit Execution</h2>
           <p className="text-muted-foreground">
             Conduct audits with digital checklists, real-time documentation, and mobile support.
           </p>

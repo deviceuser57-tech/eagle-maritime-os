@@ -100,7 +100,7 @@ const Operations = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-foreground mb-2">🛥️ Operations</h2>
+          <h2 className="text-3xl font-black tracking-tighter uppercase text-foreground mb-2">Operations</h2>
           <p className="text-muted-foreground">
             Monitor real-time vessel operations, voyage planning, and fleet activity.
           </p>

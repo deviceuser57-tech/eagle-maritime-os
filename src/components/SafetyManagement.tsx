@@ -83,7 +83,7 @@ const SafetyManagement = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold text-foreground mb-2">🛡️ Safety Management System</h2>
+        <h2 className="text-3xl font-black tracking-tighter uppercase text-foreground mb-2">Safety Management System</h2>
         <p className="text-muted-foreground">
           Comprehensive ISM Code compliance with integrated safety procedures and documentation.
         </p>

@@ -120,7 +120,7 @@ const CrewManagement = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-foreground mb-2">👨‍✈️ Crew Management</h2>
+          <h2 className="text-3xl font-black tracking-tighter uppercase text-foreground mb-2">Crew Management</h2>
           <p className="text-muted-foreground">
             Manage crew members, certifications, medical fitness, and training schedules across your fleet.
           </p>
