@@ -4247,12 +4247,7 @@ export type Database = {
           org_id: string
         }[]
       }
-      get_user_org_ids: {
-        Args: never
-        Returns: {
-          org_id: string
-        }[]
-      }
+      get_user_org_ids: { Args: never; Returns: string[] }
       rpc_accept_invitation: { Args: { p_token: string }; Returns: Json }
       rpc_calculate_vessel_compliance: {
         Args: { p_vessel_id: string }

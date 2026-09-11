@@ -23,7 +23,7 @@ const UserAuth = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold text-foreground mb-2">🔒 User Authentication</h2>
+        <h2 className="text-3xl font-black tracking-tighter uppercase text-foreground mb-2">User Authentication</h2>
         <p className="text-muted-foreground">
           Manage user access, roles, and security settings for your fleet management system.
         </p>

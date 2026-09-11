@@ -91,7 +91,7 @@ const DigitalCompliance = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold text-foreground mb-2">✅ Digital Compliance</h2>
+        <h2 className="text-3xl font-black tracking-tighter uppercase text-foreground mb-2">Digital Compliance</h2>
         <p className="text-muted-foreground">
           Real-time compliance monitoring across all regulatory requirements and standards.
         </p>

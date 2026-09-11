@@ -53,7 +53,7 @@ const SecurityPostureDashboard = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-3xl font-bold text-foreground mb-2">🛡️ Security Posture</h2>
+        <h2 className="text-3xl font-black tracking-tighter uppercase text-foreground mb-2">Security Posture</h2>
         <p className="text-muted-foreground">
           Real-time security health, RLS coverage, and audit activity for your organisation.
         </p>

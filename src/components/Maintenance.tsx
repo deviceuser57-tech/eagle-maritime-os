@@ -203,7 +203,7 @@ const Maintenance = () => {
   if (!user) {
     return (
       <div className="space-y-6">
-        <h2 className="text-3xl font-bold text-foreground mb-2">🛠️ Maintenance</h2>
+        <h2 className="text-3xl font-black tracking-tighter uppercase text-foreground mb-2">Maintenance</h2>
         <Card className="maritime-card"><CardContent className="py-12 text-center">
           <Wrench className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground">Please log in to manage maintenance tasks.</p>
@@ -216,7 +216,7 @@ const Maintenance = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-foreground mb-2">🛠️ Maintenance Planner</h2>
+          <h2 className="text-3xl font-black tracking-tighter uppercase text-foreground mb-2">Maintenance Planner</h2>
           <p className="text-muted-foreground">Plan preventive, corrective, and condition-based maintenance across your fleet.</p>
         </div>
         <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) { setEditingTask(null); resetForm(); } }}>
