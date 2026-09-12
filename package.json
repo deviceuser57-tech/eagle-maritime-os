@@ -45,7 +45,7 @@
     "@supabase/supabase-js": "^2.87.0",
     "@tanstack/react-query": "^5.56.2",
     "baseline-browser-mapping": "^2.9.19",
-    "caniuse-lite": "^1.0.30001770",
+    "caniuse-lite": "^2.0.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
@@ -68,7 +68,7 @@
     "recharts": "^2.12.7",
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.0",
+    "tailwindcss-animate": "^1.1.0",
     "tus-js-client": "^4.3.1",
     "vaul": "^0.9.3",
     "zod": "^4"
