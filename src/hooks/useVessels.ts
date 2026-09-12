@@ -14,6 +14,64 @@ export interface Vessel {
 
 type VesselCreate = Partial<Omit<Vessel, 'id' | 'created_at' | 'updated_at' | 'org_id'>> & Pick<Vessel, 'name'>;
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const toBase64 = (value: string) => btoa(unescape(encodeURIComponent(value)));
+
+async function resumableStorageUpload(file: File, filePath: string, contentType: string, accessToken: string, projectRef: string) {
+  const endpoint = `https://${projectRef}.storage.supabase.co/storage/v1/upload/resumable`;
+  const chunkSize = 6 * 1024 * 1024;
+  const metadata = [
+    `bucketName ${toBase64('vessel-assets')}`,
+    `objectName ${toBase64(filePath)}`,
+    `contentType ${toBase64(contentType)}`,
+    `cacheControl ${toBase64('3600')}`,
+  ].join(',');
+
+  const create = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Tus-Resumable': '1.0.0',
+      'Upload-Length': String(file.size),
+      'Upload-Metadata': metadata,
+    },
+  });
+  if (!create.ok) throw new Error(`Resumable upload initialization failed (HTTP ${create.status})`);
+  const location = create.headers.get('Location');
+  if (!location) throw new Error('Resumable upload did not return an upload URL');
+
+  let offset = 0;
+  while (offset < file.size) {
+    const chunk = file.slice(offset, Math.min(offset + chunkSize, file.size));
+    let response: Response | null = null;
+    let lastError: unknown = null;
+    for (const delay of [0, 2000, 5000, 10000]) {
+      if (delay) await sleep(delay);
+      try {
+        response = await fetch(location, {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Tus-Resumable': '1.0.0',
+            'Upload-Offset': String(offset),
+            'Content-Type': 'application/offset+octet-stream',
+          },
+          body: chunk,
+        });
+        if (response.ok) break;
+        lastError = new Error(`Chunk upload failed (HTTP ${response.status})`);
+      } catch (error) {
+        lastError = error;
+        response = null;
+      }
+    }
+    if (!response?.ok) throw lastError instanceof Error ? lastError : new Error('Resumable upload failed');
+    const nextOffset = Number(response.headers.get('Upload-Offset'));
+    if (!Number.isFinite(nextOffset) || nextOffset <= offset) throw new Error('Storage returned an invalid upload offset');
+    offset = nextOffset;
+  }
+}
+
 export const useVessels = () => {
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,40 +133,14 @@ export const useVessels = () => {
     const resumableThreshold = 6 * 1024 * 1024;
 
     try {
-      // Supabase recommends resumable/TUS uploads for files above 6 MB, especially
-      // on mobile or unstable networks. Vessel brochures are commonly larger than this.
       if (file.size > resumableThreshold) {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
         const accessToken = sessionData.session?.access_token;
         if (!accessToken) throw new Error('Your login session has expired. Please sign in again and retry the upload.');
-
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
         const projectRef = new URL(supabaseUrl).hostname.split('.')[0];
-        const { Upload } = await import('tus-js-client');
-
-        await new Promise<void>((resolve, reject) => {
-          const upload = new Upload(file, {
-            endpoint: `https://${projectRef}.storage.supabase.co/storage/v1/upload/resumable`,
-            retryDelays: [0, 3000, 5000, 10000, 20000],
-            headers: { authorization: `Bearer ${accessToken}`, 'x-upsert': 'false' },
-            uploadDataDuringCreation: true,
-            removeFingerprintOnSuccess: true,
-            chunkSize: resumableThreshold,
-            metadata: {
-              bucketName: 'vessel-assets',
-              objectName: filePath,
-              contentType,
-              cacheControl: '3600',
-            },
-            onError: (error) => reject(error),
-            onSuccess: () => resolve(),
-          });
-          upload.findPreviousUploads().then(previousUploads => {
-            if (previousUploads.length) upload.resumeFromPreviousUpload(previousUploads[0]);
-            upload.start();
-          }).catch(reject);
-        });
+        await resumableStorageUpload(file, filePath, contentType, accessToken, projectRef);
         return filePath;
       }
 
