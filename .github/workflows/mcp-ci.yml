@@ -45,43 +45,33 @@ jobs:
         shell: bash
         run: |
           set -e
-
-          test -f src/components/McpApi.tsx
+          test -f src/pages/McpApi.tsx
           test -f src/App.tsx
-
           grep -q "McpApi" src/App.tsx
-
           echo "MCP API source verification passed."
 
       - name: Verify MCP API route
         shell: bash
         run: |
           set -e
-
           grep -Eq '(/mcp-api|mcp-api)' src/App.tsx
-
           echo "MCP API route verification passed."
 
       - name: Verify MCP API documentation
         shell: bash
         run: |
           set -e
-
-          grep -qiE '(/\.mcp/list-tools|list-tools)' src/components/McpApi.tsx
-          grep -qiE 'JSON-RPC|jsonrpc' src/components/McpApi.tsx
-          grep -qiE 'curl' src/components/McpApi.tsx
-
+          grep -qiE '(/\.mcp/list-tools|list-tools)' src/pages/McpApi.tsx
+          grep -qiE 'JSON-RPC|jsonrpc' src/pages/McpApi.tsx
+          grep -qiE 'curl' src/pages/McpApi.tsx
           echo "MCP API documentation verification passed."
 
       - name: Verify Help Center MCP reference
         shell: bash
         run: |
           set -e
-
           test -f src/components/HelpCenter.tsx
-
           grep -qiE 'MCP API Reference|MCP API' src/components/HelpCenter.tsx
-
           echo "Help Center MCP reference verification passed."
 
   browser-test:
@@ -122,7 +112,6 @@ jobs:
             fi
             sleep 2
           done
-
           echo "Application failed to start."
           cat /tmp/eagle-mcp-preview.log
           exit 1
@@ -130,9 +119,8 @@ jobs:
       - name: Create MCP browser test
         run: |
           mkdir -p playwright-tests
-
-          cat > playwright-tests/mcp-api.spec.js <<'EOF'
-          const { test, expect } = require('@playwright/test');
+          cat > playwright-tests/mcp-api.spec.mjs <<'EOF'
+          import { test, expect } from '@playwright/test';
 
           test('MCP API page displays MCP reference content', async ({ page }) => {
             await page.goto('http://127.0.0.1:4173/mcp-api', {
@@ -140,9 +128,7 @@ jobs:
             });
 
             await expect(page).toHaveURL(/\/mcp-api/);
-
             const body = await page.locator('body').innerText();
-
             expect(body).toMatch(/list-tools/i);
             expect(body).toMatch(/curl/i);
             expect(body).toMatch(/json-rpc/i);
@@ -151,7 +137,7 @@ jobs:
 
       - name: Run MCP browser test
         run: |
-          npx playwright test playwright-tests/mcp-api.spec.js --reporter=line
+          npx playwright test playwright-tests/mcp-api.spec.mjs --reporter=line
 
       - name: Upload Playwright report
         if: always()
