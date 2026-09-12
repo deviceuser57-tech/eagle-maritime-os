@@ -1,531 +1,243 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
 
-console.log("Analyze-Image Edge Function v3 — Smart Extraction");
-
-// ---------------------------------------------------------------------------
-// Field definitions with rich context for AI tool-calling
-// ---------------------------------------------------------------------------
 const VESSEL_FIELDS = {
-  // Identity
-  name: { description: "Vessel name as displayed prominently on the document", type: "string" },
-  imo_number: { description: "IMO number — exactly 7 digits, no prefix", type: "string" },
-  call_sign: { description: "Radio call sign", type: "string" },
-  mmsi_number: { description: "MMSI number — 9 digits", type: "string" },
-  official_number: { description: "Official or registry number", type: "string" },
-  vessel_type: { description: "Vessel type: Bulk Carrier, Oil Tanker, Container Ship, General Cargo, Chemical Tanker, LNG Carrier, LPG Carrier, Ro-Ro, Car Carrier, Passenger, Cruise, Offshore, Tug, Barge, etc.", type: "string" },
-  flag_state: { description: "Flag state / country of registry", type: "string" },
-  port_of_registry: { description: "Port of registry / home port", type: "string" },
-  classification_society: { description: "Classification society: DNV, Lloyd's Register (LR), Bureau Veritas (BV), ABS, ClassNK, RINA, CCS, KR, IRS", type: "string" },
-  class_number: { description: "Classification society class number or ID", type: "string" },
-  status: { description: "Vessel operational status: active, laid-up, under-construction, scrapped", type: "string" },
-
-  // Tonnage & Dimensions
-  gross_tonnage: { description: "Gross Tonnage (GT) — numeric value only", type: "number" },
-  net_tonnage: { description: "Net Tonnage (NT) — numeric value only", type: "number" },
-  deadweight: { description: "Deadweight tonnage (DWT) — numeric value only", type: "number" },
-  length_overall: { description: "Length Overall (LOA) in meters — numeric only", type: "number" },
-  beam: { description: "Beam / Breadth in meters — numeric only", type: "number" },
-  depth: { description: "Depth / Moulded Depth in meters — numeric only", type: "number" },
-  draft: { description: "Maximum Draft / Draught in meters — numeric only", type: "number" },
-  cargo_capacity: { description: "Cargo capacity in cubic meters or metric tons — numeric only", type: "number" },
-
-  // Construction
-  year_built: { description: "Year of construction — 4-digit year", type: "number" },
-  hull_material: { description: "Hull material: Steel, Aluminum, FRP, etc.", type: "string" },
-  hull_coating: { description: "Hull coating / anti-fouling system details", type: "string" },
-  keel_laid_date: { description: "Keel laid date in YYYY-MM-DD format", type: "string" },
-  delivery_date: { description: "Vessel delivery date in YYYY-MM-DD format", type: "string" },
-
-  // Machinery
-  engine_make: { description: "Main engine manufacturer: MAN, MAN B&W, Wärtsilä, Mitsubishi, Caterpillar, Yanmar, etc.", type: "string" },
-  engine_model: { description: "Main engine model designation (e.g., 6S60MC-C, 12V46F)", type: "string" },
-  engine_power: { description: "Main engine power output in kW — numeric only", type: "number" },
-  propulsion_type: { description: "Propulsion type: Single Screw, Twin Screw, Azimuth, Diesel-Electric, etc.", type: "string" },
-  max_speed: { description: "Maximum speed in knots — numeric only", type: "number" },
-  service_speed: { description: "Service / cruising speed in knots — numeric only", type: "number" },
-  fuel_consumption: { description: "Daily fuel consumption in metric tonnes/day — numeric only", type: "number" },
-  fuel_type: { description: "Primary fuel type: HFO, VLSFO, MGO, MDO, LNG, Methanol, etc.", type: "string" },
-
-  // Safety & Capacity
-  lifeboats: { description: "Number of lifeboats — numeric only", type: "number" },
-  liferafts: { description: "Number of life rafts — numeric only", type: "number" },
-  crew_capacity: { description: "Maximum crew capacity — numeric only", type: "number" },
-  passenger_capacity: { description: "Passenger capacity — numeric only, 0 if cargo-only vessel", type: "number" },
-
-  // Operations
-  trading_area: { description: "Trading area: Worldwide / Unrestricted, Coastal, Short Sea, Inland, etc.", type: "string" },
-  navigation_equipment: { description: "Navigation equipment summary (ECDIS, Radar, GPS, AIS details)", type: "string" },
-  accommodations_pax: { description: "Accommodation / cabin details", type: "string" },
-  painting_details: { description: "Painting / coating system details", type: "string" },
-
-  // Financial
-  purchase_price: { description: "Purchase price — numeric value only", type: "number" },
-  insurance_value: { description: "Insurance value — numeric value only", type: "number" },
-  currency: { description: "Currency code: USD, EUR, GBP, SGD, NOK, JPY", type: "string" },
+  name: { type: "string", description: "Vessel name" },
+  imo_number: { type: "string", description: "IMO number, exactly 7 digits" },
+  call_sign: { type: "string", description: "Radio call sign" },
+  mmsi_number: { type: "string", description: "MMSI number, exactly 9 digits" },
+  official_number: { type: "string", description: "Official or registry number" },
+  vessel_type: { type: "string", description: "Vessel type" },
+  flag_state: { type: "string", description: "Flag state / country of registry" },
+  port_of_registry: { type: "string", description: "Port of registry" },
+  classification_society: { type: "string", description: "Classification society" },
+  class_number: { type: "string", description: "Class notation / class number" },
+  status: { type: "string", description: "Documented vessel status; do not invent" },
+  gross_tonnage: { type: "number", description: "Gross tonnage (GT), numeric only" },
+  net_tonnage: { type: "number", description: "Net tonnage (NT), numeric only" },
+  deadweight: { type: "number", description: "Deadweight (DWT), numeric only" },
+  length_overall: { type: "number", description: "Length overall (LOA), metres" },
+  beam: { type: "number", description: "Beam / breadth, metres" },
+  depth: { type: "number", description: "Moulded depth, metres" },
+  draft: { type: "number", description: "Draft / draught, metres" },
+  cargo_capacity: { type: "number", description: "Cargo capacity; retain unit in unmapped specs" },
+  year_built: { type: "number", description: "Construction year" },
+  hull_material: { type: "string", description: "Hull material" },
+  hull_coating: { type: "string", description: "Hull coating / antifouling" },
+  keel_laid_date: { type: "string", description: "Keel laid date, preferably YYYY-MM-DD" },
+  delivery_date: { type: "string", description: "Delivery date, preferably YYYY-MM-DD" },
+  engine_make: { type: "string", description: "Main engine manufacturer" },
+  engine_model: { type: "string", description: "Main engine model" },
+  engine_power: { type: "number", description: "Main engine power in kW; retain original unit/value in unmapped specs if conversion is needed" },
+  propulsion_type: { type: "string", description: "Propulsion type" },
+  max_speed: { type: "number", description: "Maximum speed in knots" },
+  service_speed: { type: "number", description: "Service speed in knots" },
+  fuel_consumption: { type: "number", description: "Daily fuel consumption; retain unit in unmapped specs" },
+  fuel_type: { type: "string", description: "Primary fuel type" },
+  lifeboats: { type: "number", description: "Number of lifeboats" },
+  liferafts: { type: "number", description: "Number of life rafts" },
+  crew_capacity: { type: "number", description: "Crew capacity" },
+  passenger_capacity: { type: "number", description: "Passenger capacity" },
+  trading_area: { type: "string", description: "Trading area" },
+  navigation_equipment: { type: "string", description: "Navigation and GMDSS equipment summary" },
+  accommodations_pax: { type: "string", description: "Accommodation / cabin information" },
+  painting_details: { type: "string", description: "Painting/coating information" },
+  purchase_price: { type: "number", description: "Purchase price" },
+  insurance_value: { type: "number", description: "Insurance value" },
+  currency: { type: "string", description: "Currency code" },
+  notes: { type: "string", description: "General document notes and observations that do not belong in another structured field" },
+  additional_unmapped_specifications: { type: "string", description: "MUST contain every useful specification that has no dedicated field. Preserve original value, unit, terminology and document section/source when possible. Do not discard anchors, chains, winches, deck dimensions/strength, tank capacities, generators, thrusters, cranes, pumps, FiFi, fire-fighting systems, class notation details, accommodation details, electrical data, capacities, or other technical data." },
 } as const;
 
-// Build tool-calling schema from field definitions
 function buildToolSchema() {
   const properties: Record<string, any> = {};
   for (const [key, meta] of Object.entries(VESSEL_FIELDS)) {
     properties[key] = {
-      type: meta.type === "number" ? "number" : "string",
+      oneOf: [{ type: meta.type }, { type: "null" }],
       description: meta.description,
     };
-    // Allow null for optional fields
-    if (meta.type === "number") {
-      properties[key] = { oneOf: [{ type: "number" }, { type: "null" }], description: meta.description };
-    } else {
-      properties[key] = { oneOf: [{ type: "string" }, { type: "null" }], description: meta.description };
-    }
   }
-  return {
-    type: "object",
-    properties,
-    required: Object.keys(VESSEL_FIELDS),
-    additionalProperties: false,
-  };
+  return { type: "object", properties, required: Object.keys(VESSEL_FIELDS), additionalProperties: false };
 }
 
-// ---------------------------------------------------------------------------
-// Intelligent post-processing: inference, cross-validation, normalization
-// ---------------------------------------------------------------------------
-function smartPostProcess(data: Record<string, any>): { cleaned: Record<string, any>; inferred: string[] } {
+function smartPostProcess(data: Record<string, any>) {
   const cleaned: Record<string, any> = {};
   const inferred: string[] = [];
-
   for (const [key, meta] of Object.entries(VESSEL_FIELDS)) {
     let value = data[key];
     if (value === null || value === undefined) continue;
-
     if (meta.type === "number") {
       if (typeof value === "string") {
-        value = value.replace(/,/g, '').replace(/\s*(GT|DWT|NT|kW|HP|BHP|m|meters|metres|knots|kn|kt|tons|tonnes|t\/d|t\/day|cbm|cu\.?m|sq\.?m|USD|EUR|GBP|SGD|MW)\.?\s*/gi, '').trim();
-        const parsed = parseFloat(value);
-        value = isNaN(parsed) ? null : parsed;
+        const parsed = parseFloat(value.replace(/,/g, "").replace(/\s*(GT|DWT|NT|kW|HP|BHP|m|meters|metres|knots|kn|kt|tons|tonnes|t\/d|t\/day|cbm|cu\.?m|MW)\.?\s*/gi, "").trim());
+        value = Number.isFinite(parsed) ? parsed : null;
       }
-      if (typeof value === "number") cleaned[key] = value;
+      if (typeof value === "number" && Number.isFinite(value)) cleaned[key] = value;
     } else {
-      const str = String(value).trim();
-      if (str && str.toLowerCase() !== "n/a" && str !== "-" && str.toLowerCase() !== "null" && str.toLowerCase() !== "unknown") {
-        cleaned[key] = str;
-      }
+      const text = String(value).trim();
+      if (text && !/^(n\/a|null|unknown|-)$/.test(text.toLowerCase())) cleaned[key] = text;
     }
   }
-
-  // --- IMO normalization ---
-  if (cleaned.imo_number) {
-    const imoMatch = String(cleaned.imo_number).match(/(\d{7})/);
-    cleaned.imo_number = imoMatch ? imoMatch[1] : null;
-    if (!cleaned.imo_number) delete cleaned.imo_number;
+  if (cleaned.imo_number) cleaned.imo_number = String(cleaned.imo_number).match(/\d{7}/)?.[0];
+  if (cleaned.mmsi_number) cleaned.mmsi_number = String(cleaned.mmsi_number).match(/\d{9}/)?.[0];
+  if (cleaned.classification_society) {
+    const cs = String(cleaned.classification_society).toUpperCase();
+    const map: Record<string, string> = { "DNV GL": "DNV", "DET NORSKE VERITAS": "DNV", DNVGL: "DNV", "LLOYD'S": "Lloyd's Register", LLOYDS: "Lloyd's Register", LR: "Lloyd's Register", "BUREAU VERITAS": "Bureau Veritas", BV: "Bureau Veritas", "AMERICAN BUREAU OF SHIPPING": "ABS", "NIPPON KAIJI KYOKAI": "ClassNK", NK: "ClassNK", NKK: "ClassNK", "REGISTRO ITALIANO": "RINA", "CHINA CLASSIFICATION SOCIETY": "CCS", "KOREAN REGISTER": "KR", "INDIAN REGISTER": "IRS" };
+    for (const [pattern, normalized] of Object.entries(map)) if (cs.includes(pattern)) { cleaned.classification_society = normalized; break; }
   }
-
-  // --- MMSI normalization ---
-  if (cleaned.mmsi_number) {
-    const mmsiMatch = String(cleaned.mmsi_number).match(/(\d{9})/);
-    cleaned.mmsi_number = mmsiMatch ? mmsiMatch[1] : null;
-    if (!cleaned.mmsi_number) delete cleaned.mmsi_number;
-  }
-
-  // --- Intelligent inference: engine power HP→kW ---
-  if (cleaned.engine_power && data._raw_engine_power_unit) {
-    const unit = String(data._raw_engine_power_unit).toUpperCase();
-    if (unit.includes('HP') || unit.includes('BHP')) {
-      cleaned.engine_power = Math.round(cleaned.engine_power * 0.7457);
-      inferred.push("Converted engine power from HP to kW");
-    }
-  }
-
-  // --- Infer vessel status ---
-  if (!cleaned.status) {
-    if (cleaned.year_built && cleaned.year_built > new Date().getFullYear()) {
-      cleaned.status = "under-construction";
-      inferred.push("Inferred status as under-construction from future build year");
-    } else {
-      cleaned.status = "active";
-    }
-  }
-
-  // --- Infer hull material ---
-  if (!cleaned.hull_material && cleaned.gross_tonnage && cleaned.gross_tonnage > 500) {
-    cleaned.hull_material = "Steel";
-    inferred.push("Inferred hull material as Steel for vessel >500 GT");
-  }
-
-  // --- Cross-validate GT vs DWT ---
+  if (!cleaned.hull_material && cleaned.gross_tonnage && cleaned.gross_tonnage > 500) { cleaned.hull_material = "Steel"; inferred.push("Hull material inferred as Steel for vessel >500 GT"); }
   if (cleaned.gross_tonnage && cleaned.deadweight) {
     const ratio = cleaned.deadweight / cleaned.gross_tonnage;
-    if (ratio < 0.3 || ratio > 3.5) {
-      inferred.push(`Warning: GT/DWT ratio (${ratio.toFixed(2)}) is unusual — please verify`);
-    }
+    if (ratio < 0.3 || ratio > 3.5) inferred.push(`Warning: GT/DWT ratio (${ratio.toFixed(2)}) is unusual — verify source document`);
   }
-
-  // --- Cross-validate dimensions ---
-  if (cleaned.length_overall && cleaned.beam) {
-    const lbRatio = cleaned.length_overall / cleaned.beam;
-    if (lbRatio < 3 || lbRatio > 12) {
-      inferred.push(`Warning: L/B ratio (${lbRatio.toFixed(1)}) is unusual — please verify`);
-    }
-  }
-
-  // --- Normalize classification society abbreviations ---
-  if (cleaned.classification_society) {
-    const cs = cleaned.classification_society.toUpperCase();
-    const csMap: Record<string, string> = {
-      "DNV GL": "DNV", "DET NORSKE VERITAS": "DNV", "DNVGL": "DNV",
-      "LLOYD'S": "Lloyd's Register", "LLOYDS": "Lloyd's Register", "LR": "Lloyd's Register",
-      "BUREAU VERITAS": "Bureau Veritas", "BV": "Bureau Veritas",
-      "AMERICAN BUREAU": "ABS", "AMERICAN BUREAU OF SHIPPING": "ABS",
-      "NIPPON KAIJI KYOKAI": "ClassNK", "NK": "ClassNK", "NKK": "ClassNK",
-      "REGISTRO ITALIANO": "RINA",
-      "CHINA CLASSIFICATION": "CCS", "CHINA CLASSIFICATION SOCIETY": "CCS",
-      "KOREAN REGISTER": "KR",
-      "INDIAN REGISTER": "IRS",
-    };
-    for (const [pattern, normalized] of Object.entries(csMap)) {
-      if (cs.includes(pattern)) {
-        cleaned.classification_society = normalized;
-        break;
-      }
-    }
-  }
-
-  // --- Normalize flag state names ---
-  if (cleaned.flag_state) {
-    const flagNorm: Record<string, string> = {
-      "REPUBLIC OF PANAMA": "Panama", "REPUBLIC OF LIBERIA": "Liberia",
-      "REPUBLIC OF MARSHALL ISLANDS": "Marshall Islands", "REPUBLIC OF THE MARSHALL ISLANDS": "Marshall Islands",
-      "RMI": "Marshall Islands", "HONG KONG, CHINA": "Hong Kong",
-      "HONG KONG SAR": "Hong Kong", "REPUBLIC OF SINGAPORE": "Singapore",
-      "COMMONWEALTH OF THE BAHAMAS": "Bahamas", "ISLE OF MAN": "Isle of Man",
-      "KINGDOM OF NORWAY": "Norway", "NIS": "Norway (NIS)",
-    };
-    const upper = cleaned.flag_state.toUpperCase();
-    for (const [pattern, normalized] of Object.entries(flagNorm)) {
-      if (upper.includes(pattern)) {
-        cleaned.flag_state = normalized;
-        break;
-      }
-    }
-  }
-
-  // --- Infer trading area for large vessels ---
-  if (!cleaned.trading_area && cleaned.gross_tonnage && cleaned.gross_tonnage > 3000) {
-    cleaned.trading_area = "Worldwide / Unrestricted";
-    inferred.push("Inferred worldwide trading area for vessel >3000 GT");
-  }
-
-  // Remove null values
-  for (const key of Object.keys(cleaned)) {
-    if (cleaned[key] === null || cleaned[key] === undefined) delete cleaned[key];
-  }
-
   return { cleaned, inferred };
 }
 
-Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+function crc32(bytes: Uint8Array) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let i = 0; i < 8; i++) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
   }
+  return (crc ^ 0xffffffff) >>> 0;
+}
 
+function pngChunk(type: string, data: Uint8Array) {
+  const typeBytes = new TextEncoder().encode(type);
+  const out = new Uint8Array(12 + data.length);
+  new DataView(out.buffer).setUint32(0, data.length);
+  out.set(typeBytes, 4);
+  out.set(data, 8);
+  const crcInput = new Uint8Array(typeBytes.length + data.length);
+  crcInput.set(typeBytes); crcInput.set(data, typeBytes.length);
+  new DataView(out.buffer).setUint32(8 + data.length, crc32(crcInput));
+  return out;
+}
+
+async function rawImageToPng(data: Uint8ClampedArray, width: number, height: number, channels: 1 | 3 | 4) {
+  const colorType = channels === 1 ? 0 : channels === 3 ? 2 : 6;
+  const stride = width * channels;
+  const scanlines = new Uint8Array((stride + 1) * height);
+  for (let y = 0; y < height; y++) {
+    scanlines[y * (stride + 1)] = 0;
+    scanlines.set(data.subarray(y * stride, (y + 1) * stride), y * (stride + 1) + 1);
+  }
+  const compressed = new Uint8Array(await new Response(new Blob([scanlines]).stream().pipeThrough(new CompressionStream("deflate"))).arrayBuffer());
+  const ihdr = new Uint8Array(13);
+  const view = new DataView(ihdr.buffer);
+  view.setUint32(0, width); view.setUint32(4, height); ihdr[8] = 8; ihdr[9] = colorType;
+  const signature = new Uint8Array([137,80,78,71,13,10,26,10]);
+  const chunks = [pngChunk("IHDR", ihdr), pngChunk("IDAT", compressed), pngChunk("IEND", new Uint8Array())];
+  const total = signature.length + chunks.reduce((n, c) => n + c.length, 0);
+  const png = new Uint8Array(total); png.set(signature); let offset = signature.length;
+  for (const chunk of chunks) { png.set(chunk, offset); offset += chunk.length; }
+  return png;
+}
+
+async function extractPdfImages(pdf: any, supabase: any, bucket: string, orgId: string, sourcePath: string) {
+  const extracted: Array<{ url: string; page: number; width: number; height: number; source: string }> = [];
+  const maxImages = 24;
+  const maxPixels = 16_777_216;
+  const safeName = sourcePath.split("/").pop()?.replace(/[^a-zA-Z0-9._-]/g, "_") || "document";
+  for (let pageNumber = 1; pageNumber <= Math.min(pdf.numPages, 60) && extracted.length < maxImages; pageNumber++) {
+    try {
+      const { extractImages } = await import("npm:unpdf");
+      const images = await extractImages(pdf, pageNumber);
+      for (const image of images) {
+        if (extracted.length >= maxImages || image.width * image.height > maxPixels) continue;
+        if (![1, 3, 4].includes(image.channels)) continue;
+        const png = await rawImageToPng(image.data, image.width, image.height, image.channels);
+        const path = `${orgId}/pdf-extracted/${Date.now()}_${safeName}/page-${pageNumber}-${extracted.length + 1}.png`;
+        const { error } = await supabase.storage.from(bucket).upload(path, png, { contentType: "image/png", upsert: false });
+        if (error) { console.error("PDF image upload failed", error); continue; }
+        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+        extracted.push({ url: data.publicUrl, page: pageNumber, width: image.width, height: image.height, source: `PDF page ${pageNumber}` });
+      }
+    } catch (error) { console.error(`PDF image extraction failed on page ${pageNumber}`, error); }
+  }
+  return extracted;
+}
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Missing backend configuration");
-    }
-
-    if (!lovableApiKey) {
-      return new Response(
-        JSON.stringify({ success: false, error: "AI service not configured." }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      );
-    }
-
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "No authorization header" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401,
-      });
-    }
-
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!supabaseUrl || !supabaseKey) throw new Error("Missing backend configuration");
+    if (!lovableApiKey) return new Response(JSON.stringify({ success: false, error: "AI service not configured." }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) return new Response(JSON.stringify({ error: "No authorization header" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const body = await req.json().catch(() => ({}));
     const { fileUrl, contentType, org_id, storageBucket, storagePath } = body;
-
-    if (!org_id) {
-      return new Response(JSON.stringify({ error: "Missing organization context (org_id)" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
-      });
-    }
-
-    if (!storagePath && !fileUrl) {
-      return new Response(JSON.stringify({ error: "Missing storagePath" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
-      });
-    }
-
+    if (!org_id || (!storagePath && !fileUrl)) return new Response(JSON.stringify({ error: "Missing organization context or storage file" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid or expired session" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401,
-      });
+    if (userError || !user) return new Response(JSON.stringify({ error: "Invalid or expired session" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const { data: member, error: memberError } = await supabase.from("organization_members").select("id").eq("user_id", user.id).eq("org_id", org_id).maybeSingle();
+    if (memberError || !member) return new Response(JSON.stringify({ error: "Organization access denied" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    const expectedPrefix = `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/`;
+    let bucket = storageBucket as string | undefined;
+    let path = storagePath as string | undefined;
+    if (!bucket || !path) {
+      if (typeof fileUrl !== "string" || !fileUrl.startsWith(expectedPrefix)) throw new Error("Only files uploaded to project storage can be analyzed");
+      const match = fileUrl.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/]+)\/(.+?)(?:\?.*)?$/);
+      if (!match) throw new Error("Invalid storage URL");
+      bucket = match[1]; path = decodeURIComponent(match[2]);
     }
+    if (!new Set(["vessel-assets", "regulations", "crew-photos"]).has(bucket)) throw new Error("Bucket not allowed");
+    const { data: fileData, error: downloadError } = await supabase.storage.from(bucket).download(path);
+    if (downloadError || !fileData) throw new Error(`Could not fetch document: ${downloadError?.message || "Unknown"}`);
+    const buffer = await fileData.arrayBuffer();
+    if (buffer.byteLength > 20 * 1024 * 1024) return new Response(JSON.stringify({ error: "Document exceeds 20MB size limit" }), { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const mimeType = contentType || fileData.type || "application/pdf";
 
-    const { data: member, error: memberError } = await supabase
-      .from('organization_members')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('org_id', org_id)
-      .maybeSingle();
-
-    if (memberError || !member) {
-      return new Response(JSON.stringify({ error: "Organization access denied" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403,
-      });
-    }
-
-    console.log(`Smart extraction for ${user.email} in org ${org_id}`);
-
-    // -----------------------------------------------------------------------
-    // Download document — SSRF-safe: only Supabase Storage is allowed.
-    // Arbitrary external URLs are rejected to prevent server-side request
-    // forgery against internal/cloud-metadata endpoints.
-    // -----------------------------------------------------------------------
-    let buffer: ArrayBuffer;
-    let mimeType = contentType || "application/pdf";
-    let resolvedBucket = storageBucket as string | undefined;
-    let resolvedPath = storagePath as string | undefined;
-
-    if (!resolvedBucket || !resolvedPath) {
-      // Only accept fileUrl if it clearly points to this project's Supabase Storage.
-      const expectedPrefix = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/`;
-      if (typeof fileUrl !== 'string' || !fileUrl.startsWith(expectedPrefix)) {
-        return new Response(JSON.stringify({
-          error: "Only files uploaded to project storage can be analyzed. Provide storageBucket/storagePath.",
-        }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 });
-      }
-      const storageMatch = fileUrl.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/]+)\/(.+?)(?:\?.*)?$/);
-      if (!storageMatch) {
-        return new Response(JSON.stringify({ error: "Invalid storage URL" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
-        });
-      }
-      resolvedBucket = storageMatch[1];
-      resolvedPath = decodeURIComponent(storageMatch[2]);
-    }
-
-    const ALLOWED_BUCKETS = new Set(['vessel-assets', 'regulations', 'crew-photos']);
-    if (!ALLOWED_BUCKETS.has(resolvedBucket!)) {
-      return new Response(JSON.stringify({ error: "Bucket not allowed" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
-      });
-    }
-
-    console.log(`Storage download: ${resolvedBucket}/${resolvedPath}`);
-    const { data: fileData, error: dlErr } = await supabase.storage.from(resolvedBucket!).download(resolvedPath!);
-    if (dlErr || !fileData) {
-      return new Response(JSON.stringify({ error: `Could not fetch document from storage: ${dlErr?.message || 'Unknown'}` }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
-      });
-    }
-    buffer = await fileData.arrayBuffer();
-    mimeType = contentType || fileData.type || "application/pdf";
-
-    const MAX_BYTES = 20 * 1024 * 1024;
-    if (buffer.byteLength > MAX_BYTES) {
-      return new Response(JSON.stringify({ error: "Document exceeds 20MB size limit" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 413,
-      });
-    }
-
-    // Convert to base64
-    const uint8 = new Uint8Array(buffer);
-    let binary = "";
-    for (let i = 0; i < uint8.byteLength; i++) binary += String.fromCharCode(uint8[i]);
-    const base64Data = btoa(binary);
-
-    // -----------------------------------------------------------------------
-    // PDF Text Extraction Enhancement
-    // -----------------------------------------------------------------------
     let pdfText = "";
+    let extractedMedia: Array<{ url: string; page: number; width: number; height: number; source: string }> = [];
     if (mimeType.includes("pdf") || mimeType === "application/pdf") {
       try {
-        console.log("PDF document detected. Running text extraction...");
         const { getDocumentProxy, extractText } = await import("npm:unpdf");
-        const pdf = await getDocumentProxy(new Uint8Array(buffer));
+        const pdf = await getDocumentProxy(new Uint8Array(buffer), { maxImageSize: 16_777_216 });
         const { totalPages, text } = await extractText(pdf, { mergePages: true });
         pdfText = text || "";
-        console.log(`Successfully extracted ${totalPages} pages and ${pdfText.length} characters of text.`);
-      } catch (pdfErr) {
-        console.error("PDF text extraction failed (will rely purely on vision API):", pdfErr);
-      }
+        extractedMedia = await extractPdfImages(pdf, supabase, bucket, org_id, path);
+        console.log(`PDF processed: ${totalPages} pages, ${pdfText.length} text chars, ${extractedMedia.length} embedded images`);
+      } catch (pdfError) { console.error("PDF processing failed; continuing with vision", pdfError); }
     }
 
-    // -----------------------------------------------------------------------
-    // AI call with tool-calling for structured extraction
-    // -----------------------------------------------------------------------
-    const systemPrompt = `You are an elite Maritime Document Intelligence specialist. You extract vessel technical specifications from ANY maritime document — brochures, data sheets, certificates, classification reports, builder specification sheets, photos of nameplates, and specification tables.
-
-SYNONYM & FIELD MAPPING GUIDE:
-- "name": "Name", "Vessel Name", "Name of Vessel", "Ship Name".
-- "imo_number": "IMO No.", "IMO Number", "IMO", "LRS No.". Exactly 7 digits.
-- "call_sign": "Call Sign", "Signal Letters", "Radio Call Sign".
-- "mmsi_number": "MMSI", "MMSI No.", "MMSI Number". Exactly 9 digits.
-- "official_number": "Official No", "Official Number", "Registry Number", "Reg. No".
-- "vessel_type": "Type", "Vessel Type", "Class / Type", "Name / Type" (if it contains both like 'MV Eagle / Bulk Carrier', extract 'Bulk Carrier').
-- "flag_state": "Flag", "Flag State", "Nationality", "Country of Registry".
-- "port_of_registry": "Port of Registry", "Home Port", "Port of Registry / Place".
-- "classification_society": "Class", "Classification", "Classification Society" (e.g., DNV, LR, ABS).
-- "gross_tonnage": "Gross Tonnage", "GRT", "GT".
-- "net_tonnage": "Net Tonnage", "NRT", "NT".
-- "deadweight": "Deadweight", "Dead Weight", "DWT", "Summer DWT".
-- "length_overall": "Length Overall", "LOA". (If only Length BP or LBP is found, you can use it if LOA is not specified, but prefer LOA).
-- "beam": "Beam", "Beam Moulded", "Breadth", "B Moulded", "Bm".
-- "depth": "Depth", "Depth to Main Deck", "Depth Moulded", "Dm".
-- "draft": "Draft", "Summer Draft", "Design Draft", "Scantling Draft", "Max Draft", "Draught".
-- "engine_make" / "engine_model": Look for "Main Engine", "Generators", "Main Diesel Generators", "Propulsion Engine" etc. to identify manufacturer and model.
-- "fuel_type": "Type of Fuel", "Fuel Type", "Fuel", "MGO/HFO/VLSFO".
-- "fuel_consumption": "Fuel Consumption", "Cons.", "Daily Consumption".
-- "navigation_equipment": Combine GMDSS, Inmarsat C, Navtex, AIS, Radars, ECDIS, Gyro, Compass, GPS, Autopilot, DP System into this text field.
-- "accommodations_pax": Combine Accommodation info (One main cabins, Two main cabins, Total beds, Hospital, Offices, Sewage, Air conditioning) into this text field.
-- "notes": Put all other unmapped fields here (e.g., Deck area, Deck strength, Deck cargo capacity, Thrusters, Bow Thruster, Anchors, Chain, Winch, FiFi, Fire Pumps, etc.) so that they are not lost!
-
-EXPERTISE:
-- You understand maritime abbreviations: LOA, LBP, B/Bm, D/Dm, T/Td, DWT, GT, NT, MCR, NCR, CSR, EEDI, EEXI, CII
-- You can read tabular data, annotations, watermarks, headers, footers, sidebars
-- You recognize vessel classification notation (e.g., ✠1A1, +100A1, NS*, etc.)
-- You understand engine designations (MAN B&W 6S60MC-C → make="MAN B&W", model="6S60MC-C")
-- You can infer vessel type from cargo holds, tank descriptions, or general arrangement drawings
-
-EXTRACTION STRATEGY:
-1. First scan the entire document/extracted text for the vessel name and IMO number.
-2. Look for specification tables — they contain most technical data.
-3. Check document headers, footers, and margins for additional data.
-4. Look at general arrangement drawings for dimensions.
-5. Check machinery sections for engine and propulsion data.
-6. Examine safety equipment sections for lifeboats and life rafts.
-7. If a value appears in multiple places with different precision, use the most precise one.
-8. For numeric fields, return ONLY the numeric value — strip all units.
-9. If you see "approx." or "~", still return the number.
-10. For dates, normalize to YYYY-MM-DD format when possible.
-11. If a text field contains multiple matching items (e.g. Navigation systems: Radars, GPS, ECDIS), list them clearly.
-
-IMPORTANT: Call the extract_vessel_data function with ALL the data you can find. Set null for any field you cannot find or are uncertain about.`;
-
-    const toolSchema = buildToolSchema();
-
+    const uint8 = new Uint8Array(buffer);
+    let binary = ""; for (let i = 0; i < uint8.length; i++) binary += String.fromCharCode(uint8[i]);
+    const base64Data = btoa(binary);
+    const systemPrompt = `You are an elite maritime document intelligence specialist. Extract every vessel specification available in the document. Never invent missing values. Use the dedicated structured fields when a value has a clear match. Everything else MUST be preserved in additional_unmapped_specifications with the original value and unit and, when possible, the document section/source. Include all technical details such as deck data, capacities, tank capacities, anchors, chains, winches, cranes, thrusters, generators, pumps, fire-fighting/FiFi, electrical systems, accommodation details, class notation, dimensions, machinery, navigation/GMDSS and other specification-table values. notes is for general observations; additional_unmapped_specifications is the lossless catch-all. If a numeric value is converted to a normalized unit, preserve the original value/unit in additional_unmapped_specifications. Do not use assumptions to fill fields.`;
+    const userText = `Extract ALL vessel technical specifications from this document and call extract_vessel_data. Review every page, table, drawing annotation, header, footer and specification section. ${pdfText ? `Raw PDF text is included below for exact matching:\n---\n${pdfText}\n---` : ""}`;
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: [
-              { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64Data}` } },
-              { type: "text", text: `Extract ALL vessel technical specifications from this document. Be thorough — examine every section, table, annotation, and drawing. Use the extract_vessel_data tool to return your findings.
-
-${pdfText ? `Here is the raw text extracted directly from the PDF file to help you match exactly:
----
-${pdfText}
----` : ""}` }
-            ]
-          }
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "extract_vessel_data",
-            description: "Submit extracted vessel technical specifications from the maritime document",
-            parameters: toolSchema,
-          }
-        }],
-        tool_choice: { type: "function", function: { name: "extract_vessel_data" } },
-      }),
+      headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "google/gemini-2.5-pro", messages: [{ role: "system", content: systemPrompt }, { role: "user", content: [{ type: "image_url", image_url: { url: `data:${mimeType};base64,${base64Data}` } }, { type: "text", text: userText }] }], tools: [{ type: "function", function: { name: "extract_vessel_data", description: "Return complete vessel specifications", parameters: buildToolSchema() } }], tool_choice: { type: "function", function: { name: "extract_vessel_data" } } }),
     });
-
     if (!aiResponse.ok) {
-      if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ success: false, error: "AI rate limit exceeded. Please try again in a moment." }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 429
-        });
-      }
-      if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ success: false, error: "AI credits exhausted." }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 402
-        });
-      }
-      const errText = await aiResponse.text();
-      console.error("AI Gateway error:", aiResponse.status, errText);
-      throw new Error("AI analysis failed");
+      if (aiResponse.status === 429) return new Response(JSON.stringify({ success: false, error: "AI rate limit exceeded. Please try again in a moment." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (aiResponse.status === 402) return new Response(JSON.stringify({ success: false, error: "AI credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      console.error("AI Gateway error", aiResponse.status, await aiResponse.text()); throw new Error("AI analysis failed");
     }
-
     const aiResult = await aiResponse.json();
-
-    // Extract from tool call response
     let rawData: Record<string, any> = {};
     const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
-    if (toolCall?.function?.arguments) {
-      try {
-        rawData = typeof toolCall.function.arguments === 'string'
-          ? JSON.parse(toolCall.function.arguments)
-          : toolCall.function.arguments;
-      } catch (e) {
-        console.error("Failed to parse tool call arguments:", e);
-      }
-    }
-
-    // Fallback: try parsing from content if tool call not present
-    if (Object.keys(rawData).length === 0) {
+    if (toolCall?.function?.arguments) rawData = typeof toolCall.function.arguments === "string" ? JSON.parse(toolCall.function.arguments) : toolCall.function.arguments;
+    if (!Object.keys(rawData).length) {
       const content = aiResult.choices?.[0]?.message?.content || "";
-      try {
-        const match = content.match(/\{[\s\S]*\}/);
-        if (match) rawData = JSON.parse(match[0]);
-      } catch (e) {
-        console.error("Fallback JSON parse failed:", e);
-        throw new Error("Could not extract vessel specifications from document");
-      }
+      const match = content.match(/\{[\s\S]*\}/); if (match) rawData = JSON.parse(match[0]);
     }
-
-    // -----------------------------------------------------------------------
-    // Smart post-processing
-    // -----------------------------------------------------------------------
     const { cleaned, inferred } = smartPostProcess(rawData);
-    const fieldsExtracted = Object.keys(cleaned).length;
-
-    console.log(`Smart extraction complete: ${fieldsExtracted} fields, ${inferred.length} inferences`);
-    if (inferred.length > 0) console.log("Inferences:", inferred.join("; "));
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: cleaned,
-        fields_extracted: fieldsExtracted,
-        inferences: inferred,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-    );
-
+    if (extractedMedia.length) cleaned.notes = [cleaned.notes, `Embedded PDF images extracted to Vessel Media: ${extractedMedia.length} image(s).`].filter(Boolean).join("\n");
+    return new Response(JSON.stringify({ success: true, data: cleaned, fields_extracted: Object.keys(cleaned).length, inferences: inferred, extracted_media: extractedMedia }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error: any) {
     console.error(`Edge Function Error: ${error.message}`);
-    return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
+    return new Response(JSON.stringify({ success: false, error: error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
