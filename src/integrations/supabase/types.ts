@@ -332,6 +332,13 @@ export type Database = {
             foreignKeyName: "audits_vessel_id_fkey"
             columns: ["vessel_id"]
             isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "audits_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
             referencedRelation: "vessels"
             referencedColumns: ["id"]
           },
@@ -467,6 +474,13 @@ export type Database = {
             foreignKeyName: "cii_records_vessel_id_fkey"
             columns: ["vessel_id"]
             isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "cii_records_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
             referencedRelation: "vessels"
             referencedColumns: ["id"]
           },
@@ -531,6 +545,13 @@ export type Database = {
             columns: ["vessel_id"]
             isOneToOne: false
             referencedRelation: "vessel_daily_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "communications_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
             referencedColumns: ["vessel_id"]
           },
           {
@@ -713,6 +734,13 @@ export type Database = {
             columns: ["vessel_id"]
             isOneToOne: false
             referencedRelation: "vessel_daily_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "crew_members_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
             referencedColumns: ["vessel_id"]
           },
           {
@@ -1131,6 +1159,13 @@ export type Database = {
             foreignKeyName: "incidents_vessel_id_fkey"
             columns: ["vessel_id"]
             isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "incidents_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
             referencedRelation: "vessels"
             referencedColumns: ["id"]
           },
@@ -1207,6 +1242,13 @@ export type Database = {
             columns: ["vessel_id"]
             isOneToOne: false
             referencedRelation: "vessel_daily_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
             referencedColumns: ["vessel_id"]
           },
           {
@@ -1295,6 +1337,13 @@ export type Database = {
             columns: ["vessel_id"]
             isOneToOne: false
             referencedRelation: "vessel_daily_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "maintenance_tasks_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
             referencedColumns: ["vessel_id"]
           },
           {
@@ -1546,6 +1595,13 @@ export type Database = {
             foreignKeyName: "project_vessels_vessel_id_fkey"
             columns: ["vessel_id"]
             isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "project_vessels_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
             referencedRelation: "vessels"
             referencedColumns: ["id"]
           },
@@ -1676,6 +1732,13 @@ export type Database = {
             columns: ["vessel_id"]
             isOneToOne: false
             referencedRelation: "vessel_daily_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "regulation_vessels_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
             referencedColumns: ["vessel_id"]
           },
           {
@@ -3676,6 +3739,13 @@ export type Database = {
             foreignKeyName: "vessel_certifications_vessel_id_fkey"
             columns: ["vessel_id"]
             isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "vessel_certifications_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
             referencedRelation: "vessels"
             referencedColumns: ["id"]
           },
@@ -3719,6 +3789,13 @@ export type Database = {
             columns: ["vessel_id"]
             isOneToOne: false
             referencedRelation: "vessel_daily_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "vessel_compliance_history_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
             referencedColumns: ["vessel_id"]
           },
           {
@@ -3783,6 +3860,13 @@ export type Database = {
             columns: ["vessel_id"]
             isOneToOne: true
             referencedRelation: "vessel_daily_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "vessel_compliance_scores_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: true
+            referencedRelation: "vessel_project_cost_summary"
             referencedColumns: ["vessel_id"]
           },
           {
@@ -3894,6 +3978,13 @@ export type Database = {
             columns: ["vessel_id"]
             isOneToOne: false
             referencedRelation: "vessel_daily_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "vessel_equipment_costs_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
             referencedColumns: ["vessel_id"]
           },
           {
@@ -4012,6 +4103,13 @@ export type Database = {
             foreignKeyName: "vessel_financial_baseline_vessel_id_fkey"
             columns: ["vessel_id"]
             isOneToOne: true
+            referencedRelation: "vessel_project_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "vessel_financial_baseline_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: true
             referencedRelation: "vessels"
             referencedColumns: ["id"]
           },
@@ -4071,6 +4169,84 @@ export type Database = {
           },
           {
             foreignKeyName: "vessel_financial_daily_costs_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "vessel_financial_daily_costs_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vessel_project_costs: {
+        Row: {
+          amount: number
+          created_at: string
+          currency_code: string
+          description: string
+          id: string
+          notes: string | null
+          org_id: string
+          project_reference: string | null
+          sort_order: number
+          updated_at: string
+          vessel_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency_code?: string
+          description: string
+          id?: string
+          notes?: string | null
+          org_id: string
+          project_reference?: string | null
+          sort_order?: number
+          updated_at?: string
+          vessel_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency_code?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          org_id?: string
+          project_reference?: string | null
+          sort_order?: number
+          updated_at?: string
+          vessel_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vessel_project_costs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vessel_project_costs_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessel_daily_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "vessel_project_costs_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "vessel_project_costs_vessel_id_fkey"
             columns: ["vessel_id"]
             isOneToOne: false
             referencedRelation: "vessels"
@@ -4157,6 +4333,13 @@ export type Database = {
             foreignKeyName: "vessel_regularities_vessel_id_fkey"
             columns: ["vessel_id"]
             isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "vessel_regularities_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
             referencedRelation: "vessels"
             referencedColumns: ["id"]
           },
@@ -4210,6 +4393,13 @@ export type Database = {
             columns: ["vessel_id"]
             isOneToOne: false
             referencedRelation: "vessel_daily_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "vessel_regulation_tags_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
             referencedColumns: ["vessel_id"]
           },
           {
@@ -4670,6 +4860,13 @@ export type Database = {
             foreignKeyName: "voyages_vessel_id_fkey"
             columns: ["vessel_id"]
             isOneToOne: false
+            referencedRelation: "vessel_project_cost_summary"
+            referencedColumns: ["vessel_id"]
+          },
+          {
+            foreignKeyName: "voyages_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
             referencedRelation: "vessels"
             referencedColumns: ["id"]
           },
@@ -4926,8 +5123,43 @@ export type Database = {
           },
         ]
       }
+      vessel_project_cost_summary: {
+        Row: {
+          currency_code: string | null
+          daily_operating_cost: number | null
+          org_id: string | null
+          project_cost_line_count: number | null
+          project_specific_costs: number | null
+          vessel_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vessels_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      calculate_vessel_project_cost: {
+        Args: {
+          p_project_days: number
+          p_project_reference?: string
+          p_vessel_id: string
+        }
+        Returns: {
+          currency_code: string
+          daily_operating_cost: number
+          operating_cost_total: number
+          project_days: number
+          project_specific_costs: number
+          total_project_cost: number
+          vessel_id: string
+        }[]
+      }
       create_new_organization: {
         Args: { org_name: string; org_slug: string; p_user_id?: string }
         Returns: string
