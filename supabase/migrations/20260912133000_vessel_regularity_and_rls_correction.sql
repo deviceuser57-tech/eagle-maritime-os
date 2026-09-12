@@ -7,28 +7,25 @@
 -- ============================================================
 
 -- ---------- Migrate any temporary setup_regularities data ----------
--- This table was introduced by the previous Vessel upgrade migration.
--- Preserve any seeded/entered values by copying them into the existing
--- regulation master before removing the duplicate table.
 INSERT INTO public.regulations (code, title, convention, description, is_global, org_id)
-SELECT
-  sr.name,
-  sr.name,
-  sr.name,
-  sr.description,
-  false,
-  sr.org_id
+SELECT sr.name, sr.name, sr.name, sr.description, false, sr.org_id
 FROM public.setup_regularities sr
 WHERE NOT EXISTS (
-  SELECT 1
-  FROM public.regulations r
-  WHERE r.org_id = sr.org_id
-    AND (r.code = sr.name OR r.title = sr.name)
+  SELECT 1 FROM public.regulations r
+  WHERE r.org_id = sr.org_id AND (r.code = sr.name OR r.title = sr.name)
 );
 
--- ---------- Re-point vessel regularities to the existing regulation master ----------
+-- ---------- Re-point existing vessel regularity rows ----------
 ALTER TABLE public.vessel_regularities
   DROP CONSTRAINT IF EXISTS vessel_regularities_regularity_id_fkey;
+
+UPDATE public.vessel_regularities vr
+SET regularity_id = r.id
+FROM public.setup_regularities sr
+JOIN public.regulations r
+  ON r.org_id = sr.org_id
+ AND (r.code = sr.name OR r.title = sr.name)
+WHERE vr.regularity_id = sr.id;
 
 ALTER TABLE public.vessel_regularities
   ADD CONSTRAINT vessel_regularities_regularity_id_fkey
@@ -43,18 +40,11 @@ DROP TABLE IF EXISTS public.setup_regularities;
 -- The application's established tenant isolation is based on
 -- organization_members(user_id, org_id), not a custom org_id JWT claim.
 DO $$
-DECLARE
-  t text;
-  p record;
+DECLARE t text; p record;
 BEGIN
   FOREACH t IN ARRAY ARRAY[
-    'setup_vessel_status',
-    'setup_ownership_modes',
-    'setup_regularity_applicability',
-    'vessel_regularities',
-    'vessel_financial_baseline',
-    'vessel_equipment_costs',
-    'vessel_financial_daily_costs'
+    'setup_vessel_status','setup_ownership_modes','setup_regularity_applicability',
+    'vessel_regularities','vessel_financial_baseline','vessel_equipment_costs','vessel_financial_daily_costs'
   ] LOOP
     IF to_regclass('public.' || t) IS NOT NULL THEN
       EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
