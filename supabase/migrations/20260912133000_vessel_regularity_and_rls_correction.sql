@@ -57,7 +57,7 @@ BEGIN
     'vessel_financial_daily_costs'
   ] LOOP
     IF to_regclass('public.' || t) IS NOT NULL THEN
-      ALTER TABLE public."' || t || '" ENABLE ROW LEVEL SECURITY;
+      EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
       FOR p IN SELECT policyname FROM pg_policies WHERE schemaname = 'public' AND tablename = t LOOP
         EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', p.policyname, t);
       END LOOP;
