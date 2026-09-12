@@ -36,8 +36,6 @@ export const useVessels = () => {
     const { error: validationError } = validate(vesselSchema, vessel);
     if (validationError) { toast({ title: 'Validation Error', description: validationError.issues[0]?.message || 'Invalid input', variant: 'destructive' }); return { error: validationError }; }
     try {
-      // Validate the known/sanitized fields, but preserve the full create payload so
-      // extended Setup-driven and operational fields are not silently stripped by Zod.
       const { data, error } = await supabase.from('vessels').insert([{ ...vessel, org_id: orgId }] as any).select().single();
       if (error) throw error;
       setVessels(prev => [data as unknown as Vessel, ...prev]);
@@ -70,14 +68,66 @@ export const useVessels = () => {
 
   const uploadVesselAsset = async (file: File, vesselId?: string): Promise<string | null> => {
     if (!user || !orgId) return null;
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'bin';
     const fileName = `${vesselId || 'new'}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
     const filePath = `${orgId}/${fileName}`;
+    const contentType = file.type || (fileExt === 'pdf' ? 'application/pdf' : 'application/octet-stream');
+    const resumableThreshold = 6 * 1024 * 1024;
+
     try {
-      const { error: uploadError } = await supabase.storage.from('vessel-assets').upload(filePath, file);
-      if (uploadError) throw uploadError;
+      // Supabase recommends resumable/TUS uploads for files above 6 MB, especially
+      // on mobile or unstable networks. Vessel brochures are commonly larger than this.
+      if (file.size > resumableThreshold) {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        const accessToken = sessionData.session?.access_token;
+        if (!accessToken) throw new Error('Your login session has expired. Please sign in again and retry the upload.');
+
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+        const projectRef = new URL(supabaseUrl).hostname.split('.')[0];
+        const { Upload } = await import('tus-js-client');
+
+        await new Promise<void>((resolve, reject) => {
+          const upload = new Upload(file, {
+            endpoint: `https://${projectRef}.storage.supabase.co/storage/v1/upload/resumable`,
+            retryDelays: [0, 3000, 5000, 10000, 20000],
+            headers: { authorization: `Bearer ${accessToken}`, 'x-upsert': 'false' },
+            uploadDataDuringCreation: true,
+            removeFingerprintOnSuccess: true,
+            chunkSize: resumableThreshold,
+            metadata: {
+              bucketName: 'vessel-assets',
+              objectName: filePath,
+              contentType,
+              cacheControl: '3600',
+            },
+            onError: (error) => reject(error),
+            onSuccess: () => resolve(),
+          });
+          upload.findPreviousUploads().then(previousUploads => {
+            if (previousUploads.length) upload.resumeFromPreviousUpload(previousUploads[0]);
+            upload.start();
+          }).catch(reject);
+        });
+        return filePath;
+      }
+
+      const { error: uploadError } = await supabase.storage.from('vessel-assets').upload(filePath, file, {
+        cacheControl: '3600',
+        contentType,
+        upsert: false,
+      });
+      if (uploadError) {
+        const details = (uploadError as any).statusCode ? ` [HTTP ${(uploadError as any).statusCode}]` : '';
+        throw new Error(`${uploadError.message || 'Storage upload failed'}${details}`);
+      }
       return filePath;
-    } catch (error: any) { toast({ title: 'Upload Failed', description: error.message, variant: 'destructive' }); return null; }
+    } catch (error: any) {
+      console.error('Vessel asset upload failed', error);
+      const message = error?.message || String(error) || 'Storage upload failed';
+      toast({ title: 'Upload Failed', description: message, variant: 'destructive' });
+      return null;
+    }
   };
 
   const getVesselAssetUrl = (path: string) => {
