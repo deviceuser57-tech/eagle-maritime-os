@@ -133,7 +133,9 @@ export const useVessels = () => {
     const resumableThreshold = 6 * 1024 * 1024;
 
     try {
-      if (file.size > resumableThreshold) {
+      // PDFs always use resumable upload because technical brochures are commonly
+      // larger than 6 MB and mobile networks are less tolerant of one-shot uploads.
+      if (file.type === 'application/pdf' || file.size > resumableThreshold) {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
         const accessToken = sessionData.session?.access_token;
