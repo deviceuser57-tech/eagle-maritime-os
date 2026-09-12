@@ -10,7 +10,7 @@ import Dashboard from '@/components/Dashboard';
 import AIAssistant from '@/components/AIAssistant';
 import SetupPage from '@/components/SetupPage';
 import VesselSetupMasters from '@/components/VesselSetupMasters';
-import VesselManagement from '@/components/VesselManagementV2';
+import VesselManagement from '@/components/VesselManagement';
 import AuthPage from '@/components/AuthPage';
 import VesselsCertification from '@/components/VesselsCertification';
 import CrewManagement from '@/components/CrewManagement';
