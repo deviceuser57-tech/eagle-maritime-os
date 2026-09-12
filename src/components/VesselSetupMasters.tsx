@@ -19,7 +19,6 @@ const MASTERS: MasterConfig[] = [
   { table: 'setup_hull_coatings', title: 'Hull Coating', fields: ['name'] },
   { table: 'setup_vessel_status', title: 'Vessel Status', fields: ['name'] },
   { table: 'setup_ownership_modes', title: 'Ownership / Employment Mode', fields: ['name'] },
-  { table: 'setup_regularities', title: 'Regularity', fields: ['name'] },
   { table: 'setup_regularity_applicability', title: 'Regularity Applicability Status', fields: ['name'] },
 ];
 
@@ -88,7 +87,7 @@ export default function VesselSetupMasters() {
     <section className="space-y-6 mt-12 pt-10 border-t border-border">
       <div>
         <h3 className="text-2xl font-black uppercase tracking-tight">Vessel Management Masters</h3>
-        <p className="text-sm text-muted-foreground mt-1">Setup-controlled reference data used by Vessel Management. Currency, Ports, Flag State and Classification Society remain on their existing registries.</p>
+        <p className="text-sm text-muted-foreground mt-1">Setup-controlled reference data used by Vessel Management. Currency, Ports, Flag State, Classification Society and Regulations remain on their existing registries.</p>
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {MASTERS.map(config => {
