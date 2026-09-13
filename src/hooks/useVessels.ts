@@ -14,6 +14,99 @@ export interface Vessel {
 
 type VesselCreate = Partial<Omit<Vessel, 'id' | 'created_at' | 'updated_at' | 'org_id'>> & Pick<Vessel, 'name'>;
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const encodeTusMetadata = (value: string) => {
+  const bytes = new TextEncoder().encode(value);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+};
+
+async function getResumableOffset(location: string, accessToken: string) {
+  const response = await fetch(location, {
+    method: 'HEAD',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Tus-Resumable': '1.0.0' },
+  });
+  if (!response.ok) throw new Error(`Could not resume vessel asset upload (HTTP ${response.status})`);
+  const offset = Number(response.headers.get('Upload-Offset'));
+  if (!Number.isFinite(offset) || offset < 0) throw new Error('Storage returned an invalid upload offset');
+  return offset;
+}
+
+async function resumableStorageUpload(file: File, filePath: string, contentType: string, accessToken: string, projectRef: string) {
+  const endpoint = `https://${projectRef}.storage.supabase.co/storage/v1/upload/resumable`;
+  const chunkSize = 6 * 1024 * 1024;
+  const metadata = [
+    `bucketName ${encodeTusMetadata('vessel-assets')}`,
+    `objectName ${encodeTusMetadata(filePath)}`,
+    `contentType ${encodeTusMetadata(contentType)}`,
+    `cacheControl ${encodeTusMetadata('3600')}`,
+  ].join(',');
+
+  const create = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Tus-Resumable': '1.0.0',
+      'Upload-Length': String(file.size),
+      'Upload-Metadata': metadata,
+      'x-upsert': 'false',
+    },
+  });
+  if (!create.ok) throw new Error(`Resumable upload initialization failed (HTTP ${create.status})`);
+  const location = create.headers.get('Location');
+  if (!location) throw new Error('Resumable upload did not return an upload URL');
+
+  let offset = 0;
+  while (offset < file.size) {
+    let completed = false;
+    let lastError: unknown = null;
+
+    for (const delay of [0, 2000, 5000, 10000]) {
+      if (delay) await sleep(delay);
+      try {
+        const chunk = file.slice(offset, Math.min(offset + chunkSize, file.size));
+        const response = await fetch(location, {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Tus-Resumable': '1.0.0',
+            'Upload-Offset': String(offset),
+            'Content-Type': 'application/offset+octet-stream',
+          },
+          body: chunk,
+        });
+
+        if (response.ok) {
+          const nextOffset = Number(response.headers.get('Upload-Offset'));
+          if (!Number.isFinite(nextOffset) || nextOffset <= offset) throw new Error('Storage returned an invalid upload offset');
+          offset = nextOffset;
+          completed = true;
+          break;
+        }
+
+        lastError = new Error(`Chunk upload failed (HTTP ${response.status})`);
+        if (response.status === 409 || response.status === 412) offset = await getResumableOffset(location, accessToken);
+      } catch (error) {
+        lastError = error;
+        try {
+          const serverOffset = await getResumableOffset(location, accessToken);
+          if (serverOffset > offset) {
+            offset = serverOffset;
+            completed = true;
+            break;
+          }
+        } catch {
+          // Keep retrying the same chunk when the server offset cannot be read.
+        }
+      }
+    }
+
+    if (!completed && offset < file.size) throw lastError instanceof Error ? lastError : new Error('Resumable vessel asset upload failed');
+  }
+}
+
 export const useVessels = () => {
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,14 +161,32 @@ export const useVessels = () => {
 
   const uploadVesselAsset = async (file: File, vesselId?: string): Promise<string | null> => {
     if (!user || !orgId) return null;
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${vesselId || 'new'}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'bin';
+    const fileName = `${vesselId || 'new'}/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
     const filePath = `${orgId}/${fileName}`;
     try {
-      const { error: uploadError } = await supabase.storage.from('vessel-assets').upload(filePath, file);
-      if (uploadError) throw uploadError;
+      const isPdf = file.type === 'application/pdf' || fileExt === 'pdf';
+      const resumableThreshold = 6 * 1024 * 1024;
+
+      if (isPdf || file.size > resumableThreshold) {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        const accessToken = sessionData.session?.access_token;
+        if (!accessToken) throw new Error('Your login session has expired. Please sign in again and retry the upload.');
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+        if (!supabaseUrl) throw new Error('Supabase URL is not configured.');
+        const projectRef = new URL(supabaseUrl).hostname.split('.')[0];
+        await resumableStorageUpload(file, filePath, file.type || 'application/octet-stream', accessToken, projectRef);
+      } else {
+        const { error: uploadError } = await supabase.storage.from('vessel-assets').upload(filePath, file);
+        if (uploadError) throw uploadError;
+      }
       return filePath;
-    } catch (error: any) { toast({ title: 'Upload Failed', description: error.message, variant: 'destructive' }); return null; }
+    } catch (error: any) {
+      console.error('Vessel asset upload failed:', error);
+      toast({ title: 'Upload Failed', description: error?.message || 'Failed to upload vessel asset. Please retry.', variant: 'destructive' });
+      return null;
+    }
   };
 
   const getVesselAssetUrl = (path: string) => {
