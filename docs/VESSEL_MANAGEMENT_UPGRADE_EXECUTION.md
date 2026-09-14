@@ -4,8 +4,9 @@ This branch implements the Vessel Management upgrade against the existing Eagle 
 
 ## Non-negotiable architecture
 - Preserve the existing `vessels` table and existing Setup architecture.
-- Reuse existing Currency, Classification Society, Flag State, Ports, and unified `setup_companies`.
+- Reuse existing Currency, Classification Society, Flag State, Ports, the existing Regulatory Intelligence `regulations` master, and unified `setup_companies`.
 - Do not create duplicate owner/operator/technical-manager/ISM-manager tables.
+- Do not create a duplicate Vessel-specific Regularity master. Vessel Regularity records reference the existing `regulations` master and carry the vessel-specific applicability/status metadata.
 - New Setup entities use the `setup_` prefix and are created only when missing.
 - No hardcoded business/master-data dropdown fallbacks in Vessel Management.
 - Vessel Management tabs: General / Identity, Management, Technical Specifications, Operational Condition, Financial Condition, Compliance / Regularity, Maintenance / Docking, Media, Additional / Unmapped Specifications.
@@ -23,8 +24,11 @@ This branch implements the Vessel Management upgrade against the existing Eagle 
 - `setup_hull_coatings`
 - `setup_vessel_status`
 - `setup_ownership_modes`
-- `setup_regularities`
 - `setup_regularity_applicability`
+- Existing Regulatory Intelligence `regulations` is the Regularity master; it is selected from Vessel Management and is not duplicated under `setup_`.
+
+## Vessel Regularity model
+When entering a Vessel, the user selects the applicable records from the existing `regulations` master. Each selected regulation is stored in `vessel_regularities` together with its vessel-specific applicability status and effective/exemption/document metadata. The applicability status comes from `setup_regularity_applicability`.
 
 ## Financial baseline
 Required baseline model includes minimum daily hire rate and recurring daily operating costs, including crew/manning, accommodation, food breakdown (breakfast/lunch/dinner/snacks), fresh water, lubricants, consumables, maintenance, repairs, spare parts, insurance allocation, technical management, regulatory/certification, communications, waste/sewage, and other recurring costs.
@@ -32,7 +36,7 @@ Required baseline model includes minimum daily hire rate and recurring daily ope
 Equipment daily costs and additional recurring cost components are dynamic child rows. The system must transparently calculate total daily vessel operating cost.
 
 ## AI extraction
-Current `handleSmartFill` / `analyze-image` flow remains the primary pipeline unless audit evidence requires a replacement. Structured extraction must map additional known vessel specifications, while all confidently unstructured/unmapped specifications are preserved in `Additional / Unmapped Specifications`. Embedded PDF images should be extracted into Vessel Media where technically supported.
+Current `handleSmartFill` / `analyze-image` flow remains the primary pipeline unless audit evidence requires a replacement. Structured extraction must map additional known vessel specifications, while all confidently unstructured/unmapped specifications are preserved in `Additional / Unmapped Specifications`. Embedded PDF images should be extracted into Vessel Media where technically supported. The Edge function pins `unpdf` for deterministic PDF image extraction.
 
 ## Verification
 The implementation must distinguish repository changes, migration files, live Supabase state, and live Setup seed state. Do not claim live migration/seed status without actual verification.
