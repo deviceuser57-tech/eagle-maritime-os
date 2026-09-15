@@ -88,6 +88,7 @@ export default function VesselSetupMasters() {
       <div>
         <h3 className="text-2xl font-black uppercase tracking-tight">Vessel Management Masters</h3>
         <p className="text-sm text-muted-foreground mt-1">Setup-controlled reference data used by Vessel Management. Currency, Ports, Flag State, Classification Society and Regulations remain on their existing registries.</p>
+        <p className="text-sm text-muted-foreground mt-1">Setup-controlled reference data used by Vessel Management. Currency, Ports, Flag State and Classification Society remain on their existing registries.</p>
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {MASTERS.map(config => {
