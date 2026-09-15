@@ -6,6 +6,7 @@ import {
   DEFAULT_CLASSIFICATION_SOCIETIES, DEFAULT_FLAG_STATES, DEFAULT_STATUTORY_CERTIFICATES,
 } from '@/constants/dropdownOptions';
 
+// These arrays are seed data for Setup masters. They are not UI dropdown fallbacks.
 const VESSEL_TYPES = ['Bulk Carrier','Container Ship','Crude Oil Tanker','Product Tanker','Chemical Tanker','LNG Carrier','LPG Carrier','General Cargo','Passenger Ship','RoRo Ship','Vehicle Carrier','Offshore Supply Vessel','Tugboat','Fishing Vessel','Yacht'];
 const PROPULSION_TYPES = ['Single Screw','Twin Screw','Diesel Electric','LNG Dual Fuel','Hybrid','Azimuth'];
 const FUEL_TYPES = ['HFO','VLSFO','MGO','MDO','LNG','Methanol','Dual Fuel'];
@@ -20,10 +21,21 @@ const REGULARITY_APPLICABILITY = ['Applied','Exempted','Not Required','Pending R
 async function seedSimple(orgId:string, table:string, names:string[]) {
   const { data } = await (supabase as any).from(table).select('id').eq('org_id',orgId).limit(1);
   if (!data?.length) {
-    // Keep this generic across both legacy Setup tables and the new Vessel-specific masters.
-    // Some existing tables do not have sort_order; new tables have a default for it.
     await (supabase as any).from(table).insert(names.map(name=>({name,org_id:orgId,is_active:true})));
   }
+}
+
+async function seedRegulations(orgId: string) {
+  const { data } = await (supabase as any).from('regulations').select('id').eq('org_id', orgId).limit(1);
+  if (data?.length) return;
+  await (supabase as any).from('regulations').insert(REGULARITIES.map(name => ({
+    code: name,
+    title: name,
+    convention: name,
+    description: `Default ${name} regulatory master record`,
+    is_global: false,
+    org_id: orgId,
+  })));
 }
 
 export const seedSetupData = async (orgId: string, userId: string) => {
@@ -60,7 +72,7 @@ export const seedSetupData = async (orgId: string, userId: string) => {
     const { data:certData }=await supabase.from('setup_certificate_types').select('id').eq('org_id',orgId).limit(1);
     if(!certData?.length) await supabase.from('setup_certificate_types').insert(DEFAULT_STATUTORY_CERTIFICATES.map(certificate_name=>({certificate_name,certificate_category:'Statutory',validity_months:60,org_id:orgId,user_id:userId})));
 
-    // Vessel-specific masters. These are Setup seed data, not UI fallbacks.
+    // Vessel-specific masters are stored in Setup. No UI fallback data is used for these.
     await seedSimple(orgId,'setup_vessel_types',VESSEL_TYPES);
     await seedSimple(orgId,'setup_propulsion_types',PROPULSION_TYPES);
     await seedSimple(orgId,'setup_fuel_types',FUEL_TYPES);
@@ -68,7 +80,7 @@ export const seedSetupData = async (orgId: string, userId: string) => {
     await seedSimple(orgId,'setup_hull_materials',HULL_MATERIALS);
     await seedSimple(orgId,'setup_vessel_status',VESSEL_STATUSES);
     await seedSimple(orgId,'setup_ownership_modes',OWNERSHIP_MODES);
-    await seedSimple(orgId,'setup_regularities',REGULARITIES);
+    await seedRegulations(orgId);
     await seedSimple(orgId,'setup_regularity_applicability',REGULARITY_APPLICABILITY);
     const { data:coatings }=await (supabase as any).from('setup_hull_coatings').select('id').eq('org_id',orgId).limit(1);
     if(!coatings?.length) await (supabase as any).from('setup_hull_coatings').insert(HULL_COATINGS.map((coating_type)=>({coating_type,org_id:orgId,is_active:true,manufacturer:null})));

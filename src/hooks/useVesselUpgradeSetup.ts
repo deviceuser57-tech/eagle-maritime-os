@@ -49,8 +49,40 @@ function useSimpleSetup(table: string, key: string, orderField = 'sort_order') {
 
 export const useSetupVesselStatus = () => useSimpleSetup('setup_vessel_status', 'setup_vessel_status');
 export const useSetupOwnershipModes = () => useSimpleSetup('setup_ownership_modes', 'setup_ownership_modes');
-// setup_regularities intentionally has no sort_order column in the migration.
-export const useSetupRegularities = () => useSimpleSetup('setup_regularities', 'setup_regularities', '');
+
+// Regularity is the existing Regulatory Intelligence `regulations` master.
+// This adapter exposes the small {id,name,...} shape expected by Vessel Management
+// without creating a second Regularity/Regulation table.
+export const useSetupRegularities = () => {
+  const { user } = useAuth();
+  const { orgId } = useOrganization();
+  const query = useQuery({
+    queryKey: ['regulations-for-vessel', orgId],
+    enabled: !!user?.id && !!orgId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('regulations')
+        .select('id,org_id,code,title,description,convention,issuing_body,created_at,updated_at')
+        .or(`is_global.eq.true,org_id.eq.${orgId}`)
+        .order('convention', { ascending: true })
+        .order('code', { ascending: true });
+      if (error) throw error;
+      return (data || []).map((r: any) => ({
+        id: r.id,
+        org_id: r.org_id || orgId,
+        name: r.code ? `${r.code}: ${r.title}` : r.title,
+        description: r.description,
+        code: r.code,
+        authority: r.issuing_body || r.convention,
+        is_active: true,
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+      })) as VesselSetupItem[];
+    },
+  });
+  return { items: query.data || [], isLoading: query.isLoading, error: query.error };
+};
+
 export const useSetupRegularityApplicability = () => useSimpleSetup('setup_regularity_applicability', 'setup_regularity_applicability');
 
 export interface VesselFinancialBaseline {
@@ -81,40 +113,9 @@ export interface VesselFinancialBaseline {
   notes: string | null;
 }
 
-export interface VesselEquipmentCost {
-  id?: string;
-  vessel_id: string;
-  equipment_name: string;
-  daily_cost: number;
-  currency_code?: string | null;
-  notes?: string | null;
-  sort_order?: number;
-}
-
-export interface VesselDailyCost {
-  id?: string;
-  vessel_id: string;
-  category: string;
-  description?: string | null;
-  daily_cost: number;
-  currency_code?: string | null;
-  sort_order?: number;
-}
-
-export interface VesselRegularity {
-  id?: string;
-  vessel_id: string;
-  regularity_id: string;
-  applicability_status_id: string;
-  effective_from?: string | null;
-  effective_to?: string | null;
-  exemption_reference?: string | null;
-  exemption_reason?: string | null;
-  document_reference?: string | null;
-  notes?: string | null;
-  regularity?: VesselSetupItem;
-  applicability?: VesselSetupItem;
-}
+export interface VesselEquipmentCost { id?: string; vessel_id: string; equipment_name: string; daily_cost: number; currency_code?: string | null; notes?: string | null; sort_order?: number; }
+export interface VesselDailyCost { id?: string; vessel_id: string; category: string; description?: string | null; daily_cost: number; currency_code?: string | null; sort_order?: number; }
+export interface VesselRegularity { id?: string; vessel_id: string; regularity_id: string; applicability_status_id: string; effective_from?: string | null; effective_to?: string | null; exemption_reference?: string | null; exemption_reason?: string | null; document_reference?: string | null; notes?: string | null; regularity?: VesselSetupItem; applicability?: VesselSetupItem; }
 
 export const emptyFinancialBaseline = (currency = 'USD'): Omit<VesselFinancialBaseline, 'id'|'org_id'|'vessel_id'> => ({
   minimum_daily_hire_rate: 0, currency_code: currency, minimum_charter_period_days: null,
@@ -127,47 +128,25 @@ export const emptyFinancialBaseline = (currency = 'USD'): Omit<VesselFinancialBa
 });
 
 export function useVesselFinancials(vesselId?: string) {
-  const { orgId } = useOrganization();
-  const { toast } = useToast();
-  const qc = useQueryClient();
-  const enabled = !!orgId && !!vesselId;
-  const baseline = useQuery({
-    queryKey: ['vessel-financial-baseline', vesselId], enabled,
-    queryFn: async () => {
-      const { data, error } = await (supabase as any).from('vessel_financial_baseline').select('*').eq('vessel_id', vesselId).maybeSingle();
-      if (error) throw error; return data as VesselFinancialBaseline | null;
-    },
-  });
-  const equipment = useQuery({
-    queryKey: ['vessel-equipment-costs', vesselId], enabled,
-    queryFn: async () => { const { data, error } = await (supabase as any).from('vessel_equipment_costs').select('*').eq('vessel_id', vesselId).order('sort_order').order('equipment_name'); if (error) throw error; return data || []; },
-  });
-  const daily = useQuery({
-    queryKey: ['vessel-daily-costs', vesselId], enabled,
-    queryFn: async () => { const { data, error } = await (supabase as any).from('vessel_financial_daily_costs').select('*').eq('vessel_id', vesselId).order('sort_order').order('category'); if (error) throw error; return data || []; },
-  });
-  const save = useMutation({
-    mutationFn: async ({ baselineData, equipmentRows, dailyRows }: { baselineData: any; equipmentRows: any[]; dailyRows: any[] }) => {
-      if (!orgId || !vesselId) throw new Error('Vessel context is missing');
-      const { error: bErr } = await (supabase as any).from('vessel_financial_baseline').upsert({ ...baselineData, vessel_id: vesselId, org_id: orgId }, { onConflict: 'vessel_id' });
-      if (bErr) throw bErr;
-      const { error: eqDeleteError } = await (supabase as any).from('vessel_equipment_costs').delete().eq('vessel_id', vesselId);
-      if (eqDeleteError) throw eqDeleteError;
-      const { error: dailyDeleteError } = await (supabase as any).from('vessel_financial_daily_costs').delete().eq('vessel_id', vesselId);
-      if (dailyDeleteError) throw dailyDeleteError;
-      if (equipmentRows.length) { const { error } = await (supabase as any).from('vessel_equipment_costs').insert(equipmentRows.map((r, i) => ({ ...r, vessel_id: vesselId, org_id: orgId, sort_order: i }))); if (error) throw error; }
-      if (dailyRows.length) { const { error } = await (supabase as any).from('vessel_financial_daily_costs').insert(dailyRows.map((r, i) => ({ ...r, vessel_id: vesselId, org_id: orgId, sort_order: i }))); if (error) throw error; }
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['vessel-financial-baseline', vesselId] }); qc.invalidateQueries({ queryKey: ['vessel-equipment-costs', vesselId] }); qc.invalidateQueries({ queryKey: ['vessel-daily-costs', vesselId] }); toast({ title: 'Financial baseline saved' }); },
-    onError: (e: Error) => toast({ title: 'Financial save failed', description: e.message, variant: 'destructive' }),
-  });
+  const { orgId } = useOrganization(); const { toast } = useToast(); const qc = useQueryClient(); const enabled = !!orgId && !!vesselId;
+  const baseline = useQuery({ queryKey: ['vessel-financial-baseline', vesselId], enabled, queryFn: async () => { const { data, error } = await (supabase as any).from('vessel_financial_baseline').select('*').eq('vessel_id', vesselId).maybeSingle(); if (error) throw error; return data as VesselFinancialBaseline | null; } });
+  const equipment = useQuery({ queryKey: ['vessel-equipment-costs', vesselId], enabled, queryFn: async () => { const { data, error } = await (supabase as any).from('vessel_equipment_costs').select('*').eq('vessel_id', vesselId).order('sort_order').order('equipment_name'); if (error) throw error; return data || []; } });
+  const daily = useQuery({ queryKey: ['vessel-daily-costs', vesselId], enabled, queryFn: async () => { const { data, error } = await (supabase as any).from('vessel_financial_daily_costs').select('*').eq('vessel_id', vesselId).order('sort_order').order('category'); if (error) throw error; return data || []; } });
+  const save = useMutation({ mutationFn: async ({ baselineData, equipmentRows, dailyRows }: { baselineData: any; equipmentRows: any[]; dailyRows: any[] }) => {
+    if (!orgId || !vesselId) throw new Error('Vessel context is missing');
+    const { error: bErr } = await (supabase as any).from('vessel_financial_baseline').upsert({ ...baselineData, vessel_id: vesselId, org_id: orgId }, { onConflict: 'vessel_id' }); if (bErr) throw bErr;
+    const { error: eqDeleteError } = await (supabase as any).from('vessel_equipment_costs').delete().eq('vessel_id', vesselId).eq('org_id', orgId); if (eqDeleteError) throw eqDeleteError;
+    const { error: dailyDeleteError } = await (supabase as any).from('vessel_financial_daily_costs').delete().eq('vessel_id', vesselId).eq('org_id', orgId); if (dailyDeleteError) throw dailyDeleteError;
+    if (equipmentRows.length) { const { error } = await (supabase as any).from('vessel_equipment_costs').insert(equipmentRows.map((r, i) => ({ ...r, vessel_id: vesselId, org_id: orgId, sort_order: i }))); if (error) throw error; }
+    if (dailyRows.length) { const { error } = await (supabase as any).from('vessel_financial_daily_costs').insert(dailyRows.map((r, i) => ({ ...r, vessel_id: vesselId, org_id: orgId, sort_order: i }))); if (error) throw error; }
+  }, onSuccess: () => { qc.invalidateQueries({ queryKey: ['vessel-financial-baseline', vesselId] }); qc.invalidateQueries({ queryKey: ['vessel-equipment-costs', vesselId] }); qc.invalidateQueries({ queryKey: ['vessel-daily-costs', vesselId] }); toast({ title: 'Financial baseline saved' }); }, onError: (e: Error) => toast({ title: 'Financial save failed', description: e.message, variant: 'destructive' }) });
   return { baseline: baseline.data, equipment: equipment.data || [], dailyCosts: daily.data || [], isLoading: baseline.isLoading || equipment.isLoading || daily.isLoading, save };
 }
 
 export function useVesselRegularities(vesselId?: string) {
   const { orgId } = useOrganization(); const { toast } = useToast(); const qc = useQueryClient();
-  const query = useQuery({ queryKey: ['vessel-regularities', vesselId], enabled: !!orgId && !!vesselId, queryFn: async () => { const { data, error } = await (supabase as any).from('vessel_regularities').select('*, regularity:setup_regularities(*), applicability:setup_regularity_applicability(*)').eq('vessel_id', vesselId).order('created_at'); if (error) throw error; return (data || []) as VesselRegularity[]; } });
+  const query = useQuery({ queryKey: ['vessel-regularities', vesselId], enabled: !!orgId && !!vesselId, queryFn: async () => { const { data, error } = await (supabase as any).from('vessel_regularities').select('*').eq('vessel_id', vesselId).eq('org_id', orgId).order('created_at'); if (error) throw error; return (data || []) as VesselRegularity[]; } });
   const save = useMutation({ mutationFn: async (row: VesselRegularity) => { if (!orgId || !vesselId) throw new Error('Vessel context is missing'); const { id, regularity, applicability, ...payload } = row; const { data, error } = await (supabase as any).from('vessel_regularities').upsert({ ...payload, ...(id ? { id } : {}), org_id: orgId, vessel_id: vesselId }, { onConflict: 'vessel_id,regularity_id' }).select().single(); if (error) throw error; return data; }, onSuccess: () => { qc.invalidateQueries({ queryKey: ['vessel-regularities', vesselId] }); toast({ title: 'Regularity saved' }); }, onError: (e: Error) => toast({ title: 'Regularity save failed', description: e.message, variant: 'destructive' }) });
-  const remove = useMutation({ mutationFn: async (id: string) => { const { error } = await (supabase as any).from('vessel_regularities').delete().eq('id', id); if (error) throw error; }, onSuccess: () => qc.invalidateQueries({ queryKey: ['vessel-regularities', vesselId] }) });
+  const remove = useMutation({ mutationFn: async (id: string) => { const { error } = await (supabase as any).from('vessel_regularities').delete().eq('id', id).eq('org_id', orgId); if (error) throw error; }, onSuccess: () => qc.invalidateQueries({ queryKey: ['vessel-regularities', vesselId] }) });
   return { records: query.data || [], isLoading: query.isLoading, save, remove };
 }

@@ -3,12 +3,13 @@
 ## Core architecture rules
 
 - Existing `public.vessels` remains the canonical vessel master record.
-- Existing Setup entities are reused; no duplicate company, currency, classification, flag-state, or port registries are introduced.
+- Existing Setup entities are reused; no duplicate company, currency, classification, flag-state, port, or Regularity registries are introduced.
 - Company relationships continue through unified `setup_companies` role flags.
 - New Vessel-specific reference data uses the `setup_` convention.
 - Structured fields are preferred for known specifications; unknown specifications are preserved in `additional_unmapped_specifications`.
 - Vessel financial data is a baseline operating-cost model, not the Project Financial module.
 - Vessel regularity is a child collection so future Project-level overrides can be added without redesigning the Vessel master.
+- Vessel Regularity references the existing Regulatory Intelligence `regulations` master; `setup_regularity_applicability` supplies the vessel-specific applicability status.
 
 | Domain | Field / Entity | UI | Source | Storage | AI | Tab |
 |---|---|---|---|---|---|---|
@@ -41,7 +42,7 @@
 | Financial | recurring daily costs | numeric/dynamic | existing Currency | vessel_financial_baseline + vessel_financial_daily_costs | — | Financial |
 | Financial | equipment daily costs | dynamic rows | existing Currency | vessel_equipment_costs | — | Financial |
 | Financial | total daily operating cost | calculated | — | vessel_daily_cost_summary | — | Financial |
-| Compliance | regularity | child rows | setup_regularities | vessel_regularities | future-ready | Compliance |
+| Compliance | regularity | child rows | existing Regulatory Intelligence `regulations` | vessel_regularities | future-ready | Compliance |
 | Compliance | applicability | select | setup_regularity_applicability | vessel_regularities | — | Compliance |
 | Compliance | effective/exemption/document metadata | structured | — | vessel_regularities | — | Compliance |
 | Maintenance | drydock dates/yard/tasks | existing controls + Setup yard | setup_shipyards | existing vessels columns | partial | Maintenance |
@@ -58,4 +59,4 @@ Future project costing can therefore use:
 
 ## Migration safety
 
-The upgrade migration extends the existing schema with `ADD COLUMN IF NOT EXISTS` and creates only missing Vessel-specific tables. It does not replace the existing `vessels` table or modify the existing `20260904000000_vessel_master_data_tables.sql` migration.
+The upgrade migration extends the existing schema with `ADD COLUMN IF NOT EXISTS` and creates only missing Vessel-specific tables. It does not replace the existing `vessels` table or modify the existing `20260904000000_vessel_master_data_tables.sql` migration. The regularity correction migration re-points any temporary Vessel Regularity rows to the existing `regulations` master and removes the duplicate `setup_regularities` table.
