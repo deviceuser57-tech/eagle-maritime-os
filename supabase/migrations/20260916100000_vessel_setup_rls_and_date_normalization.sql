@@ -1,6 +1,6 @@
--- Vessel Management runtime fixes
--- 1) Use organization membership for vessel-specific Setup masters instead of relying on a JWT org_id claim.
--- 2) Normalize blank vessel date strings to NULL before PostgreSQL date casting.
+-- Vessel Management runtime fix
+-- Use organization membership for vessel-specific Setup masters instead of relying on a JWT org_id claim.
+-- Blank vessel date normalization is handled in src/hooks/useVessels.ts before the Supabase write.
 
 DO $$
 DECLARE
@@ -52,30 +52,3 @@ BEGIN
     END IF;
   END LOOP;
 END $$;
-
-CREATE OR REPLACE FUNCTION public.normalize_vessel_blank_dates()
-RETURNS trigger
-LANGUAGE plpgsql
-AS $$
-BEGIN
-  IF NEW.keel_laid_date IS NOT NULL AND btrim(NEW.keel_laid_date::text) = '' THEN
-    NEW.keel_laid_date := NULL;
-  END IF;
-  IF NEW.delivery_date IS NOT NULL AND btrim(NEW.delivery_date::text) = '' THEN
-    NEW.delivery_date := NULL;
-  END IF;
-  IF NEW.last_drydock_date IS NOT NULL AND btrim(NEW.last_drydock_date::text) = '' THEN
-    NEW.last_drydock_date := NULL;
-  END IF;
-  IF NEW.next_drydock_date IS NOT NULL AND btrim(NEW.next_drydock_date::text) = '' THEN
-    NEW.next_drydock_date := NULL;
-  END IF;
-  RETURN NEW;
-END;
-$$;
-
-DROP TRIGGER IF EXISTS trg_normalize_vessel_blank_dates ON public.vessels;
-CREATE TRIGGER trg_normalize_vessel_blank_dates
-BEFORE INSERT OR UPDATE ON public.vessels
-FOR EACH ROW
-EXECUTE FUNCTION public.normalize_vessel_blank_dates();
