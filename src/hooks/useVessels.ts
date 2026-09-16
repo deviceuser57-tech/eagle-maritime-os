@@ -16,6 +16,14 @@ type VesselCreate = Partial<Omit<Vessel, 'id' | 'created_at' | 'updated_at' | 'o
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+const normalizeVesselDates = <T extends Record<string, any>>(payload: T): T => {
+  const normalized = { ...payload };
+  for (const key of ['keel_laid_date', 'delivery_date', 'last_drydock_date', 'next_drydock_date']) {
+    if (normalized[key] === '') normalized[key] = null;
+  }
+  return normalized;
+};
+
 const encodeTusMetadata = (value: string) => {
   const bytes = new TextEncoder().encode(value);
   let binary = '';
@@ -129,7 +137,8 @@ export const useVessels = () => {
     const { error: validationError } = validate(vesselSchema, vessel);
     if (validationError) { toast({ title: 'Validation Error', description: validationError.issues[0]?.message || 'Invalid input', variant: 'destructive' }); return { error: validationError }; }
     try {
-      const { data, error } = await supabase.from('vessels').insert([{ ...vessel, org_id: orgId }] as any).select().single();
+      const payload = normalizeVesselDates(vessel);
+      const { data, error } = await supabase.from('vessels').insert([{ ...payload, org_id: orgId }] as any).select().single();
       if (error) throw error;
       setVessels(prev => [data as unknown as Vessel, ...prev]);
       toast({ title: 'Success', description: 'Vessel added successfully' });
@@ -140,7 +149,8 @@ export const useVessels = () => {
   const updateVessel = async (id: string, updates: Partial<Vessel>) => {
     if (!orgId) return { error: new Error('No active organization') };
     try {
-      const { data, error } = await supabase.from('vessels').update(updates as any).eq('id', id).eq('org_id', orgId).select().single();
+      const payload = normalizeVesselDates(updates as Record<string, any>);
+      const { data, error } = await supabase.from('vessels').update(payload as any).eq('id', id).eq('org_id', orgId).select().single();
       if (error) throw error;
       setVessels(prev => prev.map(v => v.id === id ? (data as unknown as Vessel) : v));
       toast({ title: 'Success', description: 'Vessel updated successfully' });
