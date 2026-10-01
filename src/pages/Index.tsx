@@ -7,6 +7,7 @@ import FrontPage from '@/components/FrontPage';
 import Sidebar from '@/components/Sidebar';
 import UniversalSearch from '@/components/UniversalSearch';
 import Dashboard from '@/components/Dashboard';
+import PMS11CommandCenter from '@/components/PMS11CommandCenter';
 import AIAssistant from '@/components/AIAssistant';
 import SetupPage from '@/components/SetupPage';
 import VesselSetupMasters from '@/components/VesselSetupMasters';
@@ -47,7 +48,7 @@ const IndexContent = () => {
   const { user, loading, signOut } = useAuth();
   const { orgId } = useOrganization();
   const [showFrontPage, setShowFrontPage] = useState(true);
-  const [activeSection, setActiveSection] = useState('dashboard');
+  const [activeSection, setActiveSection] = useState('pms11');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -61,6 +62,7 @@ const IndexContent = () => {
 
   const renderContent = () => {
     switch (activeSection) {
+      case 'pms11': return <PMS11CommandCenter onSectionChange={setActiveSection} />;
       case 'dashboard': return <Dashboard onSectionChange={setActiveSection} />;
       case 'ai-assistant': return <AIAssistant />;
       case 'user-auth': return <AuthPage />;
@@ -137,7 +139,7 @@ const IndexContent = () => {
         onSignOut={async () => {
           await signOut();
           setShowFrontPage(true);
-          setActiveSection('dashboard');
+          setActiveSection('pms11');
         }}
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
