@@ -10,10 +10,6 @@ interface SidebarProps { activeSection: string; onSectionChange: (section: strin
 const Sidebar = ({ activeSection, onSectionChange, theme, onThemeToggle, userEmail, onSignOut, isOpen, onToggle }: SidebarProps) => {
   const sidebarRef = useRef<HTMLElement>(null); const headerRef = useRef<HTMLDivElement>(null); const sectionsRef = useRef<HTMLDivElement>(null); const footerRef = useRef<HTMLDivElement>(null);
   const navigationSections = [
-    { title: 'PMS-11 Operations', items: [
-      { id: 'pms11', label: 'PMS-11 Command Center', icon: Anchor, badge: null },
-      { id: 'vessel-management', label: 'Vessel Management', icon: Ship, badge: null }
-    ]},
     { title: 'Core System & AI', items: [
       { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: null }, { id: 'ai-assistant', label: 'AI Assistant', icon: Sparkles, badge: null }, { id: 'organization', label: 'Organization', icon: Building2, badge: null }, { id: 'help-center', label: 'Help Center', icon: HelpCircle, badge: null }
     ]},
