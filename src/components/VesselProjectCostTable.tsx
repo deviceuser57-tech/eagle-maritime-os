@@ -53,7 +53,7 @@ export default function VesselProjectCostTable() {
   };
 
   const updateDays = async (row: CostRow, days: number) => {
-    const safeDays = Math.max(0, Math.floor(Number(days) || 0)); const { data, error } = await supabase.rpc('calculate_vessel_project_cost', { p_vessel_id: row.vesselId, p_project_days: safeDays, p_project_reference: row.projectReference === 'Unreferenced' ? null : row.projectReference });
+    const safeDays = Math.max(0, Math.floor(Number(days) || 0)); const { data, error } = await (supabase as any).rpc('calculate_vessel_project_cost', { p_vessel_id: row.vesselId, p_project_days: safeDays, p_project_reference: row.projectReference === 'Unreferenced' ? null : row.projectReference });
     if (error) { toast({ title: 'Project cost calculation failed', description: error.message, variant: 'destructive' }); return; }
     const calculated: any = data?.[0]; if (!calculated) return;
     setRows(current => current.map(item => item === row ? { ...item, projectDays: safeDays, dailyOperatingCost: Number(calculated.daily_operating_cost || 0), operatingCostTotal: Number(calculated.operating_cost_total || 0), projectSpecificCosts: Number(calculated.project_specific_costs || 0), totalProjectCost: Number(calculated.total_project_cost || 0), currency: calculated.currency_code || item.currency } : item));
