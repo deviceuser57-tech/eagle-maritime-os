@@ -1,0 +1,1 @@
+REVOKE ALL ON public.vessel_daily_cost_summary, public.vessel_project_assignment_summary, public.project_cost_summary, public.vessel_project_assignments FROM anon;
