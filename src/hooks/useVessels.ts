@@ -17,11 +17,11 @@ type VesselCreate = Partial<Omit<Vessel, 'id' | 'created_at' | 'updated_at' | 'o
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const normalizeVesselDates = <T extends Record<string, any>>(payload: T): T => {
-  const normalized = { ...payload };
+  const normalized: Record<string, any> = { ...payload };
   for (const key of ['keel_laid_date', 'delivery_date', 'last_drydock_date', 'next_drydock_date']) {
     if (normalized[key] === '') normalized[key] = null;
   }
-  return normalized;
+  return normalized as T;
 };
 
 const encodeTusMetadata = (value: string) => {
