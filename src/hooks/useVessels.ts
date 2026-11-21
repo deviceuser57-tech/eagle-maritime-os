@@ -12,7 +12,7 @@ export interface Vessel {
   created_at: string; updated_at: string; org_id: string;
 }
 
-type VesselCreate = Partial<Omit<Vessel, 'id' | 'created_at' | 'updated_at' | 'org_id'>> & Pick<Vessel, 'name'>;
+export type VesselCreate = Partial<Omit<Vessel, 'id' | 'created_at' | 'updated_at' | 'org_id'>> & Pick<Vessel, 'name'>;
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -132,7 +132,7 @@ export const useVessels = () => {
     finally { setLoading(false); }
   };
 
-  const addVessel = async (vessel: VesselCreate) => {
+  const addVessel = async (vessel: VesselCreate, options: { silent?: boolean } = {}) => {
     if (!user || !orgId) return { error: new Error('Not authenticated or no active organization') };
     const { error: validationError } = validate(vesselSchema, vessel);
     if (validationError) { toast({ title: 'Validation Error', description: validationError.issues[0]?.message || 'Invalid input', variant: 'destructive' }); return { error: validationError }; }
@@ -141,21 +141,21 @@ export const useVessels = () => {
       const { data, error } = await supabase.from('vessels').insert([{ ...payload, org_id: orgId }] as any).select().single();
       if (error) throw error;
       setVessels(prev => [data as unknown as Vessel, ...prev]);
-      toast({ title: 'Success', description: 'Vessel added successfully' });
+      if (!options.silent) toast({ title: 'Success', description: 'Vessel added successfully' });
       return { data, error: null };
-    } catch (error: any) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return { error }; }
+    } catch (error: any) { if (!options.silent) toast({ title: 'Error', description: error.message, variant: 'destructive' }); return { error }; }
   };
 
-  const updateVessel = async (id: string, updates: Partial<Vessel>) => {
+  const updateVessel = async (id: string, updates: Partial<Vessel>, options: { silent?: boolean } = {}) => {
     if (!orgId) return { error: new Error('No active organization') };
     try {
       const payload = normalizeVesselDates(updates as Record<string, any>);
       const { data, error } = await supabase.from('vessels').update(payload as any).eq('id', id).eq('org_id', orgId).select().single();
       if (error) throw error;
       setVessels(prev => prev.map(v => v.id === id ? (data as unknown as Vessel) : v));
-      toast({ title: 'Success', description: 'Vessel updated successfully' });
+      if (!options.silent) toast({ title: 'Success', description: 'Vessel updated successfully' });
       return { data, error: null };
-    } catch (error: any) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return { error }; }
+    } catch (error: any) { if (!options.silent) toast({ title: 'Error', description: error.message, variant: 'destructive' }); return { error }; }
   };
 
   const deleteVessel = async (id: string) => {

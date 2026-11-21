@@ -94,7 +94,7 @@ function makeSetupHook<T extends { id: string; org_id: string; name: string; is_
 
 export interface SetupVesselType { id: string; org_id: string; name: string; abbreviation: string | null; is_active: boolean; created_at: string; updated_at: string; }
 export interface SetupHullMaterial { id: string; org_id: string; name: string; is_active: boolean; created_at: string; updated_at: string; }
-export interface SetupHullCoating { id: string; org_id: string; coating_type: string; name: string; manufacturer: string | null; is_active: boolean; created_at: string; updated_at: string; }
+export interface SetupHullCoating { id: string; org_id: string; coating_type: string; manufacturer: string | null; is_active: boolean; created_at: string; updated_at: string; }
 export interface SetupPropulsionType { id: string; org_id: string; name: string; is_active: boolean; created_at: string; updated_at: string; }
 export interface SetupFuelType { id: string; org_id: string; name: string; abbreviation: string | null; is_active: boolean; created_at: string; updated_at: string; }
 export interface SetupTradingArea { id: string; org_id: string; name: string; description: string | null; is_active: boolean; created_at: string; updated_at: string; }

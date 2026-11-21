@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useToast } from '@/hooks/use-toast';
 
-type MasterConfig = { table: string; title: string; fields: string[] };
+type MasterConfig = { table: string; title: string; fields: string[]; primaryField?: string };
 
 const MASTERS: MasterConfig[] = [
   { table: 'setup_vessel_types', title: 'Vessel Type', fields: ['name', 'abbreviation'] },
@@ -16,7 +16,7 @@ const MASTERS: MasterConfig[] = [
   { table: 'setup_fuel_types', title: 'Fuel Type', fields: ['name'] },
   { table: 'setup_trading_areas', title: 'Trading Area', fields: ['name'] },
   { table: 'setup_hull_materials', title: 'Hull Material', fields: ['name'] },
-  { table: 'setup_hull_coatings', title: 'Hull Coating', fields: ['name'] },
+  { table: 'setup_hull_coatings', title: 'Hull Coating', fields: ['coating_type'], primaryField: 'coating_type' },
   { table: 'setup_vessel_status', title: 'Vessel Status', fields: ['name'] },
   { table: 'setup_ownership_modes', title: 'Ownership / Employment Mode', fields: ['name'] },
   { table: 'setup_regularity_applicability', title: 'Regularity Applicability Status', fields: ['name'] },
@@ -37,7 +37,7 @@ export default function VesselSetupMasters() {
     try {
       const entries = await Promise.all(MASTERS.map(async config => {
         const { data: rows, error } = await (supabase as any)
-          .from(config.table).select('*').eq('org_id', orgId).order('name', { ascending: true });
+          .from(config.table).select('*').eq('org_id', orgId).order(config.primaryField || 'name', { ascending: true });
         if (error) throw error;
         return [config.table, rows || []] as const;
       }));
@@ -55,8 +55,9 @@ export default function VesselSetupMasters() {
   const save = async () => {
     if (!editing || !orgId) return;
     const config = MASTERS.find(x => x.table === editing.table)!;
-    const name = editing.values.name?.trim();
-    if (!name) { toast({ title: 'Name is required', variant: 'destructive' }); return; }
+    const primaryField = config.primaryField || 'name';
+    const name = editing.values[primaryField]?.trim();
+    if (!name) { toast({ title: `${config.title} is required`, variant: 'destructive' }); return; }
     try {
       const payload = { ...editing.values, org_id: orgId, is_active: true };
       const query = editing.id
@@ -105,7 +106,7 @@ export default function VesselSetupMasters() {
                     {rows.map(row => (
                       <div key={row.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
                         <div className="min-w-0">
-                          <div className="font-medium truncate">{row.name}</div>
+                          <div className="font-medium truncate">{row[config.primaryField || 'name']}</div>
                           {row.abbreviation && <div className="text-xs text-muted-foreground">{row.abbreviation}</div>}
                         </div>
                         <div className="flex gap-1 shrink-0">
@@ -135,7 +136,7 @@ export default function VesselSetupMasters() {
                 {config.fields.map(field => (
                   <div key={field} className="space-y-2">
                     <Label>{titleCase(field)}</Label>
-                    <Input value={editing.values[field] || ''} onChange={e => setEditing({ ...editing, values: { ...editing.values, [field]: e.target.value } })} required={field === 'name'} />
+                    <Input value={editing.values[field] || ''} onChange={e => setEditing({ ...editing, values: { ...editing.values, [field]: e.target.value } })} required={field === (config.primaryField || 'name')} />
                   </div>
                 ))}
                 <Button className="w-full" onClick={save}>Save {config.title}</Button>
