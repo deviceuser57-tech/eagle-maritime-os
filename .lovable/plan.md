@@ -1,37 +1,21 @@
-# خطة: إصلاح البناء، نشر MCP، وإدارة المنظمات والعضويات
+# Plan: Finish the Vessel Management Correction
 
-## 1. إصلاح أخطاء البناء الثلاثة (أولاً — البناء متوقف الآن)
-- `useDynamicSetup.ts` سطر 51: تحويل النتيجة عبر `as unknown as DynamicSetupEntity[]`.
-- `useDynamicSetup.ts` سطر 61: تمرير `schema` كـ `Json` عند الإدراج.
-- `auditService.ts` سطر 20: مواءمة `detail` مع نوع `Json` في الإدراج.
+## Confirmed current state
+- The connected database already has `vessel_project_assignments`, `vessel_project_assignment_summary`, `project_cost_summary`, and the existing `projects` master.
+- RLS on `vessel_financial_baseline`, `vessel_project_assignments`, and `vessel_project_costs` uses `get_user_org_ids()`; no replacement policy is currently needed.
+- `VesselSetupMasters` still queries and displays hull coatings as `name`, while the master uses `coating_type`.
+- The vessel Financial tab still contains hire/charter and project-entry fields, and saving a vessel deletes project cost lines.
+- The current project-cost screen calls `calculate_vessel_project_cost`, which is no longer present, instead of using assignment summaries.
 
-## 2. نشر دالة MCP وتفعيلها
-- نشر دالة `mcp` على الخادم.
-- نشر التطبيق ليصبح `/mcp-api` و`/connect` متاحين فعلياً.
-- التحقق أن نقطة النهاية ترجع `401` مع ترويسة `WWW-Authenticate` (دليل أن OAuth يعمل)، وأن وثيقة الاكتشاف تُقرأ بدون مصادقة.
+## Work
+1. Correct the hull-coating setup editor and sorting/display to use `coating_type`.
+2. Keep the vessel Financial tab focused on reusable owned-vessel daily cost drivers. Remove project hire, charter minimum, insurance, and project-cost entry from that tab; prevent vessel saves from touching project-specific cost records. Ensure save feedback appears only after all required vessel and child writes succeed.
+3. Replace the project-cost table with project-vessel assignment entry using the existing Projects and Vessels, assignment table, and summary views. Support assignment-level create/edit/delete, project days, owned baseline or charter hire/minimum days, project-specific cost lines, and transparent calculated totals. Preserve legacy unassigned cost lines and never overwrite costs belonging to another assignment.
+4. Add the four requested cost summary cards: owned-fleet daily cost, active project-vessel cost, project total, and vessel cost across projects. Exclude chartered/leased vessels from owned-fleet daily totals and use the existing database summaries for calculations.
+5. Add focused calculation/persistence tests for the owned 202 × 15 = 3,030 case, charter hire 1,250 with 12 billable days, separate project assignments for one vessel, and managed-vessel project-only costs. Run typecheck, tests, build, and signed-in save/reopen checks where credentials allow.
+6. Record the project-cost assignment rule in root `AGENTS.md`. Keep historical migrations unchanged; add a new additive corrective migration only if a verified database gap requires one.
 
-## 3. Help Center وصفحة MCP API
-- صفحة `/mcp-api` مسجَّلة وبطاقاتها موجودة في Help Center — سيتم التحقق منها بعد النشر.
-- إضافة داخل `/mcp-api`: قسم "دليل الأدوات الحقيقي" يجلب قائمة الأدوات السبع من نفس تعريف MCP، ورابط مباشر إلى مثال JSON-RPC، وزر نسخ لعنوان النقطة النهائية جاهز للإرسال للعملاء.
-- إضافة رابط متبادل بين `/connect` و`/mcp-api`.
-
-## 4. شاشة إدارة المنظمات
-شاشة المنظمة الحالية تحتوي إنشاء منظمة ودعوة أعضاء. سيتم استكمالها بـ:
-- اختيار الدور عند الدعوة (Super Admin / Admin / Member) من أدوار المنظمة الفعلية.
-- تغيير دور عضو قائم وإزالة عضو (للمسؤولين فقط).
-- لوحة صلاحيات توضح ما يراه كل دور، وربط الأدوار فعلياً بإخفاء/إظهار عناصر الواجهة (الإعدادات والتدقيق والمنظمة للمسؤولين، والعرض فقط للأعضاء).
-
-## 5. صفحة ربط حسابات العملاء بالمنظمة
-- صفحة `/join` تقبل رمز الدعوة (`token`) من رابط الدعوة.
-- إن لم يكن المستخدم مسجّل الدخول → توجيه لتسجيل الدخول ثم العودة لنفس الرابط.
-- عند القبول: إنشاء عضوية بالدور المحدد، وتعليم الدعوة كمقبولة، ثم تحويل المستخدم إلى التطبيق.
-- بعد الربط، التحقق من ظهور السجلات (السفن، التدقيق، الحوادث) الخاصة بتلك المنظمة.
-
-## 6. التحقق النهائي
-- فحص شاشات: Platform Setup (إدخال الأرقام)، Audits/Findings، Incidents — عبر تشغيل فعلي في المتصفح والتقاط النتائج.
-- تشغيل فحص أمني قبل النشر النهائي.
-
-## تفاصيل تقنية
-- قبول الدعوة يحتاج دالة قاعدة بيانات `security definer` (`rpc_accept_invitation(p_token uuid)`) تتحقق من تطابق البريد وانتهاء الصلاحية، وتُدرج في `organization_members` بالدور الصحيح — لأن `organization_members` تمنع الإدراج المباشر من العميل.
-- تحديث/حذف الأعضاء يمرّ عبر دوال `security definer` محمية بـ `fn_is_org_admin`، مع منح `EXECUTE` لـ `authenticated`.
-- ربط `organization_invitations.role` بجدول `org_roles` عند الإنشاء بدل النص الحر.
+## Technical details
+- Use the existing organization membership model and current RLS; do not add a second project master or duplicate setup masters.
+- Replace untyped calls with database-derived types where available, and avoid the removed calculation RPC.
+- Keep the current visual language and semantic color tokens; do not redesign unrelated screens.
